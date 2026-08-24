@@ -15,6 +15,7 @@ import { CompanyInfoCard } from "@/components/applications/company-info-card";
 import { StatusTimeline } from "@/components/applications/status-timeline";
 import { DocumentsPanel } from "@/components/applications/documents-panel";
 import { CoverLetterPanel } from "@/components/applications/cover-letter-panel";
+import { VoiceMemoPanel } from "@/components/applications/voice-memo-panel";
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -116,6 +117,8 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
 
         <div className="flex flex-col gap-6">
           <CompanyInfoCard company={application.company} onSaved={refresh} />
+
+          <VoiceMemoPanel applicationId={application.id} companyName={application.company.name} />
 
           <Card>
             <CardHeader>

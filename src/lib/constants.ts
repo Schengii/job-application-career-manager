@@ -10,8 +10,8 @@
 
 export const APPLICATION_STATUSES = [
   { value: "DRAFT", label: "Entwurf", color: "slate" },
-  { value: "SENT", label: "Gesendet", color: "blue" },
-  { value: "INTERVIEW", label: "Vorstellungsgespräch", color: "amber" },
+  { value: "SENT", label: "Gesendet (Offen)", color: "yellow" },
+  { value: "INTERVIEW", label: "Vorstellungsgespräch", color: "blue" },
   { value: "OFFER", label: "Zusage", color: "green" },
   { value: "REJECTED", label: "Absage", color: "red" },
   { value: "WITHDRAWN", label: "Zurückgezogen", color: "gray" },

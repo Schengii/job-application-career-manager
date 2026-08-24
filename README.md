@@ -12,7 +12,13 @@ verloren geht.
 
 ### 1. Bewerbungs- & Unternehmens-Management
 - **Dashboard mit Live-Metriken**: Gesamtanzahl, Offene Bewerbungen, Gespräche, Absagen und Zusagen auf einen Blick.
+- **In-App Benachrichtigungs-Zentrale (Notification Bell)**: Interaktives Glocken-Symbol in der Kopfzeile mit Live-Badge-Counter für überfällige Schritte, anstehende Vorstellungsgespräche in den nächsten 48h und empfohlene Nachfass-Aktionen (> 14 Tage).
+- **In-Browser Excel & CSV Import (`.xlsx`, `.xls`, `.csv`)**: Dateien direkt per Drag & Drop im Browser hochladen, Vorschau prüfen und mit 1 Klick in die Datenbank übernehmen – kein Terminal erforderlich.
 - **Interaktive Excel-Tabelle (`/excel-view`)**: Tabellarischer Grid-Editor wie in Excel/Google Sheets mit direktem **Inline-Editing**, Tastatur-Navigation (Tab/Enter), schneller Erfassung neuer Zeilen und automatischem Batch-Speichern (`/api/applications/bulk`).
+- **Spalten-Konfigurator (Column Customizer)**: Einzelne Tabellenspalten (Datum, Portal, Status, Ansprechpartner, E-Mail/Tel, Wiedervorlage, Notizen, Aktionen) flexibel ein- und ausblenden mit Schnell-Presets (*Standard*, *Kompakt*, *Kontakte*) und automatischer `localStorage`-Speicherung.
+- **Audio-Notizen & Sprachmemos**: Vorstellungsgespräche und Telefonate direkt im Browser aufnehmen (Web Audio / MediaRecorder API), mit integriertem Player abspielen, herunterladen und bei der Bewerbung archivieren.
+- **Live-Abonnierbarer Kalender-Feed (`/api/calendar/feed.ics`)**: Automatische iCal-Kalendersynchronisation für Smartphone (iOS / Android), Apple Kalender, Google Kalender und Outlook inkl. 1-Klick-Abo-Modal.
+- **Erweiterte Filter- & Sortierleiste**: Überall verfügbar (Bewerbungen, Excel-Grid, Unternehmen, Jobsuche) – filtern nach Freitext, Status, Jobportal, Fristen/Wiedervorlage, Match-Score und sortieren nach Datum, Name oder Relevanz mit 1-Klick-Filter-Reset.
 - **3 Ansichtsmodi in der Bewerbungsliste**: Flexibler Wechsel zwischen **Tabelle**, nativem **Kanban-Board** (Drag & Drop) und **Excel-Grid**.
 - **E-Mail-Rückmeldungs-Assistent**: Arbeitgeber-E-Mails (Absagen, Einladungen, Eingangsbestätigungen, Angebote) per Copy & Paste analysieren und mit einem Klick Status, Termine und Notizen aktualisieren.
 - **Smarte Wiedervorlage & Nachfass-Engine**: Hebt überfällige Schritte sowie Bewerbungen ohne Rückmeldung (> 14 Tage) auf dem Dashboard und in der Liste hervor.
@@ -34,8 +40,9 @@ verloren geht.
   - **Klassisch** (formell für Behörden, Banken & Großkonzerne)
   - **Startup / Agil** (dynamisch, teamorientiert, direkte Ansprache)
   - **Detailliert** (starker Fokus auf Umschulung, Handwerk & technischen Tiefgang)
+- **Keyword-Booster & ATS-Match Optimizer**: Gleicht das Anschreiben live mit den geforderten Tech-Keywords der Stellenanzeige ab, vergibt einen ATS-Score (0-100%) und erlaubt das 1-Klick-Einfügen passender Formulierungsvorschläge für fehlende Kernkompetenzen.
 - **Projekt-Hervorhebung**: Gezielte Auswahl, welches Referenzprojekt (z. B. *electroCheck-ai*) im Anschreiben in den Mittelpunkt gestellt werden soll.
-- **DIN 5008 Druck- & PDF-Ansicht**: Druckoptimiertes Brieflayout mit korrekter Absenderzeile, Empfängerfeld, Datum, Betreffzeile und Unterschriftsbereich (`window.print()` / PDF-Speicherung).
+- **DIN 5008 Druck- & PDF-Ansicht**: Druckoptimiertes Brieflayout mit korrekter Absenderzeile, Empfängerfeld, Datum, Betreffzeile, optionaler digitaler Signaturzeile, 1-Klick-HTML-Export sowie Direktdruck (`window.print()` / PDF-Speicherung).
 - **Nachfass-E-Mail Generator**: Vorformulierte Nachfass-E-Mail auf Knopfdruck bei fehlender Rückmeldung inkl. One-Click-Copy und Mailto-Unterstützung.
 
 ### 4. Dokumenten-Handling & Bewerbungspaket-Download
@@ -60,16 +67,28 @@ verloren geht.
 - **Stellenanzeigen-Schnellerfassung (Smart Parser)**: Beliebigen Freitext einer Stellenanzeige (LinkedIn, Stepstone, E-Mail) einfügen – der Parser extrahiert automatisch Titel, Unternehmen, Ort, Remote-Option, Gehalt, Tech-Stack und berechnet sofort den Match-Score.
 - **1-Klick „Bewerben“**: Legt direkt eine neue Bewerbung im System an und verknüpft das Stellenangebot.
 
-### 7. Analytics & Gehalts-Vergleichsmatrix
+### 7. Analytics & Gehalts-Benchmarking
+- **Gehalts-Benchmarking & Marktvergleich**: Berechnet marktübliche Gehaltsspannen für Fachinformatiker Anwendungsentwicklung (Frontend) nach Erfahrungsstufe (Junior, Mid-Level, Senior) und Region (Bonn/Köln, Ruhrgebiet, Remote, München, Berlin). Vergleicht das persönliche Wunschgehalt mit dem Marktmedian und liefert konkrete Verhandlungs-Hebel für Vorstellungsgespräche.
 - **Gehalts- & Benefit-Vergleichsrechner**: Vergleicht vorliegende Angebote (`OFFER`) anhand von Brutto-/Netto-Gehalt, Home-Office-Tagen, Urlaubstagen, Fahrtkostenersparnis und Gesamt-Score.
 - **Bewerbungs-Trichter (Conversion Funnel)**: Visualisiert die Phasen *Verschickt $\rightarrow$ Rückmeldung $\rightarrow$ Gespräch $\rightarrow$ Angebot*.
 - **Portal-Effizienz & Einladungsquoten**: Zeigt auf, welche Portale (z. B. GetInIT, Stepstone, LinkedIn) die höchste Einladungsquote aufweisen.
 - **Reaktionszeiten & Erfolgsquote**: Durchschnittliche Dauer bis zur ersten Rückmeldung und Zusagequote.
 
-### 8. Premium UI/UX, Glassmorphism & Micro-Animations
+### 8. Farbleitsystem & Übersichtlichkeit (UI/UX)
+- **Klare Farbcodierung im gesamten Dashboard:**
+  - 🟡 **Gelb / Amber (`#f59e0b`)**: Offene & gesendete Bewerbungen (`SENT`, `DRAFT`)
+  - 🔵 **Blau / Sky (`#0ea5e9`)**: Vorstellungsgespräche (`INTERVIEW`)
+  - 🟢 **Grün / Emerald (`#10b981`)**: Zusagen & Angebote (`OFFER`)
+  - 🔴 **Rot / Rose (`#ef4444`)**: Absagen (`REJECTED`)
+  - 🟠 **Orange / Warning (`#ea580c`)**: Nachfass-Erinnerungen, überfällige Fristen und fällige Aktionen
+- **Visuelle Akzentleisten:** Tabellenzeilen und Kanban-Karten besitzen dezente linke Farbbalken für sofortige Wiedererkennung.
 - **SaaS Design System**: Feine Glassmorphism-Karten (`backdrop-blur`), flüssige Übergänge (`animate-fade-in`, `animate-scale-in`), dezent pulsierende Frist-Indikatoren (`animate-pulse-subtle`) und optimiertes Responsive-Layout für Mobilgeräte, Tablets und Desktop.
 
-### 9. Datensicherheit & Backup
+### 9. PWA & Offline-Fähigkeit (Progressive Web App)
+- **Web App Manifest (`/manifest.webmanifest`)**: Ermöglicht die Installation der Anwendung als eigenständige Desktop- oder Smartphone-App (Standalone Window).
+- **Service Worker (`public/sw.js`)**: Automatisches Caching statischer Kernkomponenten für ultraschnelle Ladezeiten und grundlegende Offline-Verfügbarkeit.
+
+### 10. Datensicherheit & Backup
 - **1-Klick JSON-Backup & Restore**: Vollständige Sicherung und Wiederherstellung aller Tabellen unter *Einstellungen $\rightarrow$ Backup & Daten*.
 - **Excel-Bewerbungslisten-Import (`scripts/import-bewerbungsliste.ts`)**: Überträgt historische Excel-Bewerbungslisten in die SQLite-Datenbank.
 - **Datenschutz**: Trennung zwischen Code/Vorlage (`scripts/profile-data.example.json`) und gitignorten Echtdaten (`profile-data.local.json`).
@@ -84,7 +103,8 @@ verloren geht.
 | Backend   | Next.js Route Handler (REST-API unter `/api/*`), Zod-Validierung          |
 | Datenbank | SQLite via Prisma 7 ORM (Adapter: `better-sqlite3`)                       |
 | State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
-| Testing   | Vitest (33 automatisierte Unit- & Integrationstests)                      |
+| PWA       | Web App Manifest, Service Worker Caching                                  |
+| Testing   | Vitest (41 automatisierte Unit- & Integrationstests)                      |
 
 ---
 
@@ -96,14 +116,16 @@ prisma/
   seed.ts               Beispieldaten (Profil, Unternehmen, Jobs, Bewerbungen)
 src/
   app/
-    api/                 REST-API-Route-Handler (CRUD, Backup, Analytics, Bulk, Simulation, ZIP-Package, Generator)
+    api/                 REST-API-Route-Handler (CRUD, Backup, Analytics, Bulk, Simulation, ZIP-Package, Calendar Feed, Generator)
     (Seiten)/             Dashboard (/), Bewerbungen (/applications), Excel-Tabelle (/excel-view),
                          Unternehmen (/companies), Jobsuche (/jobs), CV-Designer (/cv-designer),
                          Interview-Prep (/interview-prep), Auswertungen (/analytics), Einstellungen (/settings)
-  components/            UI-Primitives, Modals, Kanban, ExcelGridTable, Charts, Dokumenten-Vorschau, Suche, Rechner, Mock-Interview
+  components/            UI-Primitives, Modals, Kanban, ExcelGridTable, VoiceMemoPanel, Charts, Dokumenten-Vorschau, Suche, Rechner, Mock-Interview
   lib/
     prisma.ts            Prisma-Client-Singleton (better-sqlite3-Adapter)
     matching.ts           Match-Score-Berechnung (Tech-Stack, Standort, Rolle)
+    salaryBenchmark.ts    Gehalts-Benchmarking & Marktvergleichs-Engine
+    keywordBooster.ts     Anschreiben Keyword-Booster & ATS-Match Engine
     coverLetterGenerator.ts Multi-Tone Anschreiben & Nachfass-E-Mail Generator
     cvGenerator.ts        Lebenslauf-Generator & HTML/Print-Formatter
     interviewGuide.ts     Fachfragenkatalog & Tech-Stack-Filter
@@ -113,7 +135,7 @@ src/
     salaryCalculator.ts   Gehalts- & Benefit-Vergleichsrechner
     zipPackage.ts         ZIP-Bewerbungspaket Generator
     followUp.ts           Wiedervorlage- und Fristen-Engine
-    ical.ts               iCal / .ics Kalenderdatei-Generator
+    ical.ts               iCal / .ics Kalenderdatei- & Feed-Generator
     jobParser.ts          Freitext-Stellenanzeigen Parser
     backup.ts             JSON Backup & Restore Serialisierung
     mockJobPortals.ts     Job-Portal-Simulator
@@ -156,7 +178,7 @@ Die Anwendung läuft anschließend unter **http://localhost:3000**.
 | `npm run dev`               | Entwicklungsserver (Turbopack) starten                            |
 | `npm run build`             | Produktions-Build erstellen (inkl. TypeScript-Check)               |
 | `npm run lint`               | ESLint ausführen                                                    |
-| `npm run test`                | Testsuite (Vitest, 33 Tests) einmalig ausführen                     |
+| `npm run test`                | Testsuite (Vitest, 41 Tests) einmalig ausführen                     |
 | `npm run test:watch`           | Testsuite im Watch-Modus ausführen                                    |
 | `npx prisma studio`          | Datenbank-Inhalte im Browser ansehen/bearbeiten                     |
 | `npx prisma db push`         | Schema-Änderungen direkt auf SQLite anwenden                        |

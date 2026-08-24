@@ -13,6 +13,7 @@ import { TrendChart } from "@/components/analytics/trend-chart";
 import { StatTile } from "@/components/analytics/stat-tile";
 import { FunnelChart } from "@/components/analytics/funnel-chart";
 import { OfferComparisonMatrix } from "@/components/analytics/offer-comparison-matrix";
+import { SalaryBenchmarkCard } from "@/components/analytics/salary-benchmark-card";
 
 type Analytics = {
   statusDistribution: { status: string; label: string; color: string; count: number }[];
@@ -179,6 +180,11 @@ export default function AnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
+            {/* Gehalts-Benchmarking & Marktvergleich */}
+            <div className="lg:col-span-2">
+              <SalaryBenchmarkCard />
+            </div>
+
             {/* Gehalts- & Benefit-Vergleichsmatrix */}
             <div className="lg:col-span-2">
               <OfferComparisonMatrix />

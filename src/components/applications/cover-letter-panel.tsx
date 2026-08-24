@@ -15,6 +15,7 @@ import type { ApplicationDetail, CoverLetter, PreferencesWithProfile } from "@/t
 import type { CoverLetterTone } from "@/lib/coverLetterGenerator";
 import { CoverLetterPrintModal } from "./cover-letter-print-modal";
 import { FollowUpEmailModal } from "./follow-up-email-modal";
+import { CoverLetterKeywordBooster } from "./cover-letter-keyword-booster";
 
 const TONES: { value: CoverLetterTone; label: string }[] = [
   { value: "MODERN", label: "Modern (Lösungsorientiert)" },
@@ -87,6 +88,19 @@ export function CoverLetterPanel({
     } catch {
       toast.error("Status konnte nicht geändert werden.");
     }
+  }
+
+  function handleAddSentence(sentence: string) {
+    if (!content) return;
+    const parts = content.split("\n\n");
+    if (parts.length > 2) {
+      // Füge den Satz vor dem letzten Absatz ein
+      parts.splice(parts.length - 2, 0, sentence);
+      setContent(parts.join("\n\n"));
+    } else {
+      setContent(`${content}\n\n${sentence}`);
+    }
+    toast.success("Keyword-Satz ins Anschreiben eingefügt!");
   }
 
   return (
@@ -185,6 +199,12 @@ export function CoverLetterPanel({
             rows={16}
             aria-label="Inhalt des Anschreibens"
             className="font-mono text-sm leading-relaxed"
+          />
+
+          <CoverLetterKeywordBooster
+            coverLetterContent={content}
+            jobDescription={application.jobPosting?.description}
+            onAddSentence={handleAddSentence}
           />
 
           <div className="flex justify-end">

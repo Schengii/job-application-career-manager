@@ -61,6 +61,55 @@ export function generateIcsContent({
   return lines.join("\r\n");
 }
 
+export function generateIcsFeed(
+  calendarName: string,
+  events: IcsEventParams[]
+): string {
+  const now = new Date();
+
+  const escapeIcs = (str: string) =>
+    str
+      .replace(/\\/g, "\\\\")
+      .replace(/;/g, "\\;")
+      .replace(/,/g, "\\,")
+      .replace(/\n/g, "\\n");
+
+  const header = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Job Career Manager//DE",
+    `X-WR-CALNAME:${escapeIcs(calendarName)}`,
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+  ];
+
+  const vevents = events.map((event, idx) => {
+    const duration = event.durationMinutes || 60;
+    const endDate = new Date(event.startDate.getTime() + duration * 60 * 1000);
+    const uid = `event-${event.startDate.getTime()}-${idx}@career-manager`;
+
+    return [
+      "BEGIN:VEVENT",
+      `UID:${uid}`,
+      `DTSTAMP:${formatIcsDate(now)}`,
+      `DTSTART:${formatIcsDate(event.startDate)}`,
+      `DTEND:${formatIcsDate(endDate)}`,
+      `SUMMARY:${escapeIcs(event.title)}`,
+      event.description ? `DESCRIPTION:${escapeIcs(event.description)}` : null,
+      event.location ? `LOCATION:${escapeIcs(event.location)}` : null,
+      event.url ? `URL:${event.url}` : null,
+      "STATUS:CONFIRMED",
+      "END:VEVENT",
+    ]
+      .filter(Boolean)
+      .join("\r\n");
+  });
+
+  const footer = ["END:VCALENDAR"];
+
+  return [...header, ...vevents, ...footer].join("\r\n");
+}
+
 export function downloadIcsFile(filename: string, content: string): void {
   if (typeof window === "undefined") return;
   const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });

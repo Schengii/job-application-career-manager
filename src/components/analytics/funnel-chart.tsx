@@ -6,6 +6,8 @@
 // Visualisiert die Conversion-Rate über die 4 Kernphasen des Bewerbungsprozesses.
 // -----------------------------------------------------------------------------
 
+import { cn } from "@/lib/utils";
+
 type FunnelStep = {
   stage: string;
   count: number;
@@ -23,8 +25,6 @@ export function FunnelChart({ data }: { data: FunnelStep[] }) {
     <div className="flex flex-col gap-4 py-2">
       {data.map((step, idx) => {
         const widthPct = Math.max(12, Math.round((step.count / maxCount) * 100));
-        const isOffer = idx === data.length - 1;
-        const isInterview = idx === 2;
 
         return (
           <div key={step.stage} className="flex flex-col gap-1.5">
@@ -43,15 +43,13 @@ export function FunnelChart({ data }: { data: FunnelStep[] }) {
 
             <div className="h-6 w-full rounded-md bg-surface-hover/70 overflow-hidden flex items-center p-0.5">
               <div
-                className={`h-full rounded transition-all duration-500 ${
-                  isOffer
-                    ? "bg-success"
-                    : isInterview
-                      ? "bg-warning"
-                      : idx === 1
-                        ? "bg-info"
-                        : "bg-primary"
-                }`}
+                className={cn(
+                  "h-full rounded transition-all duration-500 shadow-2xs",
+                  idx === 0 && "bg-amber-500",
+                  idx === 1 && "bg-indigo-500",
+                  idx === 2 && "bg-sky-500",
+                  idx === 3 && "bg-emerald-500"
+                )}
                 style={{ width: `${widthPct}%` }}
               />
             </div>

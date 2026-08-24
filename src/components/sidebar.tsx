@@ -6,6 +6,7 @@ import { LayoutDashboard, Briefcase, Building2, Search, Settings, Menu, X, BarCh
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -34,7 +35,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             className={cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
               active
-                ? "bg-primary-soft text-primary"
+                ? "bg-primary-soft text-primary font-semibold"
                 : "text-muted-foreground hover:bg-surface-hover hover:text-foreground",
             )}
           >
@@ -56,6 +57,7 @@ export function Sidebar() {
       <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 md:hidden">
         <span className="text-base font-semibold">Career Manager</span>
         <div className="flex items-center gap-2">
+          <NotificationBell />
           <ThemeToggle />
           <button
             type="button"
@@ -106,7 +108,7 @@ export function Sidebar() {
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-surface py-5 md:flex">
         <div className="flex items-center justify-between px-4 pb-6">
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-xs">
               JM
             </span>
             <span className="text-base font-semibold leading-tight">
@@ -115,6 +117,7 @@ export function Sidebar() {
               Manager
             </span>
           </Link>
+          <NotificationBell />
         </div>
         <div className="px-3 pb-3">
           <button

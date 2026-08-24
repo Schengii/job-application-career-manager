@@ -12,6 +12,7 @@ import {
   AlertCircle,
   MailQuestion,
   Mail,
+  Calendar,
 } from "lucide-react";
 import { useState } from "react";
 import { fetcher } from "@/lib/api";
@@ -23,9 +24,11 @@ import { ApplicationStatusBadge } from "@/components/status-badge";
 import { formatDate } from "@/lib/utils";
 import { getFollowUpStatus } from "@/lib/followUp";
 import { EmailResponseModal } from "@/components/applications/email-response-modal";
+import { CalendarFeedModal } from "@/components/calendar/calendar-feed-modal";
 
 export default function DashboardPage() {
   const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [calendarModalOpen, setCalendarModalOpen] = useState(false);
   const { data: metrics, isLoading: metricsLoading, mutate: mutateMetrics } = useSWR<Metrics>("/api/metrics", fetcher, {
     refreshInterval: 15000,
   });
@@ -58,26 +61,31 @@ export default function DashboardPage() {
             Überblick über deine Jobsuche als Fachinformatiker für Anwendungsentwicklung.
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={() => setEmailModalOpen(true)}>
-          <Mail className="h-4 w-4" /> E-Mail erfassen
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => setCalendarModalOpen(true)} className="card-hover-effect">
+            <Calendar className="h-4 w-4 text-sky-500" /> Kalender-Abo (.ics)
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setEmailModalOpen(true)} className="card-hover-effect">
+            <Mail className="h-4 w-4" /> E-Mail erfassen
+          </Button>
+        </div>
       </header>
 
       {/* KPI-Karten */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <MetricCard label="Bewerbungen gesamt" value={metrics?.total ?? 0} icon={Briefcase} accent="primary" loading={metricsLoading} />
-        <MetricCard label="Offene Bewerbungen" value={metrics?.open ?? 0} icon={Inbox} accent="info" loading={metricsLoading} />
-        <MetricCard label="Gespräche" value={metrics?.interview ?? 0} icon={CalendarClock} accent="warning" loading={metricsLoading} />
-        <MetricCard label="Absagen" value={metrics?.rejected ?? 0} icon={ThumbsDown} accent="danger" loading={metricsLoading} />
-        <MetricCard label="Zusagen" value={metrics?.offer ?? 0} icon={PartyPopper} accent="success" loading={metricsLoading} />
+        <MetricCard label="Offene Bewerbungen" value={metrics?.open ?? 0} icon={Inbox} accent="yellow" loading={metricsLoading} />
+        <MetricCard label="Gespräche" value={metrics?.interview ?? 0} icon={CalendarClock} accent="blue" loading={metricsLoading} />
+        <MetricCard label="Absagen" value={metrics?.rejected ?? 0} icon={ThumbsDown} accent="red" loading={metricsLoading} />
+        <MetricCard label="Zusagen" value={metrics?.offer ?? 0} icon={PartyPopper} accent="green" loading={metricsLoading} />
       </div>
 
       {/* Follow-up / Wiedervorlage Banner */}
       {followUpItems.length > 0 && (
-        <Card className="border-warning/40 bg-warning-soft/40">
+        <Card className="border-orange-500/40 bg-orange-500/5 dark:bg-orange-500/10 shadow-xs animate-scale-in">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-warning font-medium text-base">
-              <AlertCircle className="h-5 w-5" /> Fällige Aktionen & Nachfass-Erinnerungen ({followUpItems.length})
+            <CardTitle className="flex items-center gap-2 text-orange-600 dark:text-orange-400 font-semibold text-base">
+              <AlertCircle className="h-5 w-5 text-orange-500 animate-pulse-subtle" /> Fällige Aktionen & Nachfass-Erinnerungen ({followUpItems.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-2">
@@ -86,28 +94,32 @@ export default function DashboardPage() {
                 <Link
                   key={app.id}
                   href={`/applications/${app.id}`}
-                  className="flex flex-col justify-between rounded-lg border border-warning/30 bg-surface p-3 hover:bg-surface-hover transition-colors"
+                  className="flex flex-col justify-between rounded-lg border border-orange-500/30 bg-surface p-3.5 card-hover-effect hover:border-orange-500/60"
                 >
                   <div>
                     <div className="flex items-start justify-between gap-1">
                       <p className="text-sm font-semibold text-foreground truncate">{app.company.name}</p>
                       {followUp.isFollowUpSuggested && (
-                        <span className="shrink-0 flex items-center gap-1 rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-medium text-warning">
+                        <span className="shrink-0 flex items-center gap-1 rounded-full bg-orange-500/15 border border-orange-500/30 px-2 py-0.5 text-[10px] font-bold text-orange-600 dark:text-orange-400">
                           <MailQuestion className="h-3 w-3" /> Nachfassen!
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">{app.position}</p>
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">{app.position}</p>
                   </div>
-                  <div className="mt-2 text-xs">
+                  <div className="mt-3 text-xs pt-2 border-t border-border/50">
                     {followUp.isOverdue && (
-                      <span className="text-danger font-medium">Termin überfällig ({formatDate(app.nextStepDate)})</span>
+                      <span className="text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-1">
+                        ● Termin überfällig ({formatDate(app.nextStepDate)})
+                      </span>
                     )}
                     {followUp.isDueSoon && !followUp.isOverdue && (
-                      <span className="text-warning font-medium">Termin in Kürze: {formatDate(app.nextStepDate)}</span>
+                      <span className="text-orange-600 dark:text-orange-400 font-semibold flex items-center gap-1">
+                        ● Termin in Kürze: {formatDate(app.nextStepDate)}
+                      </span>
                     )}
                     {followUp.isFollowUpSuggested && (
-                      <span className="text-muted-foreground">
+                      <span className="text-muted-foreground font-medium">
                         Seit {followUp.daysSinceApplication} Tagen keine Rückmeldung
                       </span>
                     )}
@@ -189,6 +201,11 @@ export default function DashboardPage() {
           mutateApps();
           mutateMetrics();
         }}
+      />
+
+      <CalendarFeedModal
+        open={calendarModalOpen}
+        onClose={() => setCalendarModalOpen(false)}
       />
     </div>
   );

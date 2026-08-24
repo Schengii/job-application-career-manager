@@ -11,10 +11,12 @@ import { useId, useState } from "react";
 // Feste Farbzuordnung je Status (entspricht den Badge-Farbtokens aus constants.ts)
 const COLOR_HEX: Record<string, string> = {
   slate: "#64748b",
-  blue: "#3b82f6",
-  amber: "#d97706",
-  green: "#16a34a",
-  red: "#dc2626",
+  yellow: "#f59e0b",
+  amber: "#f59e0b",
+  orange: "#ea580c",
+  blue: "#0ea5e9",
+  green: "#10b981",
+  red: "#ef4444",
   gray: "#6b7280",
 };
 

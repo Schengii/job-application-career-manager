@@ -1,28 +1,35 @@
 "use client";
 
 // -----------------------------------------------------------------------------
-// Interaktive Excel-Tabelle / Grid-Editor für Bewerbungen
+// Interaktive Excel-Tabelle / Grid-Editor für Bewerbungen mit Filtern & Sortierung
 // -----------------------------------------------------------------------------
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
 import {
   Plus,
   Save,
-  Download,
   Trash2,
   ArrowUpRight,
+  Download,
+  Upload,
   Search,
   CheckCircle2,
   RefreshCw,
   FileSpreadsheet,
+  SlidersHorizontal,
+  Columns,
+  X,
 } from "lucide-react";
 import { fetcher, apiPost, apiDelete } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
 import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/constants";
 import type { ApplicationListItem } from "@/types";
 import { applicationsToCsv, downloadCsv } from "@/lib/csv";
+import { cn } from "@/lib/utils";
+import { ExcelImportModal } from "@/components/excel/excel-import-modal";
 
 export type ExcelRow = {
   id: string;
@@ -39,6 +46,32 @@ export type ExcelRow = {
   notes: string;
   isDirty?: boolean;
 };
+
+type SortOption = "DATE_DESC" | "DATE_ASC" | "COMPANY_ASC" | "STATUS";
+
+export type VisibleColumns = {
+  date: boolean;
+  portal: boolean;
+  status: boolean;
+  contact: boolean;
+  email: boolean;
+  followUp: boolean;
+  notes: boolean;
+  actions: boolean;
+};
+
+const DEFAULT_COLUMNS: VisibleColumns = {
+  date: true,
+  portal: true,
+  status: true,
+  contact: true,
+  email: true,
+  followUp: true,
+  notes: true,
+  actions: true,
+};
+
+const COLS_STORAGE_KEY = "career_manager_excel_cols";
 
 export function ExcelGridTable() {
   const { data: applications, isLoading } = useSWR<ApplicationListItem[]>("/api/applications", fetcher);
@@ -77,20 +110,139 @@ function ExcelGridContent({ initialApplications }: { initialApplications: Applic
   );
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [portalFilter, setPortalFilter] = useState("ALL");
+  const [onlyFollowUps, setOnlyFollowUps] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>("DATE_DESC");
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [columnPopoverOpen, setColumnPopoverOpen] = useState(false);
+  const columnPopoverRef = useRef<HTMLDivElement>(null);
+
+  const [visibleCols, setVisibleCols] = useState<VisibleColumns>(() => {
+    if (typeof window === "undefined") return DEFAULT_COLUMNS;
+    try {
+      const saved = localStorage.getItem(COLS_STORAGE_KEY);
+      return saved ? { ...DEFAULT_COLUMNS, ...JSON.parse(saved) } : DEFAULT_COLUMNS;
+    } catch {
+      return DEFAULT_COLUMNS;
+    }
+  });
+
+  // Click outside for column popover
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (columnPopoverRef.current && !columnPopoverRef.current.contains(e.target as Node)) {
+        setColumnPopoverOpen(false);
+      }
+    }
+    if (columnPopoverOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [columnPopoverOpen]);
+
+  function toggleColumn(key: keyof VisibleColumns) {
+    const updated = { ...visibleCols, [key]: !visibleCols[key] };
+    setVisibleCols(updated);
+    try {
+      localStorage.setItem(COLS_STORAGE_KEY, JSON.stringify(updated));
+    } catch {}
+  }
+
+  function applyPreset(preset: "ALL" | "COMPACT" | "CONTACTS") {
+    let updated: VisibleColumns = { ...DEFAULT_COLUMNS };
+    if (preset === "COMPACT") {
+      updated = {
+        date: true,
+        portal: false,
+        status: true,
+        contact: false,
+        email: false,
+        followUp: false,
+        notes: false,
+        actions: true,
+      };
+    } else if (preset === "CONTACTS") {
+      updated = {
+        date: false,
+        portal: false,
+        status: true,
+        contact: true,
+        email: true,
+        followUp: false,
+        notes: true,
+        actions: true,
+      };
+    }
+    setVisibleCols(updated);
+    try {
+      localStorage.setItem(COLS_STORAGE_KEY, JSON.stringify(updated));
+    } catch {}
+    setColumnPopoverOpen(false);
+  }
+
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"IDLE" | "SAVING" | "SAVED">("IDLE");
 
   const filteredRows = useMemo(() => {
-    if (!searchQuery.trim()) return rows;
-    const q = searchQuery.toLowerCase();
-    return rows.filter(
-      (r) =>
-        r.companyName.toLowerCase().includes(q) ||
-        r.position.toLowerCase().includes(q) ||
-        r.portal.toLowerCase().includes(q) ||
-        r.notes.toLowerCase().includes(q)
-    );
-  }, [rows, searchQuery]);
+    let list = [...rows];
+
+    // Status Filter
+    if (statusFilter !== "ALL") {
+      list = list.filter((r) => r.status === statusFilter);
+    }
+
+    // Portal Filter
+    if (portalFilter !== "ALL") {
+      list = list.filter((r) => r.portal === portalFilter);
+    }
+
+    // Search Query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (r) =>
+          r.companyName.toLowerCase().includes(q) ||
+          r.position.toLowerCase().includes(q) ||
+          r.portal.toLowerCase().includes(q) ||
+          r.notes.toLowerCase().includes(q) ||
+          r.contactName.toLowerCase().includes(q)
+      );
+    }
+
+    // Follow Up Filter
+    if (onlyFollowUps) {
+      list = list.filter((r) => r.nextStep || r.nextStepDate);
+    }
+
+    // Sorting
+    list.sort((a, b) => {
+      if (sortBy === "DATE_DESC") {
+        return b.applicationDate.localeCompare(a.applicationDate);
+      }
+      if (sortBy === "DATE_ASC") {
+        return a.applicationDate.localeCompare(b.applicationDate);
+      }
+      if (sortBy === "COMPANY_ASC") {
+        return a.companyName.localeCompare(b.companyName);
+      }
+      if (sortBy === "STATUS") {
+        return a.status.localeCompare(b.status);
+      }
+      return 0;
+    });
+
+    return list;
+  }, [rows, searchQuery, statusFilter, portalFilter, onlyFollowUps, sortBy]);
+
+  const hasActiveFilters = statusFilter !== "ALL" || portalFilter !== "ALL" || searchQuery.trim() !== "" || onlyFollowUps;
+
+  function resetFilters() {
+    setStatusFilter("ALL");
+    setPortalFilter("ALL");
+    setSearchQuery("");
+    setOnlyFollowUps(false);
+  }
 
   function handleCellChange(id: string, field: keyof ExcelRow, value: string) {
     setRows((prev) =>
@@ -175,98 +327,316 @@ function ExcelGridContent({ initialApplications }: { initialApplications: Applic
 
   return (
     <div className="flex flex-col gap-4 animate-fade-in">
-      {/* Tabellen-Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-surface p-3.5 rounded-xl border border-border glass-card">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <FileSpreadsheet className="h-5 w-5" />
+      {/* Tabellen-Toolbar & Filter */}
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-3.5 glass-card">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <FileSpreadsheet className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                Tabellen-Schnellerfassung
+                {dirtyCount > 0 && (
+                  <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-bold text-warning animate-pulse-subtle">
+                    {dirtyCount} ungespeichert
+                  </span>
+                )}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Zellen wie in Excel bearbeiten, Filter setzen und Tab/Enter zur Navigation nutzen.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              Tabellen-Schnellerfassung
-              {dirtyCount > 0 && (
-                <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-bold text-warning animate-pulse-subtle">
-                  {dirtyCount} ungespeichert
-                </span>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => setImportModalOpen(true)} className="card-hover-effect">
+              <Upload className="h-4 w-4" /> Import (.xlsx/.csv)
+            </Button>
+
+            <Button size="sm" variant="outline" onClick={handleAddRow} className="card-hover-effect">
+              <Plus className="h-4 w-4" /> Neue Zeile
+            </Button>
+
+            <Button size="sm" variant="outline" onClick={handleExportCsv} className="card-hover-effect">
+              <Download className="h-4 w-4" /> Export
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={handleSaveAll}
+              disabled={saving || dirtyCount === 0}
+              className="card-hover-effect relative"
+            >
+              {saving ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : saveStatus === "SAVED" ? (
+                <CheckCircle2 className="h-4 w-4 text-success-foreground" />
+              ) : (
+                <Save className="h-4 w-4" />
               )}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              Direkt wie in Excel Zellen bearbeiten, Tab/Enter zur Navigation nutzen.
-            </p>
+              <span>{saving ? "Speichere …" : saveStatus === "SAVED" ? "Gespeichert" : "Speichern"}</span>
+            </Button>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+        {/* Filterleiste */}
+        <div className="flex flex-wrap items-center gap-2.5 pt-1 border-t border-border/60">
+          <div className="relative min-w-[180px] max-w-xs flex-1">
+            <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Tabelle durchsuchen …"
+              placeholder="In Tabelle suchen …"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 rounded-md border border-border bg-surface pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary w-48 sm:w-60"
+              className="h-8 w-full rounded-md border border-border bg-surface pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
 
-          <Button size="sm" variant="outline" onClick={handleAddRow}>
-            <Plus className="h-4 w-4" /> Neue Zeile
-          </Button>
-
-          <Button size="sm" variant="outline" onClick={handleExportCsv}>
-            <Download className="h-4 w-4" /> Export
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={handleSaveAll}
-            disabled={saving || dirtyCount === 0}
-            className="relative"
+          {/* Status Filter */}
+          <Select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-8 w-auto text-xs"
           >
-            {saving ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : saveStatus === "SAVED" ? (
-              <CheckCircle2 className="h-4 w-4 text-success-foreground" />
-            ) : (
-              <Save className="h-4 w-4" />
+            <option value="ALL">Alle Status ({rows.length})</option>
+            {APPLICATION_STATUSES.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label} ({rows.filter((r) => r.status === s.value).length})
+              </option>
+            ))}
+          </Select>
+
+          {/* Portal Filter */}
+          <Select
+            value={portalFilter}
+            onChange={(e) => setPortalFilter(e.target.value)}
+            className="h-8 w-auto text-xs"
+          >
+            <option value="ALL">Alle Portale</option>
+            {JOB_PORTALS.map((p) => (
+              <option key={p.value} value={p.label}>
+                {p.label}
+              </option>
+            ))}
+          </Select>
+
+          {/* Sortierung */}
+          <Select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            className="h-8 w-auto text-xs"
+          >
+            <option value="DATE_DESC">Datum (Neueste zuerst)</option>
+            <option value="DATE_ASC">Datum (Älteste zuerst)</option>
+            <option value="COMPANY_ASC">Unternehmen (A–Z)</option>
+            <option value="STATUS">Nach Status</option>
+          </Select>
+
+          {/* Nur Wiedervorlage */}
+          <button
+            type="button"
+            onClick={() => setOnlyFollowUps(!onlyFollowUps)}
+            className={cn(
+              "flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors",
+              onlyFollowUps
+                ? "border-primary bg-primary-soft text-primary font-semibold"
+                : "border-border bg-surface text-muted-foreground hover:bg-surface-hover hover:text-foreground"
             )}
-            <span>{saving ? "Speichere …" : saveStatus === "SAVED" ? "Gespeichert" : "Speichern"}</span>
-          </Button>
+          >
+            <SlidersHorizontal className="h-3 w-3" />
+            <span>Nur Wiedervorlage</span>
+          </button>
+
+          {/* Spalten-Konfigurator Popover */}
+          <div className="relative" ref={columnPopoverRef}>
+            <button
+              type="button"
+              onClick={() => setColumnPopoverOpen(!columnPopoverOpen)}
+              className="flex h-8 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 text-xs font-medium text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors"
+            >
+              <Columns className="h-3.5 w-3.5" />
+              <span>Spalten ({Object.values(visibleCols).filter(Boolean).length + 2})</span>
+            </button>
+
+            {columnPopoverOpen && (
+              <div className="absolute right-0 top-9.5 z-50 w-64 rounded-xl border border-border bg-surface p-3.5 shadow-xl animate-scale-in glass-card space-y-3">
+                <div className="flex items-center justify-between border-b border-border pb-2">
+                  <span className="text-xs font-bold text-foreground">Spalten anpassen</span>
+                  <button
+                    type="button"
+                    onClick={() => setColumnPopoverOpen(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                {/* Presets */}
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => applyPreset("ALL")}
+                    className="flex-1 rounded bg-surface-hover py-1 text-[10px] font-semibold text-foreground hover:bg-primary-soft hover:text-primary transition-colors"
+                  >
+                    Alle
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset("COMPACT")}
+                    className="flex-1 rounded bg-surface-hover py-1 text-[10px] font-semibold text-foreground hover:bg-primary-soft hover:text-primary transition-colors"
+                  >
+                    Kompakt
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPreset("CONTACTS")}
+                    className="flex-1 rounded bg-surface-hover py-1 text-[10px] font-semibold text-foreground hover:bg-primary-soft hover:text-primary transition-colors"
+                  >
+                    Kontakte
+                  </button>
+                </div>
+
+                {/* Checkboxen */}
+                <div className="space-y-1.5 text-xs">
+                  <label className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={visibleCols.date}
+                      onChange={() => toggleColumn("date")}
+                      className="rounded border-border text-primary"
+                    />
+                    <span>Datum</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={visibleCols.portal}
+                      onChange={() => toggleColumn("portal")}
+                      className="rounded border-border text-primary"
+                    />
+                    <span>Portal / Quelle</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={visibleCols.status}
+                      onChange={() => toggleColumn("status")}
+                      className="rounded border-border text-primary"
+                    />
+                    <span>Status</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={visibleCols.contact}
+                      onChange={() => toggleColumn("contact")}
+                      className="rounded border-border text-primary"
+                    />
+                    <span>Ansprechpartner</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={visibleCols.email}
+                      onChange={() => toggleColumn("email")}
+                      className="rounded border-border text-primary"
+                    />
+                    <span>E-Mail / Tel</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={visibleCols.followUp}
+                      onChange={() => toggleColumn("followUp")}
+                      className="rounded border-border text-primary"
+                    />
+                    <span>Wiedervorlage</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={visibleCols.notes}
+                      onChange={() => toggleColumn("notes")}
+                      className="rounded border-border text-primary"
+                    />
+                    <span>Notizen / Anmerkungen</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={visibleCols.actions}
+                      onChange={() => toggleColumn("actions")}
+                      className="rounded border-border text-primary"
+                    />
+                    <span>Aktionen</span>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {hasActiveFilters && (
+            <Button size="sm" variant="ghost" onClick={resetFilters} className="h-8 text-xs text-muted-foreground hover:text-danger">
+              <X className="h-3.5 w-3.5" /> Filter zurücksetzen
+            </Button>
+          )}
+
+          <span className="ml-auto text-[11px] text-muted-foreground">
+            {filteredRows.length} von {rows.length} Zeilen
+          </span>
         </div>
       </div>
 
       {/* Grid-Tabelle */}
       <div className="rounded-xl border border-border bg-surface overflow-hidden shadow-xs">
         <div className="scroll-thin overflow-x-auto max-h-[70vh]">
-          <table className="w-full min-w-[1200px] text-left text-xs border-collapse">
+          <table className="w-full min-w-[900px] text-left text-xs border-collapse">
             <thead className="sticky top-0 z-20 border-b border-border bg-surface-hover/90 backdrop-blur-md text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
               <tr>
                 <th className="w-10 px-3 py-2.5 text-center">#</th>
                 <th className="w-48 px-3 py-2.5">Unternehmen *</th>
                 <th className="w-48 px-3 py-2.5">Position *</th>
-                <th className="w-32 px-3 py-2.5">Datum</th>
-                <th className="w-36 px-3 py-2.5">Portal</th>
-                <th className="w-36 px-3 py-2.5">Status</th>
-                <th className="w-40 px-3 py-2.5">Ansprechpartner</th>
-                <th className="w-44 px-3 py-2.5">E-Mail / Tel</th>
-                <th className="w-36 px-3 py-2.5">Wiedervorlage</th>
-                <th className="min-w-[200px] px-3 py-2.5">Notizen / Anmerkungen</th>
-                <th className="w-16 px-3 py-2.5 text-center">Aktion</th>
+                {visibleCols.date && <th className="w-32 px-3 py-2.5">Datum</th>}
+                {visibleCols.portal && <th className="w-36 px-3 py-2.5">Portal</th>}
+                {visibleCols.status && <th className="w-36 px-3 py-2.5">Status</th>}
+                {visibleCols.contact && <th className="w-40 px-3 py-2.5">Ansprechpartner</th>}
+                {visibleCols.email && <th className="w-44 px-3 py-2.5">E-Mail / Tel</th>}
+                {visibleCols.followUp && <th className="w-36 px-3 py-2.5">Wiedervorlage</th>}
+                {visibleCols.notes && <th className="min-w-[200px] px-3 py-2.5">Notizen / Anmerkungen</th>}
+                {visibleCols.actions && <th className="w-16 px-3 py-2.5 text-center">Aktion</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {filteredRows.length === 0 && (
                 <tr>
                   <td colSpan={11} className="py-12 text-center text-muted-foreground">
-                    Keine Zeilen gefunden. Klicke auf „+ Neue Zeile“, um eine Bewerbung einzutragen.
+                    Keine Zeilen für die aktuellen Filter gefunden. Klicke auf „+ Neue Zeile“ oder setze die Filter zurück.
                   </td>
                 </tr>
               )}
               {filteredRows.map((row, idx) => (
                 <tr
                   key={row.id}
-                  className={`group hover:bg-surface-hover/40 transition-colors ${
-                    row.isDirty ? "bg-warning-soft/20" : ""
-                  }`}
+                  className={cn(
+                    "group hover:bg-surface-hover/50 transition-colors",
+                    row.isDirty && "bg-warning-soft/30",
+                    row.status === "SENT" && "border-l-4 border-l-amber-500",
+                    row.status === "INTERVIEW" && "border-l-4 border-l-sky-500",
+                    row.status === "OFFER" && "border-l-4 border-l-emerald-500",
+                    row.status === "REJECTED" && "border-l-4 border-l-rose-500",
+                    row.status === "WITHDRAWN" && "border-l-4 border-l-slate-400",
+                    row.status === "DRAFT" && "border-l-4 border-l-slate-300"
+                  )}
                 >
                   <td className="px-3 py-1.5 text-center text-muted-foreground font-mono text-[10px]">
                     {idx + 1}
@@ -279,7 +649,7 @@ function ExcelGridContent({ initialApplications }: { initialApplications: Applic
                       value={row.companyName}
                       placeholder="Firma Name..."
                       onChange={(e) => handleCellChange(row.id, "companyName", e.target.value)}
-                      className="w-full rounded px-2 py-1 bg-transparent text-xs text-foreground font-medium placeholder:text-muted-foreground/60 focus:outline-none focus:bg-surface"
+                      className="w-full rounded px-2 py-1 bg-transparent text-xs text-foreground font-semibold placeholder:text-muted-foreground/60 focus:outline-none focus:bg-surface"
                     />
                   </td>
 
@@ -295,116 +665,146 @@ function ExcelGridContent({ initialApplications }: { initialApplications: Applic
                   </td>
 
                   {/* Datum */}
-                  <td className="p-1 excel-cell">
-                    <input
-                      type="date"
-                      value={row.applicationDate}
-                      onChange={(e) => handleCellChange(row.id, "applicationDate", e.target.value)}
-                      className="w-full rounded px-1.5 py-1 bg-transparent text-xs text-foreground focus:outline-none focus:bg-surface"
-                    />
-                  </td>
+                  {visibleCols.date && (
+                    <td className="p-1 excel-cell">
+                      <input
+                        type="date"
+                        value={row.applicationDate}
+                        onChange={(e) => handleCellChange(row.id, "applicationDate", e.target.value)}
+                        className="w-full rounded px-1.5 py-1 bg-transparent text-xs text-foreground focus:outline-none focus:bg-surface"
+                      />
+                    </td>
+                  )}
 
                   {/* Portal */}
-                  <td className="p-1 excel-cell">
-                    <select
-                      value={row.portal}
-                      onChange={(e) => handleCellChange(row.id, "portal", e.target.value)}
-                      className="w-full rounded px-1.5 py-1 bg-transparent text-xs text-foreground focus:outline-none focus:bg-surface"
-                    >
-                      <option value="">(Kein Portal)</option>
-                      {JOB_PORTALS.map((p) => (
-                        <option key={p.value} value={p.label}>
-                          {p.label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
+                  {visibleCols.portal && (
+                    <td className="p-1 excel-cell">
+                      <select
+                        value={row.portal}
+                        onChange={(e) => handleCellChange(row.id, "portal", e.target.value)}
+                        className="w-full rounded px-1.5 py-1 bg-transparent text-xs text-foreground focus:outline-none focus:bg-surface"
+                      >
+                        <option value="">(Kein Portal)</option>
+                        {JOB_PORTALS.map((p) => (
+                          <option key={p.value} value={p.label}>
+                            {p.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  )}
 
                   {/* Status */}
-                  <td className="p-1 excel-cell">
-                    <select
-                      value={row.status}
-                      onChange={(e) => handleCellChange(row.id, "status", e.target.value)}
-                      className="w-full rounded px-1.5 py-1 bg-transparent text-xs font-semibold focus:outline-none focus:bg-surface"
-                    >
-                      {APPLICATION_STATUSES.map((s) => (
-                        <option key={s.value} value={s.value}>
-                          {s.label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
+                  {visibleCols.status && (
+                    <td className="p-1 excel-cell">
+                      <select
+                        value={row.status}
+                        onChange={(e) => handleCellChange(row.id, "status", e.target.value)}
+                        className={cn(
+                          "w-full rounded px-2 py-1 text-xs font-bold focus:outline-none focus:bg-surface border border-current/20",
+                          row.status === "SENT" && "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+                          row.status === "INTERVIEW" && "bg-sky-500/15 text-sky-700 dark:text-sky-300",
+                          row.status === "OFFER" && "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
+                          row.status === "REJECTED" && "bg-rose-500/15 text-rose-700 dark:text-rose-300",
+                          row.status === "WITHDRAWN" && "bg-gray-500/15 text-gray-700 dark:text-gray-300",
+                          row.status === "DRAFT" && "bg-slate-500/15 text-slate-700 dark:text-slate-300"
+                        )}
+                      >
+                        {APPLICATION_STATUSES.map((s) => (
+                          <option key={s.value} value={s.value} className="bg-surface text-foreground font-normal">
+                            {s.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  )}
 
                   {/* Ansprechpartner */}
-                  <td className="p-1 excel-cell">
-                    <input
-                      type="text"
-                      value={row.contactName}
-                      placeholder="z. B. Fr. Müller"
-                      onChange={(e) => handleCellChange(row.id, "contactName", e.target.value)}
-                      className="w-full rounded px-2 py-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:bg-surface"
-                    />
-                  </td>
+                  {visibleCols.contact && (
+                    <td className="p-1 excel-cell">
+                      <input
+                        type="text"
+                        value={row.contactName}
+                        placeholder="z. B. Fr. Müller"
+                        onChange={(e) => handleCellChange(row.id, "contactName", e.target.value)}
+                        className="w-full rounded px-2 py-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:bg-surface"
+                      />
+                    </td>
+                  )}
 
                   {/* Kontakt E-Mail / Tel */}
-                  <td className="p-1 excel-cell">
-                    <input
-                      type="text"
-                      value={row.contactEmail || row.contactPhone}
-                      placeholder="kontakt@firma.de"
-                      onChange={(e) => handleCellChange(row.id, "contactEmail", e.target.value)}
-                      className="w-full rounded px-2 py-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:bg-surface"
-                    />
-                  </td>
+                  {visibleCols.email && (
+                    <td className="p-1 excel-cell">
+                      <input
+                        type="text"
+                        value={row.contactEmail || row.contactPhone}
+                        placeholder="kontakt@firma.de"
+                        onChange={(e) => handleCellChange(row.id, "contactEmail", e.target.value)}
+                        className="w-full rounded px-2 py-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:bg-surface"
+                      />
+                    </td>
+                  )}
 
                   {/* Wiedervorlage / Datum */}
-                  <td className="p-1 excel-cell">
-                    <input
-                      type="date"
-                      value={row.nextStepDate}
-                      onChange={(e) => handleCellChange(row.id, "nextStepDate", e.target.value)}
-                      className="w-full rounded px-1.5 py-1 bg-transparent text-xs text-foreground focus:outline-none focus:bg-surface"
-                    />
-                  </td>
+                  {visibleCols.followUp && (
+                    <td className="p-1 excel-cell">
+                      <input
+                        type="date"
+                        value={row.nextStepDate}
+                        onChange={(e) => handleCellChange(row.id, "nextStepDate", e.target.value)}
+                        className="w-full rounded px-1.5 py-1 bg-transparent text-xs text-foreground focus:outline-none focus:bg-surface"
+                      />
+                    </td>
+                  )}
 
                   {/* Notizen */}
-                  <td className="p-1 excel-cell">
-                    <input
-                      type="text"
-                      value={row.notes}
-                      placeholder="Notizen zur Bewerbung …"
-                      onChange={(e) => handleCellChange(row.id, "notes", e.target.value)}
-                      className="w-full rounded px-2 py-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:bg-surface"
-                    />
-                  </td>
+                  {visibleCols.notes && (
+                    <td className="p-1 excel-cell">
+                      <input
+                        type="text"
+                        value={row.notes}
+                        placeholder="Notizen zur Bewerbung …"
+                        onChange={(e) => handleCellChange(row.id, "notes", e.target.value)}
+                        className="w-full rounded px-2 py-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:bg-surface"
+                      />
+                    </td>
+                  )}
 
                   {/* Aktionen */}
-                  <td className="p-1 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      {!row.id.startsWith("temp-") && (
-                        <Link href={`/applications/${row.id}`} title="Zur Detailansicht">
-                          <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <ArrowUpRight className="h-3.5 w-3.5 text-primary" />
-                          </Button>
-                        </Link>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteRow(row)}
-                        className="h-6 w-6 text-danger hover:bg-danger-soft"
-                        title="Zeile entfernen"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </td>
+                  {visibleCols.actions && (
+                    <td className="p-1 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        {!row.id.startsWith("temp-") && (
+                          <Link href={`/applications/${row.id}`} title="Zur Detailansicht">
+                            <Button variant="ghost" size="icon" className="h-6 w-6">
+                              <ArrowUpRight className="h-3.5 w-3.5 text-primary" />
+                            </Button>
+                          </Link>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteRow(row)}
+                          className="h-6 w-6 text-danger hover:bg-danger-soft"
+                          title="Zeile entfernen"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      <ExcelImportModal
+        open={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        onImported={() => mutate("/api/applications")}
+      />
     </div>
   );
 }
