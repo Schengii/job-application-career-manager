@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Briefcase, Building2, Search, Settings, Menu, X } from "lucide-react";
+import { LayoutDashboard, Briefcase, Building2, Search, Settings, Menu, X, BarChart3 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/applications", label: "Bewerbungen", icon: Briefcase },
   { href: "/companies", label: "Unternehmen", icon: Building2 },
   { href: "/jobs", label: "Jobsuche", icon: Search },
+  { href: "/analytics", label: "Auswertungen", icon: BarChart3 },
   { href: "/settings", label: "Einstellungen", icon: Settings },
 ];
 
@@ -80,6 +81,19 @@ export function Sidebar() {
                 <X className="h-4 w-4" />
               </button>
             </div>
+            <div className="px-4 pb-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  window.dispatchEvent(new Event("open-command-palette"));
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground"
+              >
+                <Search className="h-4 w-4 shrink-0" aria-hidden />
+                <span>Suchen …</span>
+              </button>
+            </div>
             <NavLinks onNavigate={() => setMobileOpen(false)} />
           </div>
         </div>
@@ -98,6 +112,17 @@ export function Sidebar() {
               Manager
             </span>
           </Link>
+        </div>
+        <div className="px-3 pb-3">
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event("open-command-palette"))}
+            className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-surface-hover hover:text-foreground"
+          >
+            <Search className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="flex-1 text-left">Suchen …</span>
+            <kbd className="hidden rounded border border-border px-1.5 py-0.5 text-[10px] sm:inline">⌘K</kbd>
+          </button>
         </div>
         <NavLinks />
         <div className="flex items-center justify-between border-t border-border px-4 pt-4">

@@ -57,6 +57,35 @@ function findEntry(entries: CoverLetterEducationEntry[], type: string) {
   return entries.find((e) => e.type === type);
 }
 
+/** Stellt sicher, dass ein Satzfragment mit einem Satzzeichen endet, bevor es
+ *  mit dem nächsten Satz zusammengefügt wird (verhindert "verbindet Dieses..."). */
+function ensureSentence(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return trimmed;
+  return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+}
+
+/** Baut eine grammatikalisch korrekte Anrede aus dem Ansprechpartner-Namen.
+ *  "Frau Dr. Julia Weber" -> "Sehr geehrte Frau Dr. Weber," (Vorname entfällt,
+ *  Titel bleiben erhalten). Ohne erkennbares "Frau"/"Herr"-Präfix oder ohne
+ *  Ansprechpartner wird die neutrale Standardanrede verwendet. */
+function buildSalutation(contactName: string | null | undefined): string {
+  if (!contactName?.trim()) return "Sehr geehrte Damen und Herren,";
+
+  const [genderWord, ...rest] = contactName.trim().split(/\s+/);
+  const gender = genderWord.toLowerCase();
+  if (gender !== "frau" && gender !== "herr" || rest.length === 0) {
+    return "Sehr geehrte Damen und Herren,";
+  }
+
+  const titles = rest.filter((w) => w.endsWith("."));
+  const givenAndSurnames = rest.filter((w) => !w.endsWith("."));
+  const surname = givenAndSurnames[givenAndSurnames.length - 1] ?? rest[rest.length - 1];
+  const nameForSalutation = [...titles, surname].join(" ");
+
+  return `Sehr geehrte${gender === "herr" ? "r" : ""} ${genderWord} ${nameForSalutation},`;
+}
+
 /** Ermittelt die Schnittmenge aus Profil-Tech-Stack und Job-Anforderungen für eine gezielte Ansprache. */
 function relevantSkills(profileTechStack: string, job: CoverLetterJob): string[] {
   const profileSkills = profileTechStack.split(",").map((s) => s.trim()).filter(Boolean);
@@ -93,9 +122,7 @@ export function generateCoverLetter(params: {
     .filter(Boolean)
     .join("\n");
 
-  const salutation = company.contactName
-    ? `Sehr geehrte(r) ${company.contactName},`
-    : "Sehr geehrte Damen und Herren,";
+  const salutation = buildSalutation(company.contactName);
 
   const introParagraph = `mit großem Interesse habe ich Ihre Stellenanzeige für die Position "${position}" gelesen. Als ${profile.desiredRole} mit Schwerpunkt Frontend-Entwicklung möchte ich mich bei ${company.name} bewerben und meine Erfahrung im Umgang mit ${skills.join(", ")} in Ihr Team einbringen.`;
 
@@ -114,21 +141,26 @@ export function generateCoverLetter(params: {
   const backgroundParagraph = backgroundSentences.join(" ");
 
   const projectSentence = project
-    ? `Besonders stolz bin ich auf mein Projekt "${project.title}"${project.techStack ? ` (${project.techStack})` : ""}, ${project.description ?? "in dem ich eigenständig eine vollständige Anwendung von der Konzeption bis zur Umsetzung realisiert habe."} Dieses Projekt zeigt, dass ich in der Lage bin, komplexe Anforderungen selbstständig in funktionierende, benutzerfreundliche Software umzusetzen.`
+    ? `Besonders stolz bin ich auf mein Projekt "${project.title}"${project.techStack ? ` (${project.techStack})` : ""}, ${ensureSentence(
+        project.description ?? "in dem ich eigenständig eine vollständige Anwendung von der Konzeption bis zur Umsetzung realisiert habe",
+      )} Dieses Projekt zeigt, dass ich in der Lage bin, komplexe Anforderungen selbstständig in funktionierende, benutzerfreundliche Software umzusetzen.`
     : "";
 
-  const requirementsSentence = job?.requirementsProfile
-    ? `Die von Ihnen genannten Anforderungen decken sich sehr gut mit meinem Profil: ${job.requirementsProfile}`
-    : "";
-
-  const summarySentence = profile.profileSummary ?? "";
+  // Nur EINE der beiden Quellen verwenden, um redundante, aneinandergereihte
+  // Sätze zu vermeiden: job-spezifische Anforderungen sind aussagekräftiger
+  // als das generische Kurzprofil, wenn eine Stellenanzeige vorliegt.
+  const closingContextSentence = job?.requirementsProfile
+    ? `Die von Ihnen genannten Anforderungen decken sich sehr gut mit meinem Profil: ${ensureSentence(job.requirementsProfile)}`
+    : profile.profileSummary
+      ? ensureSentence(profile.profileSummary)
+      : "";
 
   const closingParagraph = `Ich bringe eine hohe Lernbereitschaft, Teamfähigkeit und Freude an der Entwicklung moderner, nutzerfreundlicher Web-Anwendungen mit. Gerne überzeuge ich Sie in einem persönlichen Gespräch von meiner Motivation und meinen Fähigkeiten.`;
 
   const paragraphs = [
     introParagraph,
     backgroundParagraph,
-    [projectSentence, requirementsSentence, summarySentence].filter(Boolean).join(" "),
+    [projectSentence, closingContextSentence].filter(Boolean).join(" "),
     closingParagraph,
   ].filter((p) => p && p.trim().length > 0);
 

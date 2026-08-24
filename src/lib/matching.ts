@@ -26,11 +26,47 @@ export type MatchInput = {
   };
 };
 
+// Deutsche Füllwörter, die bei der Rollen-Keyword-Analyse ignoriert werden,
+// damit z.B. "Fachinformatiker FÜR Anwendungsentwicklung" nicht an einem
+// fehlenden "für" im Stellentitel scheitert.
+const STOPWORDS = new Set([
+  "für",
+  "und",
+  "der",
+  "die",
+  "das",
+  "des",
+  "dem",
+  "den",
+  "mit",
+  "im",
+  "in",
+  "am",
+  "an",
+  "als",
+  "von",
+  "zur",
+  "zum",
+]);
+
 function toKeywordList(value: string | null | undefined): string[] {
   return (value ?? "")
     .split(",")
     .map((v) => v.trim().toLowerCase())
     .filter(Boolean);
+}
+
+/** Zerlegt einen Freitext (z.B. "Fachinformatiker für Anwendungsentwicklung") in
+ *  einzelne, aussagekräftige Wörter statt ihn als einen einzigen langen
+ *  Suchstring zu behandeln – sonst scheitert der Treffer schon an einem
+ *  einzigen fehlenden Füllwort im Stellentitel. */
+function toRoleKeywords(value: string): string[] {
+  return value
+    .toLowerCase()
+    .replace(/[()/]/g, " ")
+    .split(/[\s,]+/)
+    .map((w) => w.trim())
+    .filter((w) => w.length > 2 && !STOPWORDS.has(w));
 }
 
 export function computeMatchScore({ job, preferences }: MatchInput): number {
@@ -59,8 +95,8 @@ export function computeMatchScore({ job, preferences }: MatchInput): number {
   }
 
   // 3) Rollen-Keywords aus der gewünschten Rolle (z.B. "Fachinformatiker",
-  //    "Anwendungsentwicklung", "Frontend")
-  const roleKeywords = toKeywordList(preferences.desiredRole.replace(/[()]/g, ","));
+  //    "Anwendungsentwicklung"), wortweise statt als ein langer Suchstring
+  const roleKeywords = toRoleKeywords(preferences.desiredRole);
   const roleHits = roleKeywords.filter((kw) => haystack.includes(kw)).length;
   const roleScore = roleKeywords.length > 0 ? roleHits / roleKeywords.length : 0;
 

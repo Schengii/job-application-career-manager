@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/ui/toast";
 import { Sidebar } from "@/components/sidebar";
+import { CommandPalette } from "@/components/command-palette";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full bg-background text-foreground">
         <ThemeProvider>
           <ToastProvider>
+            <CommandPalette />
             <div className="flex min-h-screen flex-col md:flex-row">
               <Sidebar />
               <main className="flex-1 overflow-x-hidden px-4 py-6 md:px-8 md:py-8">

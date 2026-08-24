@@ -19,7 +19,15 @@ verloren geht.
   für Arbeit inkl. **Match-Score** auf Basis der hinterlegten Präferenzen, mit „Bewerben“-Button
 - **Anschreiben-Generator**: erstellt auf Knopfdruck ein individuelles Anschreiben aus
   Unternehmensdaten, Stellenanzeige und Profil und speichert es als Entwurf in der Datenbank
+- **Auswertungen**: Erfolgsquote, durchschnittliche Reaktionszeit, Status-Verteilung,
+  Bewerbungen pro Monat und je Jobportal — als interaktive Charts (Hover-Tooltips)
+- **Kanban-Board** als Alternative zur Tabellenansicht: Bewerbungen per Drag & Drop
+  zwischen Status-Spalten verschieben
+- **Globale Suche (⌘K / Strg+K)**: durchsucht Bewerbungen, Unternehmen und Stellenangebote
+  gleichzeitig und springt direkt zum passenden Datensatz
+- **CSV-Export** der (gefilterten) Bewerbungsliste, Excel-kompatibel
 - **Light/Dark Mode**, responsives SaaS-Design, tastaturzugänglich (WCAG-orientiert)
+- **Automatisierte Tests** (Vitest) für Matching-Engine und Anschreiben-Generator
 
 ## Tech-Stack
 
@@ -104,6 +112,8 @@ Die Anwendung läuft anschließend unter **http://localhost:3000**.
 | `npx prisma studio`          | Datenbank-Inhalte im Browser ansehen/bearbeiten                     |
 | `npx prisma migrate dev`     | Neue Migration nach Schema-Änderung erstellen                       |
 | `npx prisma generate`         | Prisma-Client nach Schema-Änderung neu generieren                    |
+| `npm run test`                | Testsuite (Vitest) einmalig ausführen                                |
+| `npm run test:watch`           | Testsuite im Watch-Modus ausführen                                    |
 
 ## Eigene Daten hinterlegen
 

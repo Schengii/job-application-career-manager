@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
-import { Plus, ArrowUpRight } from "lucide-react";
+import { Plus, ArrowUpRight, Table2, LayoutGrid, Download } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem } from "@/types";
 import { Card } from "@/components/ui/card";
@@ -12,7 +12,11 @@ import { Select } from "@/components/ui/form";
 import { formatDate, cn } from "@/lib/utils";
 import { APPLICATION_STATUSES } from "@/lib/constants";
 import { ApplicationFormDialog, quickUpdateStatus } from "@/components/applications/application-form-dialog";
+import { KanbanBoard } from "@/components/applications/kanban-board";
 import { useToast } from "@/components/ui/toast";
+import { applicationsToCsv, downloadCsv } from "@/lib/csv";
+
+type ViewMode = "table" | "kanban";
 
 export default function ApplicationsPage() {
   const { data: applications, isLoading } = useSWR<ApplicationListItem[]>("/api/applications", fetcher);
@@ -21,6 +25,7 @@ export default function ApplicationsPage() {
 
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [view, setView] = useState<ViewMode>("table");
 
   const filtered = useMemo(() => {
     if (!applications) return [];
@@ -46,6 +51,15 @@ export default function ApplicationsPage() {
     }
   }
 
+  function handleExport() {
+    if (!filtered.length) {
+      toast.error("Keine Bewerbungen zum Exportieren vorhanden.");
+      return;
+    }
+    downloadCsv(`bewerbungen-${new Date().toISOString().slice(0, 10)}.csv`, applicationsToCsv(filtered));
+    toast.success("CSV-Export wurde heruntergeladen.");
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -53,22 +67,59 @@ export default function ApplicationsPage() {
           <h1 className="text-2xl font-semibold text-foreground">Bewerbungen</h1>
           <p className="mt-1 text-sm text-muted-foreground">Alle Bewerbungen im Überblick, mit direktem Status-Update.</p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4" /> Neue Bewerbung
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="h-4 w-4" /> CSV-Export
+          </Button>
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4" /> Neue Bewerbung
+          </Button>
+        </div>
       </header>
 
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Nach Status filtern">
-        <FilterChip active={statusFilter === "ALL"} onClick={() => setStatusFilter("ALL")}>
-          Alle ({applications?.length ?? 0})
-        </FilterChip>
-        {APPLICATION_STATUSES.map((s) => (
-          <FilterChip key={s.value} active={statusFilter === s.value} onClick={() => setStatusFilter(s.value)}>
-            {s.label} ({applications?.filter((a) => a.status === s.value).length ?? 0})
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Nach Status filtern">
+          <FilterChip active={statusFilter === "ALL"} onClick={() => setStatusFilter("ALL")}>
+            Alle ({applications?.length ?? 0})
           </FilterChip>
-        ))}
+          {APPLICATION_STATUSES.map((s) => (
+            <FilterChip key={s.value} active={statusFilter === s.value} onClick={() => setStatusFilter(s.value)}>
+              {s.label} ({applications?.filter((a) => a.status === s.value).length ?? 0})
+            </FilterChip>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1 rounded-lg border border-border bg-surface p-1" role="tablist" aria-label="Ansicht wählen">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === "table"}
+            onClick={() => setView("table")}
+            aria-label="Tabellenansicht"
+            className={cn("flex h-7 w-7 items-center justify-center rounded-md", view === "table" ? "bg-primary-soft text-primary" : "text-muted-foreground hover:text-foreground")}
+          >
+            <Table2 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === "kanban"}
+            onClick={() => setView("kanban")}
+            aria-label="Kanban-Ansicht"
+            className={cn("flex h-7 w-7 items-center justify-center rounded-md", view === "kanban" ? "bg-primary-soft text-primary" : "text-muted-foreground hover:text-foreground")}
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
+      {view === "kanban" ? (
+        isLoading ? (
+          <p className="text-sm text-muted-foreground">Lade Bewerbungen …</p>
+        ) : (
+          <KanbanBoard applications={filtered} onStatusChange={handleStatusChange} />
+        )
+      ) : (
       <Card className="overflow-hidden">
         <div className="scroll-thin overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
@@ -138,6 +189,7 @@ export default function ApplicationsPage() {
           </table>
         </div>
       </Card>
+      )}
 
       <ApplicationFormDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
     </div>
