@@ -9,11 +9,13 @@ import { cn } from "@/lib/utils";
 import { PreferencesForm } from "@/components/settings/preferences-form";
 import { EducationProjectsManager } from "@/components/settings/education-projects-manager";
 import { DocumentsManager } from "@/components/settings/documents-manager";
+import { BackupManager } from "@/components/settings/backup-manager";
 
 const TABS = [
   { id: "preferences", label: "Profil & Präferenzen" },
   { id: "education", label: "Ausbildung & Projekte" },
   { id: "documents", label: "Dokumente" },
+  { id: "backup", label: "Backup & Daten" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -27,7 +29,7 @@ export default function SettingsPage() {
       <header>
         <h1 className="text-2xl font-semibold text-foreground">Einstellungen</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Job-Suchpräferenzen, Ausbildungsdaten, Projekte und Unterlagen zentral verwalten.
+          Job-Suchpräferenzen, Ausbildungsdaten, Projekte, Unterlagen und Datensicherung zentral verwalten.
         </p>
       </header>
 
@@ -64,6 +66,7 @@ export default function SettingsPage() {
           )}
           {tab === "education" && <EducationProjectsManager preferences={preferences} />}
           {tab === "documents" && <DocumentsManager />}
+          {tab === "backup" && <BackupManager />}
         </>
       )}
     </div>

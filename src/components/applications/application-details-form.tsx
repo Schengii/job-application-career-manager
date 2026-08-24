@@ -2,12 +2,14 @@
 
 import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
+import { Calendar } from "lucide-react";
 import { apiPatch } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { APPLICATION_STATUSES } from "@/lib/constants";
 import { toDateInputValue } from "@/lib/utils";
+import { generateIcsContent, downloadIcsFile } from "@/lib/ical";
 import type { ApplicationDetail } from "@/types";
 
 export function ApplicationDetailsForm({
@@ -86,7 +88,29 @@ export function ApplicationDetailsForm({
         <Textarea id="detail-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
       </Field>
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {application.nextStepDate ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const ics = generateIcsContent({
+                title: `${application.nextStep || "Termin"}: ${application.position} (${application.company.name})`,
+                description: `Bewerbung als ${application.position} bei ${application.company.name}\n\nNotizen:\n${application.notes || "Keine weiteren Notizen"}`,
+                location: application.company.street ? `${application.company.street}, ${application.company.postalCode || ""} ${application.company.city || ""}` : (application.company.city || "Online"),
+                startDate: new Date(application.nextStepDate!),
+              });
+              downloadIcsFile(`Termin-${application.company.name}-${application.position}.ics`, ics);
+              toast.success("Kalendereintrag (.ics) heruntergeladen.");
+            }}
+          >
+            <Calendar className="h-4 w-4" /> Termin in Kalender (.ics) exportieren
+          </Button>
+        ) : (
+          <div />
+        )}
+
         <Button type="submit" disabled={saving}>
           {saving ? "Speichere …" : "Änderungen speichern"}
         </Button>

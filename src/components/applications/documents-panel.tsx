@@ -3,13 +3,14 @@
 import { useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
-import { FileText, Trash2, Plus } from "lucide-react";
+import { FileText, Trash2, Plus, Eye, Download } from "lucide-react";
 import { fetcher, apiPost, apiDelete } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Select } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { DOCUMENT_CATEGORIES, findStatusMeta } from "@/lib/constants";
 import type { ApplicationDetail, Document } from "@/types";
+import { DocumentPreviewModal } from "@/components/documents/document-preview-modal";
 
 export function DocumentsPanel({
   application,
@@ -22,6 +23,7 @@ export function DocumentsPanel({
   const { data: library } = useSWR<Document[]>("/api/documents", fetcher);
   const [selected, setSelected] = useState("");
   const [attaching, setAttaching] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
 
   const attachedIds = new Set(application.documents.map((d) => d.documentId));
   const available = (library ?? []).filter((d) => !attachedIds.has(d.id));
@@ -60,7 +62,7 @@ export function DocumentsPanel({
           {application.documents.map(({ document, documentId }) => (
             <li
               key={documentId}
-              className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2"
+              className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2 hover:bg-surface-hover/40 transition-colors"
             >
               <div className="flex min-w-0 items-center gap-2">
                 <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -71,9 +73,35 @@ export function DocumentsPanel({
                   </p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => handleRemove(documentId)} aria-label={`${document.name} entfernen`}>
-                <Trash2 className="h-4 w-4 text-danger" />
-              </Button>
+              <div className="flex items-center gap-1">
+                {document.fileUrl && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setPreviewDoc(document)}
+                      aria-label={`${document.name} in App ansehen`}
+                      title="Vorschau"
+                    >
+                      <Eye className="h-4 w-4 text-primary" />
+                    </Button>
+                    <a href={document.fileUrl} download title="Herunterladen">
+                      <Button variant="ghost" size="icon" aria-label={`${document.name} herunterladen`}>
+                        <Download className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </a>
+                  </>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleRemove(documentId)}
+                  aria-label={`${document.name} entfernen`}
+                  title="Von Bewerbung trennen"
+                >
+                  <Trash2 className="h-4 w-4 text-danger" />
+                </Button>
+              </div>
             </li>
           ))}
         </ul>
@@ -104,6 +132,13 @@ export function DocumentsPanel({
         </Link>{" "}
         hochladen.
       </p>
+
+      {/* In-App Vorschau */}
+      <DocumentPreviewModal
+        open={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        document={previewDoc}
+      />
     </div>
   );
 }

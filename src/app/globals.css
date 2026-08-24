@@ -124,3 +124,24 @@ body {
   background: var(--color-border);
   border-radius: 999px;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-cover-letter,
+  #printable-cover-letter * {
+    visibility: visible;
+  }
+  #printable-cover-letter {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20mm;
+    box-shadow: none !important;
+    background: white !important;
+    color: black !important;
+  }
+}

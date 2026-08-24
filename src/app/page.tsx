@@ -2,13 +2,23 @@
 
 import useSWR from "swr";
 import Link from "next/link";
-import { Briefcase, Inbox, CalendarClock, ThumbsDown, PartyPopper, ArrowRight } from "lucide-react";
+import {
+  Briefcase,
+  Inbox,
+  CalendarClock,
+  ThumbsDown,
+  PartyPopper,
+  ArrowRight,
+  AlertCircle,
+  MailQuestion,
+} from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem, Metrics } from "@/types";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApplicationStatusBadge } from "@/components/status-badge";
 import { formatDate } from "@/lib/utils";
+import { getFollowUpStatus } from "@/lib/followUp";
 
 export default function DashboardPage() {
   const { data: metrics, isLoading: metricsLoading } = useSWR<Metrics>("/api/metrics", fetcher, {
@@ -20,6 +30,15 @@ export default function DashboardPage() {
   );
 
   const recent = applications?.slice(0, 6) ?? [];
+
+  // Berechne anstehende Termine & fällige Nachfass-Aktionen
+  const followUpItems = (applications ?? [])
+    .map((app) => ({
+      app,
+      followUp: getFollowUpStatus(app),
+    }))
+    .filter(({ followUp }) => followUp.isOverdue || followUp.isDueSoon || followUp.isFollowUpSuggested);
+
   const upcoming = (applications ?? [])
     .filter((a) => a.nextStepDate)
     .sort((a, b) => new Date(a.nextStepDate!).getTime() - new Date(b.nextStepDate!).getTime())
@@ -34,6 +53,7 @@ export default function DashboardPage() {
         </p>
       </header>
 
+      {/* KPI-Karten */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <MetricCard label="Bewerbungen gesamt" value={metrics?.total ?? 0} icon={Briefcase} accent="primary" loading={metricsLoading} />
         <MetricCard label="Offene Bewerbungen" value={metrics?.open ?? 0} icon={Inbox} accent="info" loading={metricsLoading} />
@@ -42,6 +62,54 @@ export default function DashboardPage() {
         <MetricCard label="Zusagen" value={metrics?.offer ?? 0} icon={PartyPopper} accent="success" loading={metricsLoading} />
       </div>
 
+      {/* Follow-up / Wiedervorlage Banner */}
+      {followUpItems.length > 0 && (
+        <Card className="border-warning/40 bg-warning-soft/40">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-warning font-medium text-base">
+              <AlertCircle className="h-5 w-5" /> Fällige Aktionen & Nachfass-Erinnerungen ({followUpItems.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {followUpItems.slice(0, 6).map(({ app, followUp }) => (
+                <Link
+                  key={app.id}
+                  href={`/applications/${app.id}`}
+                  className="flex flex-col justify-between rounded-lg border border-warning/30 bg-surface p-3 hover:bg-surface-hover transition-colors"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-1">
+                      <p className="text-sm font-semibold text-foreground truncate">{app.company.name}</p>
+                      {followUp.isFollowUpSuggested && (
+                        <span className="shrink-0 flex items-center gap-1 rounded bg-warning-soft px-1.5 py-0.5 text-[10px] font-medium text-warning">
+                          <MailQuestion className="h-3 w-3" /> Nachfassen!
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{app.position}</p>
+                  </div>
+                  <div className="mt-2 text-xs">
+                    {followUp.isOverdue && (
+                      <span className="text-danger font-medium">Termin überfällig ({formatDate(app.nextStepDate)})</span>
+                    )}
+                    {followUp.isDueSoon && !followUp.isOverdue && (
+                      <span className="text-warning font-medium">Termin in Kürze: {formatDate(app.nextStepDate)}</span>
+                    )}
+                    {followUp.isFollowUpSuggested && (
+                      <span className="text-muted-foreground">
+                        Seit {followUp.daysSinceApplication} Tagen keine Rückmeldung
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Hauptbereich */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -83,7 +151,7 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Nächste Schritte</CardTitle>
+            <CardTitle>Nächste Schritte & Termine</CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             {upcoming.length === 0 && (

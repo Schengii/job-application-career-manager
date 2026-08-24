@@ -112,6 +112,8 @@ export const projectEntryUpdateSchema = projectEntrySchema.partial();
 
 export const coverLetterGenerateSchema = z.object({
   applicationId: z.string().min(1),
+  tone: z.enum(["MODERN", "CLASSIC", "STARTUP", "DETAILED"]).optional(),
+  highlightProjectTitle: z.string().optional().nullable(),
 });
 
 export const coverLetterUpdateSchema = z.object({

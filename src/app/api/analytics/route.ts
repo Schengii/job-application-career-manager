@@ -21,12 +21,20 @@ export async function GET() {
   }));
 
   // 2) Portal-Verteilung (Quelle der Bewerbung)
-  const portalDistribution = [...JOB_PORTALS, { value: "UNKNOWN", label: "Unbekannt" }]
-    .map((p) => ({
-      portal: p.value,
-      label: p.label,
-      count: applications.filter((a) => (a.source ?? "UNKNOWN") === p.value).length,
-    }))
+  const portalDistribution = [...JOB_PORTALS, { value: "UNKNOWN", label: "Sonstige / Unbekannt" }]
+    .map((p) => {
+      const portalApps = applications.filter((a) => (a.source ?? "UNKNOWN") === p.value);
+      const interviews = portalApps.filter(
+        (a) => a.status === "INTERVIEW" || a.status === "OFFER" || a.statusEvents.some((e) => e.status === "INTERVIEW"),
+      ).length;
+      return {
+        portal: p.value,
+        label: p.label,
+        count: portalApps.length,
+        interviewCount: interviews,
+        interviewRate: portalApps.length > 0 ? Math.round((interviews / portalApps.length) * 100) : 0,
+      };
+    })
     .filter((p) => p.count > 0);
 
   // 3) Bewerbungen pro Monat (letzte 6 Monate, nach Erstellungsdatum)
@@ -49,8 +57,23 @@ export async function GET() {
   const decided = offerCount + rejectedCount;
   const successRate = decided > 0 ? Math.round((offerCount / decided) * 100) : null;
 
-  // 5) Durchschnittliche Reaktionszeit: Tage zwischen Bewerbungsdatum und der
-  //    ersten Rückmeldung (Gespräch/Zusage/Absage) laut Status-Historie
+  // 5) Funnel / Conversion Trichter
+  const totalSent = applications.filter((a) => a.status !== "DRAFT" || a.statusEvents.length > 0).length;
+  const respondedApps = applications.filter(
+    (a) => RESPONSE_STATUSES.has(a.status) || a.statusEvents.some((e) => RESPONSE_STATUSES.has(e.status)),
+  ).length;
+  const interviewApps = applications.filter(
+    (a) => a.status === "INTERVIEW" || a.status === "OFFER" || a.statusEvents.some((e) => e.status === "INTERVIEW"),
+  ).length;
+
+  const funnel = [
+    { stage: "Bewerbung verschickt", count: totalSent, rate: 100 },
+    { stage: "Rückmeldung erhalten", count: respondedApps, rate: totalSent > 0 ? Math.round((respondedApps / totalSent) * 100) : 0 },
+    { stage: "Vorstellungsgespräch", count: interviewApps, rate: totalSent > 0 ? Math.round((interviewApps / totalSent) * 100) : 0 },
+    { stage: "Job-Angebot / Zusage", count: offerCount, rate: totalSent > 0 ? Math.round((offerCount / totalSent) * 100) : 0 },
+  ];
+
+  // 6) Durchschnittliche Reaktionszeit
   const responseDurations: number[] = [];
   for (const app of applications) {
     if (!app.applicationDate) continue;
@@ -70,6 +93,7 @@ export async function GET() {
     statusDistribution,
     portalDistribution,
     monthlySeries,
+    funnel,
     successRate,
     avgResponseDays,
     totalApplications: applications.length,

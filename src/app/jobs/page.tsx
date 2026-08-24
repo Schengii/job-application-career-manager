@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { RefreshCw, ExternalLink, MapPin, Building2, Send } from "lucide-react";
+import { RefreshCw, ExternalLink, MapPin, Building2, Send, Sparkles } from "lucide-react";
 import { fetcher, apiPost } from "@/lib/api";
 import type { JobPostingWithCompany } from "@/types";
 import { Card } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { Select } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { JOB_PORTALS, findStatusMeta } from "@/lib/constants";
 import { useToast } from "@/components/ui/toast";
+import { JobTextParserModal } from "@/components/jobs/job-text-parser-modal";
 
 function matchColor(score: number) {
   if (score >= 75) return "text-success";
@@ -29,6 +30,7 @@ export default function JobsPage() {
   const [portalFilter, setPortalFilter] = useState("ALL");
   const [simulating, setSimulating] = useState(false);
   const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [parserOpen, setParserOpen] = useState(false);
 
   const filtered = useMemo(() => {
     if (!jobs) return [];
@@ -68,13 +70,18 @@ export default function JobsPage() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Jobsuche</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Simulierte Stellenangebote von Stepstone, Indeed, GetInIT & Agentur für Arbeit, gematcht anhand deiner Präferenzen.
+            Stellenangebote durchsuchen, analysieren und automatisch anhand deiner Präferenzen matchen.
           </p>
         </div>
-        <Button onClick={handleSimulate} disabled={simulating}>
-          <RefreshCw className={cn("h-4 w-4", simulating && "animate-spin")} />
-          {simulating ? "Suche läuft …" : "Jobportale durchsuchen"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setParserOpen(true)}>
+            <Sparkles className="h-4 w-4" /> Anzeige einfügen (Parser)
+          </Button>
+          <Button onClick={handleSimulate} disabled={simulating}>
+            <RefreshCw className={cn("h-4 w-4", simulating && "animate-spin")} />
+            {simulating ? "Suche läuft …" : "Portale durchsuchen"}
+          </Button>
+        </div>
       </header>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -162,6 +169,8 @@ export default function JobsPage() {
         </Link>{" "}
         anpassen.
       </p>
+
+      <JobTextParserModal open={parserOpen} onClose={() => setParserOpen(false)} />
     </div>
   );
 }

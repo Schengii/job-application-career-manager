@@ -1,156 +1,131 @@
 # Job Application & Career Manager
 
-Eine vollständige Web-Anwendung zur zentralen Verwaltung der Jobsuche als **Fachinformatiker für
-Anwendungsentwicklung** (Schwerpunkt Frontend: TypeScript, JavaScript, CSS – Region
+Eine vollständige, moderne Web-Anwendung zur zentralen Verwaltung der Jobsuche als **Fachinformatiker für
+Anwendungsentwicklung** (Schwerpunkt Frontend: TypeScript, JavaScript, CSS, React, Next.js – Region
 Bonn/Dortmund/Remote). Alle Daten – Unternehmen, Stellenangebote, Bewerbungen, Präferenzen,
-Dokumente und generierte Anschreiben – werden in einer echten Datenbank gespeichert, sodass nichts
+Dokumente, Historie und generierte Anschreiben – werden in einer echten Datenbank gespeichert, sodass nichts
 verloren geht.
 
-## Features
+---
 
-- **Dashboard** mit Live-Metrik-Karten (Bewerbungen gesamt, offen, Gespräche, Absagen, Zusagen)
-- **Bewerbungs-Tracker** mit Tabellenansicht, Status-Filter und direktem Status-Update
-- **Detailansicht** je Bewerbung: Unternehmensdaten, Status-Historie, Notizen, verknüpfte Dokumente
-- **Unternehmensverwaltung** mit vollständigem CRUD (Adresse, Ansprechpartner, Notizen, Status)
-- **Präferenzen & Profil**: Rolle, Tech-Stack, Standorte, Remote-Präferenz, Ausbildungs- und
-  Projektdaten (z. B. Elektroniker für Betriebstechnik → Umschulung → electroCheck-ai)
-- **Dokumenten-Manager**: Lebenslauf, Zeugnisse, Referenzen hochladen und Bewerbungen zuordnen
-- **Job-Portal-Simulator**: simuliert Stellenangebote von Stepstone, Indeed, GetInIT und der Agentur
-  für Arbeit inkl. **Match-Score** auf Basis der hinterlegten Präferenzen, mit „Bewerben“-Button
-- **Anschreiben-Generator**: erstellt auf Knopfdruck ein individuelles Anschreiben aus
-  Unternehmensdaten, Stellenanzeige und Profil und speichert es als Entwurf in der Datenbank
-- **Auswertungen**: Erfolgsquote, durchschnittliche Reaktionszeit, Status-Verteilung,
-  Bewerbungen pro Monat und je Jobportal — als interaktive Charts (Hover-Tooltips)
-- **Kanban-Board** als Alternative zur Tabellenansicht: Bewerbungen per Drag & Drop
-  zwischen Status-Spalten verschieben
-- **Globale Suche (⌘K / Strg+K)**: durchsucht Bewerbungen, Unternehmen und Stellenangebote
-  gleichzeitig und springt direkt zum passenden Datensatz
-- **CSV-Export** der (gefilterten) Bewerbungsliste, Excel-kompatibel
-- **Light/Dark Mode**, responsives SaaS-Design, tastaturzugänglich (WCAG-orientiert)
-- **Automatisierte Tests** (Vitest) für Matching-Engine und Anschreiben-Generator
+## 🚀 Features im Überblick
 
-## Tech-Stack
+### 1. Bewerbungs- & Unternehmens-Management
+- **Dashboard mit Live-Metriken**: Gesamtanzahl, Offene Bewerbungen, Gespräche, Absagen und Zusagen auf einen Blick.
+- **Smarte Wiedervorlage & Nachfass-Engine**: Hebt überfällige Schritte sowie Bewerbungen ohne Rückmeldung (> 14 Tage) auf dem Dashboard und in der Liste hervor.
+- **Bewerbungs-Tracker & Kanban-Board**: Wechsel zwischen übersichtlicher Tabellenansicht und nativem HTML5 Drag-and-Drop Kanban-Board.
+- **Detailansicht**: Vollständige Kontaktdaten, lückenlose Status-Historie, Notizen und verknüpfte Unterlagen.
+- **Termin- & Kalender-Export (.ics / iCal)**: Exportiert anstehende Vorstellungsgespräche und Termine mit einem Klick in Google Kalender, Outlook oder Apple Calendar.
+- **Unternehmensverwaltung**: Vollständiges CRUD (Adresse, Ansprechpartner, Telefon, E-Mail, Notizen und Status).
+
+### 2. Anschreiben-Engine 2.0 & Kommunikation
+- **Multi-Tone Anschreiben-Generator**:
+  - **Modern** (standard, lösungs- und praxisorientiert)
+  - **Klassisch** (formell für Behörden, Banken & Großkonzerne)
+  - **Startup / Agil** (dynamisch, teamorientiert, direkte Ansprache)
+  - **Detailliert** (starker Fokus auf Umschulung, Handwerk & technischen Tiefgang)
+- **Projekt-Hervorhebung**: Gezielte Auswahl, welches Referenzprojekt (z. B. *electroCheck-ai*) im Anschreiben in den Mittelpunkt gestellt werden soll.
+- **DIN 5008 Druck- & PDF-Ansicht**: Druckoptimiertes Brieflayout mit korrekter Absenderzeile, Empfängerfeld, Datum, Betreffzeile und Unterschriftsbereich (`window.print()` / PDF-Speicherung).
+- **Nachfass-E-Mail Generator**: Vorformulierte Nachfass-E-Mail auf Knopfdruck bei fehlender Rückmeldung inkl. One-Click-Copy und Mailto-Unterstützung.
+
+### 3. Dokumenten-Handling & In-App Vorschau
+- **Dokumenten-Manager**: Lebensläufe, Schul-/Ausbildungs-/Umschulungszeugnisse und Referenzen zentral verwalten.
+- **In-App Dokumentenvorschau**: PDFs und Bilddateien direkt in der App per Modal ansehen, ohne sie erst separat herunterladen zu müssen.
+- **Wiederverwendbarkeit**: Dokumente einmalig hochladen und beliebig vielen Bewerbungen flexibel zuordnen.
+
+### 4. Jobsuche & Stellenanzeigen-Erfassung
+- **Job-Portal-Simulator**: Simuliert Stellenangebote von Stepstone, Indeed, GetInIT und der Agentur für Arbeit inkl. **Match-Score-Berechnung** auf Basis der hinterlegten Präferenzen.
+- **Stellenanzeigen-Schnellerfassung (Smart Parser)**: Beliebigen Freitext einer Stellenanzeige (LinkedIn, Stepstone, E-Mail) einfügen – der Parser extrahiert automatisch Titel, Unternehmen, Ort, Remote-Option, Gehalt, Tech-Stack und berechnet sofort den Match-Score.
+- **1-Klick „Bewerben“**: Legt direkt eine neue Bewerbung im System an und verknüpft das Stellenangebot.
+
+### 5. Analytics & Karriere-Insights
+- **Bewerbungs-Trichter (Conversion Funnel)**: Visualisiert die Phasen *Verschickt $\rightarrow$ Rückmeldung $\rightarrow$ Gespräch $\rightarrow$ Angebot*.
+- **Portal-Effizienz & Einladungsquoten**: Zeigt auf, welche Portale (z. B. GetInIT, Stepstone, LinkedIn) die höchste Einladungsquote aufweisen.
+- **Reaktionszeiten & Erfolgsquote**: Durchschnittliche Dauer bis zur ersten Rückmeldung und Zusagequote.
+- **Interaktive Charts**: Reine Inline-SVG-Diagramme für monatliche Bewerbungstrends und Statusverteilungen.
+
+### 6. Datensicherheit & Backup
+- **1-Klick JSON-Backup & Restore**: Vollständige Sicherung und Wiederherstellung aller Tabellen unter *Einstellungen $\rightarrow$ Backup & Daten*.
+- **Excel-Bewerbungslisten-Import (`scripts/import-bewerbungsliste.ts`)**: Überträgt historische Excel-Bewerbungslisten in die SQLite-Datenbank.
+- **Datenschutz**: Trennung zwischen Code/Vorlage (`scripts/profile-data.example.json`) und gitignorten Echtdaten (`profile-data.local.json`).
+
+---
+
+## 🛠️ Tech-Stack
 
 | Bereich   | Technologie                                                              |
 | --------- | ------------------------------------------------------------------------- |
 | Frontend  | Next.js 16 (App Router, Turbopack), React 19, TypeScript, Tailwind CSS v4 |
 | Backend   | Next.js Route Handler (REST-API unter `/api/*`), Zod-Validierung          |
 | Datenbank | SQLite via Prisma 7 ORM (Adapter: `better-sqlite3`)                       |
-| State     | SWR (clientseitiges Caching + Revalidierung nach jeder Mutation)          |
+| State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
+| Testing   | Vitest (19 automatisierte Unit- & Integrationstests)                      |
 
-Die Anwendung ist bewusst als **ein** Next.js-Projekt aufgebaut (statt separatem Express-Server):
-Backend (Route Handler) und Frontend laufen im selben Prozess, sodass `npm run dev` genügt, um die
-komplette Anwendung zu starten.
+---
 
-## Architektur
+## 📂 Architektur
 
 ```
 prisma/
-  schema.prisma        Datenbankschema (siehe unten)
+  schema.prisma        Datenbankschema mit optimierten Indizes
   seed.ts               Beispieldaten (Profil, Unternehmen, Jobs, Bewerbungen)
 src/
   app/
-    api/                 REST-API-Route-Handler (CRUD für alle Entitäten)
-    (Seiten)/             Dashboard, Bewerbungen, Unternehmen, Jobsuche, Einstellungen
-  components/            UI-Komponenten (Primitives, Domänen-Komponenten)
+    api/                 REST-API-Route-Handler (CRUD, Backup, Analytics, Generator)
+    (Seiten)/             Dashboard (/), Bewerbungen (/applications), Unternehmen (/companies),
+                         Jobsuche (/jobs), Auswertungen (/analytics), Einstellungen (/settings)
+  components/            UI-Primitives, Modals, Kanban, Charts, Dokumenten-Vorschau, Suche
   lib/
     prisma.ts            Prisma-Client-Singleton (better-sqlite3-Adapter)
     matching.ts           Match-Score-Berechnung (Tech-Stack, Standort, Rolle)
-    mockJobPortals.ts     Job-Portal-Simulator (Stepstone/Indeed/GetInIT/Arbeitsagentur)
-    coverLetterGenerator.ts  Anschreiben-Generator
+    coverLetterGenerator.ts Multi-Tone Anschreiben & Nachfass-E-Mail Generator
+    followUp.ts           Wiedervorlage- und Fristen-Engine
+    ical.ts               iCal / .ics Kalenderdatei-Generator
+    jobParser.ts          Freitext-Stellenanzeigen Parser
+    backup.ts             JSON Backup & Restore Serialisierung
+    mockJobPortals.ts     Job-Portal-Simulator
     validation.ts         Zod-Schemata für alle API-Requests
     constants.ts           Status-/Kategorie-Definitionen (DE-Labels, Farben)
   types/                  Frontend-Typen (erweitern die generierten Prisma-Typen)
 ```
 
-### Datenbankschema (Prisma)
+---
 
-```
-Company (1) ──< JobPosting (n)          Ein Unternehmen kann mehrere Stellenangebote haben
-Company (1) ──< Application (n)          Ein Unternehmen kann mehrere Bewerbungen haben
-JobPosting (1) ──< Application (n)       Optional: Bewerbung bezieht sich auf ein Stellenangebot
-Application (1) ──< ApplicationStatusEvent (n)   Status-Historie
-Application (1) ── CoverLetter (1)        Generiertes Anschreiben
-Application (n) ──< ApplicationDocument >── (n) Document   Wiederverwendbare Dokumente (n:m)
-Preferences (1) ──< EducationEntry (n)    Ausbildungs-/Bildungsdaten
-Preferences (1) ──< ProjectEntry (n)      Projekte/Referenzen (z. B. electroCheck-ai)
-```
+## ⚡ Schnellstart & Setup
 
-> SQLite unterstützt in Prisma keine nativen Enums – Status-/Kategorie-Felder sind daher als
-> validierter `String` abgebildet (siehe `src/lib/constants.ts` für die erlaubten Werte inkl.
-> deutscher Labels).
-
-## Setup
-
-Voraussetzung: Node.js ≥ 20.
+Voraussetzung: **Node.js ≥ 20**.
 
 ```bash
+# 1. Abhängigkeiten installieren
 npm install
 
-# .env aus Vorlage anlegen (DATABASE_URL="file:./dev.db")
+# 2. .env aus Vorlage anlegen (DATABASE_URL="file:./dev.db")
 cp .env.example .env
 
-# Datenbank anlegen + Schema migrieren
+# 3. Datenbank anlegen & Schema migrieren
 npx prisma migrate dev
 
-# Beispieldaten laden (Profil, Unternehmen, Jobs, Bewerbungen)
+# 4. Beispieldaten laden (Profil, Unternehmen, Jobs, Bewerbungen)
 npx prisma db seed
 
-# Entwicklungsserver starten
+# 5. Entwicklungsserver starten
 npm run dev
 ```
 
 Die Anwendung läuft anschließend unter **http://localhost:3000**.
 
-## Eigene Bewerbungsliste importieren
+---
 
-`scripts/import-bewerbungsliste.ts` überträgt eine persönliche Excel-Bewerbungsliste (Spalten:
-Datum, Unternehmen, Homepage, Anzeigeportal, Stellenbezeichnung, Ansprechpartner, Adresse,
-Telefonnummer, Emailadresse, "beworben am…", Wiedervorlage, Anmerkungen, Absagen-Datum) sowie
-Profil-/Zeugnisdaten in die Datenbank — inklusive automatisch generierter Anschreiben je
-Unternehmen. Das Skript selbst enthält keine personenbezogenen Daten und ist git-versioniert;
-gelesen werden nur lokale, per `.gitignore` ausgeschlossene Dateien.
-
-```bash
-npm run import:bewerbungsliste
-# oder mit explizitem Pfad:
-npm run import:bewerbungsliste -- "Pfad/zur/Bewerbungsliste.xlsx"
-```
-
-> **Sicherheitshinweis:** `xlsx` (SheetJS) hat aktuell zwei ungepatchte Advisories (Prototype
-> Pollution, ReDoS) und ist deshalb bewusst nur als `devDependency` eingebunden — genutzt wird es
-> ausschließlich in diesem lokalen Import-Skript mit selbst erstellten, vertrauenswürdigen
-> Dateien, niemals zur Laufzeit der Web-Anwendung oder für von außen hochgeladene Dateien.
-
-### Nützliche Befehle
+## 🧪 Nützliche Befehle
 
 | Befehl                    | Zweck                                                          |
 | -------------------------- | ---------------------------------------------------------------- |
 | `npm run dev`               | Entwicklungsserver (Turbopack) starten                            |
 | `npm run build`             | Produktions-Build erstellen (inkl. TypeScript-Check)               |
 | `npm run lint`               | ESLint ausführen                                                    |
-| `npx prisma studio`          | Datenbank-Inhalte im Browser ansehen/bearbeiten                     |
-| `npx prisma migrate dev`     | Neue Migration nach Schema-Änderung erstellen                       |
-| `npx prisma generate`         | Prisma-Client nach Schema-Änderung neu generieren                    |
-| `npm run test`                | Testsuite (Vitest) einmalig ausführen                                |
+| `npm run test`                | Testsuite (Vitest, 19 Tests) einmalig ausführen                     |
 | `npm run test:watch`           | Testsuite im Watch-Modus ausführen                                    |
-
-## Eigene Daten hinterlegen
-
-1. **Einstellungen → Profil & Präferenzen**: Name, Kontaktdaten, gewünschte Rolle, Tech-Stack,
-   Standorte und Remote-Präferenz eintragen (Basis für Matching & Anschreiben).
-2. **Einstellungen → Ausbildung & Projekte**: eigene Ausbildungs-/Umschulungsstationen und Projekte
-   (z. B. eigene Referenzprojekte) hinzufügen.
-3. **Einstellungen → Dokumente**: Lebenslauf, Zeugnisse und Referenzen hochladen.
-4. **Jobsuche**: „Jobportale durchsuchen“ klicken, um simulierte Stellenangebote mit Match-Score zu
-   erhalten, und direkt „Bewerben“.
-5. In der neu angelegten Bewerbung: „Anschreiben generieren“ klicken – das Ergebnis lässt sich vor
-   dem Versand noch frei bearbeiten.
-
-## Hinweis zum Job-Portal-Simulator
-
-Ein Live-Scraping realer Portale (Stepstone, Indeed, GetInIT, Agentur für Arbeit) ist rechtlich und
-technisch aufwändig (Anti-Bot-Schutz, Nutzungsbedingungen). `src/lib/mockJobPortals.ts` simuliert
-daher realistische, thematisch passende Stellenanzeigen nach demselben Datenmodell wie echte
-Stellenangebote (`JobPosting`) – ein späterer Anschluss an eine echte Portal-API oder einen erlaubten
-Scraper kann an genau dieser Stelle erfolgen, ohne den Rest der Anwendung anzupassen.
+| `npx prisma studio`          | Datenbank-Inhalte im Browser ansehen/bearbeiten                     |
+| `npx prisma db push`         | Schema-Änderungen direkt auf SQLite anwenden                        |
+| `npx prisma generate`         | Prisma-Client nach Schema-Änderung neu generieren                    |
+| `npm run import:bewerbungsliste` | Persönliche Excel-Bewerbungsliste importieren                 |

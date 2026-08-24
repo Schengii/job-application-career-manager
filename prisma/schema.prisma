@@ -98,6 +98,9 @@ model Application {
   @@index([companyId])
   @@index([jobPostingId])
   @@index([status])
+  @@index([applicationDate])
+  @@index([nextStepDate])
+  @@index([updatedAt])
 }
 
 // ---------------------------------------------------------------------------

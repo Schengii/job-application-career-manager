@@ -16,7 +16,7 @@ import { getPreferencesWithProfile } from "@/lib/preferences";
 
 export async function POST(request: NextRequest) {
   try {
-    const { applicationId } = coverLetterGenerateSchema.parse(await request.json());
+    const { applicationId, tone, highlightProjectTitle } = coverLetterGenerateSchema.parse(await request.json());
 
     const application = await prisma.application.findUnique({
       where: { id: applicationId },
@@ -33,6 +33,8 @@ export async function POST(request: NextRequest) {
       job: application.jobPosting,
       profile,
       position: application.position,
+      tone,
+      highlightProjectTitle,
     });
 
     const coverLetter = await prisma.coverLetter.upsert({

@@ -2,7 +2,7 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import useSWR, { useSWRConfig } from "swr";
-import { FileText, Trash2, Upload, Download } from "lucide-react";
+import { FileText, Trash2, Upload, Download, Eye } from "lucide-react";
 import { fetcher, apiUpload, apiDelete } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select } from "@/components/ui/form";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DOCUMENT_CATEGORIES, findStatusMeta } from "@/lib/constants";
 import type { Document } from "@/types";
+import { DocumentPreviewModal } from "@/components/documents/document-preview-modal";
 
 export function DocumentsManager() {
   const { data: documents } = useSWR<Document[]>("/api/documents", fetcher);
@@ -20,6 +21,7 @@ export function DocumentsManager() {
   const [name, setName] = useState("");
   const [category, setCategory] = useState(DOCUMENT_CATEGORIES[0].value as string);
   const [uploading, setUploading] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
 
   async function handleUpload(e: FormEvent) {
     e.preventDefault();
@@ -82,15 +84,27 @@ export function DocumentsManager() {
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 {doc.fileUrl && (
-                  <a
-                    href={doc.fileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`${doc.name} öffnen`}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-hover hover:text-foreground"
-                  >
-                    <Download className="h-4 w-4" />
-                  </a>
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setPreviewDoc(doc)}
+                      aria-label={`${doc.name} ansehen`}
+                      title="In-App Vorschau"
+                    >
+                      <Eye className="h-4 w-4 text-primary" />
+                    </Button>
+                    <a
+                      href={doc.fileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`${doc.name} herunterladen`}
+                      title="Herunterladen"
+                      className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+                    >
+                      <Download className="h-4 w-4" />
+                    </a>
+                  </>
                 )}
                 <Button variant="ghost" size="icon" onClick={() => handleDelete(doc.id, doc.name)} aria-label={`${doc.name} löschen`}>
                   <Trash2 className="h-4 w-4 text-danger" />
@@ -100,6 +114,13 @@ export function DocumentsManager() {
           ))}
           {documents?.length === 0 && <p className="text-sm text-muted-foreground">Noch keine Dokumente hochgeladen.</p>}
         </ul>
+
+        {/* In-App Vorschau Modal */}
+        <DocumentPreviewModal
+          open={Boolean(previewDoc)}
+          onClose={() => setPreviewDoc(null)}
+          document={previewDoc}
+        />
 
         <form onSubmit={handleUpload} className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-end sm:flex-wrap">
           <div className="min-w-[180px] flex-1">
