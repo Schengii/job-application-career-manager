@@ -4,23 +4,23 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f6f7fb;
+  --background: #f8fafc;
   --surface: #ffffff;
-  --surface-hover: #f1f2f8;
-  --border: #e4e6ef;
-  --foreground: #14161f;
-  --muted: #6b7085;
-  --muted-foreground: #8b90a3;
+  --surface-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --muted-foreground: #94a3b8;
 
   --primary: #4f46e5;
   --primary-hover: #4338ca;
   --primary-foreground: #ffffff;
-  --primary-soft: #eef0fd;
+  --primary-soft: #eef2ff;
 
   --success: #16a34a;
-  --success-soft: #ecfdf3;
+  --success-soft: #ecfdf5;
   --warning: #d97706;
-  --warning-soft: #fffaeb;
+  --warning-soft: #fffbeb;
   --danger: #dc2626;
   --danger-soft: #fef2f2;
   --info: #2563eb;
@@ -31,27 +31,27 @@
 }
 
 .dark {
-  --background: #0c0e16;
-  --surface: #141726;
-  --surface-hover: #1b1f33;
-  --border: #262b42;
-  --foreground: #edeefb;
-  --muted: #9296ab;
-  --muted-foreground: #6f7388;
+  --background: #090d16;
+  --surface: #111728;
+  --surface-hover: #182038;
+  --border: #1e293b;
+  --foreground: #f8fafc;
+  --muted: #94a3b8;
+  --muted-foreground: #64748b;
 
   --primary: #6366f1;
   --primary-hover: #818cf8;
   --primary-foreground: #ffffff;
-  --primary-soft: #1e2142;
+  --primary-soft: #1a203f;
 
   --success: #22c55e;
-  --success-soft: #0f2a1a;
+  --success-soft: #062b19;
   --warning: #f59e0b;
-  --warning-soft: #2c2109;
+  --warning-soft: #2e1d08;
   --danger: #f87171;
-  --danger-soft: #2c1315;
-  --info: #60a5fa;
-  --info-soft: #10213a;
+  --danger-soft: #2e1215;
+  --info: #38bdf8;
+  --info-soft: #08243b;
 
   --ring: #818cf8;
 }
@@ -92,6 +92,7 @@
 
 html {
   color-scheme: light;
+  scroll-behavior: smooth;
 }
 html.dark {
   color-scheme: dark;
@@ -101,6 +102,7 @@ body {
   background: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Sichtbarer, zugänglicher Fokus-Indikator für Tastaturnavigation (WCAG) */
@@ -117,12 +119,100 @@ body {
 
 /* Schlanke Scrollbar für Tabellen-Container etc. */
 .scroll-thin::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
+  height: 6px;
+  width: 6px;
 }
 .scroll-thin::-webkit-scrollbar-thumb {
   background: var(--color-border);
   border-radius: 999px;
+}
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Micro-Animations & Keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.02); }
+}
+
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse-subtle {
+  animation: pulseGlow 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Interaktive Hover- & Click-Effekte */
+.card-hover-effect {
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+}
+.card-hover-effect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+}
+
+.button-press {
+  transition: transform 0.1s ease, filter 0.15s ease;
+}
+.button-press:active {
+  transform: scale(0.97);
+}
+
+/* Glassmorphism & Card Glow */
+.glass-card {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+  box-shadow: 0 12px 32px -4px rgba(79, 70, 229, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Excel Grid Styling */
+.excel-cell {
+  position: relative;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.excel-cell:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  z-index: 10;
+  background-color: color-mix(in srgb, var(--surface) 92%, var(--primary));
 }
 
 @media print {

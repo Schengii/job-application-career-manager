@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
-import { Plus, ArrowUpRight, Table2, LayoutGrid, Download, Mail } from "lucide-react";
+import { Plus, ArrowUpRight, Table2, LayoutGrid, Download, Mail, FileSpreadsheet } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem } from "@/types";
 import { Card } from "@/components/ui/card";
@@ -16,8 +16,9 @@ import { KanbanBoard } from "@/components/applications/kanban-board";
 import { useToast } from "@/components/ui/toast";
 import { applicationsToCsv, downloadCsv } from "@/lib/csv";
 import { EmailResponseModal } from "@/components/applications/email-response-modal";
+import { ExcelGridTable } from "@/components/excel/excel-grid-table";
 
-type ViewMode = "table" | "kanban";
+type ViewMode = "table" | "kanban" | "excel";
 
 export default function ApplicationsPage() {
   const { data: applications, isLoading } = useSWR<ApplicationListItem[]>("/api/applications", fetcher);
@@ -115,10 +116,22 @@ export default function ApplicationsPage() {
           >
             <LayoutGrid className="h-4 w-4" />
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={view === "excel"}
+            onClick={() => setView("excel")}
+            aria-label="Excel-Tabellenansicht"
+            className={cn("flex h-7 w-7 items-center justify-center rounded-md", view === "excel" ? "bg-primary-soft text-primary" : "text-muted-foreground hover:text-foreground")}
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
-      {view === "kanban" ? (
+      {view === "excel" ? (
+        <ExcelGridTable />
+      ) : view === "kanban" ? (
         isLoading ? (
           <p className="text-sm text-muted-foreground">Lade Bewerbungen …</p>
         ) : (

@@ -1,8 +1,11 @@
 "use client";
 
-import useSWR from "swr";
-import { TrendingUp, Clock, Target, Send, Filter } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { useState } from "react";
+import useSWR, { useSWRConfig } from "swr";
+import { TrendingUp, Clock, Target, Send, Filter, Sparkles } from "lucide-react";
+import { fetcher, apiPost } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBarChart } from "@/components/analytics/status-bar-chart";
 import { PortalBarChart } from "@/components/analytics/portal-bar-chart";
@@ -24,14 +27,47 @@ type Analytics = {
 
 export default function AnalyticsPage() {
   const { data, isLoading } = useSWR<Analytics>("/api/analytics", fetcher);
+  const { mutate } = useSWRConfig();
+  const toast = useToast();
+  const [generating, setGenerating] = useState(false);
+
+  async function handleGenerateSamples() {
+    setGenerating(true);
+    try {
+      await apiPost("/api/applications/simulate-batch", {});
+      await Promise.all([
+        mutate("/api/analytics"),
+        mutate("/api/applications"),
+        mutate("/api/metrics"),
+        mutate("/api/companies"),
+      ]);
+      toast.success("6 Beispiel-Bewerbungen für Statistiken angelegt!");
+    } catch {
+      toast.error("Generierung fehlgeschlagen.");
+    } finally {
+      setGenerating(false);
+    }
+  }
 
   return (
-    <div className="flex flex-col gap-6">
-      <header>
-        <h1 className="text-2xl font-semibold text-foreground">Auswertungen</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Kennzahlen zu deiner Jobsuche: Erfolgsquote, Conversion-Trichter, Reaktionszeiten und Portal-Effizienz.
-        </p>
+    <div className="flex flex-col gap-6 animate-fade-in">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Auswertungen</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Kennzahlen zu deiner Jobsuche: Erfolgsquote, Conversion-Trichter, Reaktionszeiten und Portal-Effizienz.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleGenerateSamples}
+          disabled={generating}
+          className="card-hover-effect"
+        >
+          <Sparkles className="h-4 w-4 text-primary" />
+          {generating ? "Generiere …" : "Test-Bewerbungen füllen"}
+        </Button>
       </header>
 
       {isLoading && <p className="text-sm text-muted-foreground">Lade Auswertungen …</p>}

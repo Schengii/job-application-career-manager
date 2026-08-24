@@ -1,0 +1,103 @@
+// -----------------------------------------------------------------------------
+// POST /api/applications/bulk -> Batch-Erstellung oder Inline-Speicherung von Zeilen
+// -----------------------------------------------------------------------------
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { handleApiError } from "@/lib/apiUtils";
+import { z } from "zod";
+
+const bulkRowSchema = z.object({
+  id: z.string().optional(),
+  companyName: z.string().min(1, "Unternehmensname ist erforderlich"),
+  position: z.string().min(1, "Position ist erforderlich"),
+  status: z.enum(["DRAFT", "SENT", "INTERVIEW", "OFFER", "REJECTED", "WITHDRAWN"]).default("DRAFT"),
+  applicationDate: z.string().nullable().optional(),
+  portal: z.string().nullable().optional(),
+  contactName: z.string().nullable().optional(),
+  contactEmail: z.string().nullable().optional(),
+  contactPhone: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  nextStep: z.string().nullable().optional(),
+  nextStepDate: z.string().nullable().optional(),
+});
+
+const bulkPayloadSchema = z.object({
+  rows: z.array(bulkRowSchema),
+});
+
+export async function POST(request: NextRequest) {
+  try {
+    const json = await request.json();
+    const { rows } = bulkPayloadSchema.parse(json);
+
+    const results = [];
+
+    for (const row of rows) {
+      // 1. Firma suchen oder anlegen
+      let company = await prisma.company.findFirst({
+        where: { name: { equals: row.companyName } },
+      });
+
+      if (!company) {
+        company = await prisma.company.create({
+          data: {
+            name: row.companyName,
+            contactName: row.contactName || null,
+            contactEmail: row.contactEmail || null,
+            contactPhone: row.contactPhone || null,
+          },
+        });
+      } else if (row.contactEmail || row.contactPhone || row.contactName) {
+        // Optionale Kontaktdaten an Firma aktualisieren
+        await prisma.company.update({
+          where: { id: company.id },
+          data: {
+            contactName: row.contactName || company.contactName,
+            contactEmail: row.contactEmail || company.contactEmail,
+            contactPhone: row.contactPhone || company.contactPhone,
+          },
+        });
+      }
+
+      const appDate = row.applicationDate ? new Date(row.applicationDate) : null;
+      const nextDate = row.nextStepDate ? new Date(row.nextStepDate) : null;
+
+      if (row.id && !row.id.startsWith("temp-")) {
+        // Bestehende Zeile aktualisieren
+        const updated = await prisma.application.update({
+          where: { id: row.id },
+          data: {
+            companyId: company.id,
+            position: row.position,
+            status: row.status,
+            applicationDate: appDate,
+            source: row.portal || null,
+            notes: row.notes || null,
+            nextStep: row.nextStep || null,
+            nextStepDate: nextDate,
+          },
+        });
+        results.push(updated);
+      } else {
+        // Neue Zeile anlegen
+        const created = await prisma.application.create({
+          data: {
+            companyId: company.id,
+            position: row.position,
+            status: row.status,
+            applicationDate: appDate,
+            source: row.portal || null,
+            notes: row.notes || null,
+            nextStep: row.nextStep || null,
+            nextStepDate: nextDate,
+          },
+        });
+        results.push(created);
+      }
+    }
+
+    return NextResponse.json({ success: true, count: results.length, data: results });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

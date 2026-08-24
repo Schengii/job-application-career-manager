@@ -12,9 +12,10 @@ verloren geht.
 
 ### 1. Bewerbungs- & Unternehmens-Management
 - **Dashboard mit Live-Metriken**: Gesamtanzahl, Offene Bewerbungen, Gespräche, Absagen und Zusagen auf einen Blick.
+- **Interaktive Excel-Tabelle (`/excel-view`)**: Tabellarischer Grid-Editor wie in Excel/Google Sheets mit direktem **Inline-Editing**, Tastatur-Navigation (Tab/Enter), schneller Erfassung neuer Zeilen und automatischem Batch-Speichern (`/api/applications/bulk`).
+- **3 Ansichtsmodi in der Bewerbungsliste**: Flexibler Wechsel zwischen **Tabelle**, nativem **Kanban-Board** (Drag & Drop) und **Excel-Grid**.
 - **E-Mail-Rückmeldungs-Assistent**: Arbeitgeber-E-Mails (Absagen, Einladungen, Eingangsbestätigungen, Angebote) per Copy & Paste analysieren und mit einem Klick Status, Termine und Notizen aktualisieren.
 - **Smarte Wiedervorlage & Nachfass-Engine**: Hebt überfällige Schritte sowie Bewerbungen ohne Rückmeldung (> 14 Tage) auf dem Dashboard und in der Liste hervor.
-- **Bewerbungs-Tracker & Kanban-Board**: Wechsel zwischen übersichtlicher Tabellenansicht und nativem HTML5 Drag-and-Drop Kanban-Board.
 - **Detailansicht**: Vollständige Kontaktdaten, lückenlose Status-Historie, Notizen und verknüpfte Unterlagen.
 - **Termin- & Kalender-Export (.ics / iCal)**: Exportiert anstehende Vorstellungsgespräche und Termine mit einem Klick in Google Kalender, Outlook oder Apple Calendar.
 - **Unternehmensverwaltung**: Vollständiges CRUD (Adresse, Ansprechpartner, Telefon, E-Mail, Notizen und Status).
@@ -65,7 +66,10 @@ verloren geht.
 - **Portal-Effizienz & Einladungsquoten**: Zeigt auf, welche Portale (z. B. GetInIT, Stepstone, LinkedIn) die höchste Einladungsquote aufweisen.
 - **Reaktionszeiten & Erfolgsquote**: Durchschnittliche Dauer bis zur ersten Rückmeldung und Zusagequote.
 
-### 8. Datensicherheit & Backup
+### 8. Premium UI/UX, Glassmorphism & Micro-Animations
+- **SaaS Design System**: Feine Glassmorphism-Karten (`backdrop-blur`), flüssige Übergänge (`animate-fade-in`, `animate-scale-in`), dezent pulsierende Frist-Indikatoren (`animate-pulse-subtle`) und optimiertes Responsive-Layout für Mobilgeräte, Tablets und Desktop.
+
+### 9. Datensicherheit & Backup
 - **1-Klick JSON-Backup & Restore**: Vollständige Sicherung und Wiederherstellung aller Tabellen unter *Einstellungen $\rightarrow$ Backup & Daten*.
 - **Excel-Bewerbungslisten-Import (`scripts/import-bewerbungsliste.ts`)**: Überträgt historische Excel-Bewerbungslisten in die SQLite-Datenbank.
 - **Datenschutz**: Trennung zwischen Code/Vorlage (`scripts/profile-data.example.json`) und gitignorten Echtdaten (`profile-data.local.json`).
@@ -80,7 +84,7 @@ verloren geht.
 | Backend   | Next.js Route Handler (REST-API unter `/api/*`), Zod-Validierung          |
 | Datenbank | SQLite via Prisma 7 ORM (Adapter: `better-sqlite3`)                       |
 | State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
-| Testing   | Vitest (30 automatisierte Unit- & Integrationstests)                      |
+| Testing   | Vitest (33 automatisierte Unit- & Integrationstests)                      |
 
 ---
 
@@ -92,11 +96,11 @@ prisma/
   seed.ts               Beispieldaten (Profil, Unternehmen, Jobs, Bewerbungen)
 src/
   app/
-    api/                 REST-API-Route-Handler (CRUD, Backup, Analytics, ZIP-Package, Generator)
-    (Seiten)/             Dashboard (/), Bewerbungen (/applications), Unternehmen (/companies),
-                         Jobsuche (/jobs), CV-Designer (/cv-designer), Interview-Prep (/interview-prep),
-                         Auswertungen (/analytics), Einstellungen (/settings)
-  components/            UI-Primitives, Modals, Kanban, Charts, Dokumenten-Vorschau, Suche, Rechner, Mock-Interview
+    api/                 REST-API-Route-Handler (CRUD, Backup, Analytics, Bulk, Simulation, ZIP-Package, Generator)
+    (Seiten)/             Dashboard (/), Bewerbungen (/applications), Excel-Tabelle (/excel-view),
+                         Unternehmen (/companies), Jobsuche (/jobs), CV-Designer (/cv-designer),
+                         Interview-Prep (/interview-prep), Auswertungen (/analytics), Einstellungen (/settings)
+  components/            UI-Primitives, Modals, Kanban, ExcelGridTable, Charts, Dokumenten-Vorschau, Suche, Rechner, Mock-Interview
   lib/
     prisma.ts            Prisma-Client-Singleton (better-sqlite3-Adapter)
     matching.ts           Match-Score-Berechnung (Tech-Stack, Standort, Rolle)
@@ -104,6 +108,7 @@ src/
     cvGenerator.ts        Lebenslauf-Generator & HTML/Print-Formatter
     interviewGuide.ts     Fachfragenkatalog & Tech-Stack-Filter
     mockInterviewEngine.ts Mock-Interview Antwort-Auswertungs-Engine
+    sampleGenerator.ts    Batch-Bewerbungs-Generator für Statistiken
     emailResponseParser.ts E-Mail-Rückmeldungs-Parser (Absage/Einladung/Termine)
     salaryCalculator.ts   Gehalts- & Benefit-Vergleichsrechner
     zipPackage.ts         ZIP-Bewerbungspaket Generator
@@ -151,7 +156,7 @@ Die Anwendung läuft anschließend unter **http://localhost:3000**.
 | `npm run dev`               | Entwicklungsserver (Turbopack) starten                            |
 | `npm run build`             | Produktions-Build erstellen (inkl. TypeScript-Check)               |
 | `npm run lint`               | ESLint ausführen                                                    |
-| `npm run test`                | Testsuite (Vitest, 30 Tests) einmalig ausführen                     |
+| `npm run test`                | Testsuite (Vitest, 33 Tests) einmalig ausführen                     |
 | `npm run test:watch`           | Testsuite im Watch-Modus ausführen                                    |
 | `npx prisma studio`          | Datenbank-Inhalte im Browser ansehen/bearbeiten                     |
 | `npx prisma db push`         | Schema-Änderungen direkt auf SQLite anwenden                        |

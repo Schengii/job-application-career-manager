@@ -101,6 +101,7 @@ export function CommandPalette() {
     const pageResults: ResultItem[] = [
       { id: "page-dashboard", group: "Jobsuche", icon: Briefcase, title: "Dashboard", subtitle: "Überblick & Metriken", href: "/" },
       { id: "page-apps", group: "Bewerbungen", icon: Briefcase, title: "Bewerbungen", subtitle: "Übersicht & Kanban-Board", href: "/applications" },
+      { id: "page-excel", group: "Bewerbungen", icon: FileSearch, title: "Excel-Tabelle", subtitle: "Tabellarische Schnellerfassung", href: "/excel-view" },
       { id: "page-companies", group: "Unternehmen", icon: Building2, title: "Unternehmen", subtitle: "Firmenübersicht", href: "/companies" },
       { id: "page-jobs", group: "Jobsuche", icon: FileSearch, title: "Jobsuche & Parser", subtitle: "Stellenangebote durchsuchen", href: "/jobs" },
       { id: "page-prep", group: "Jobsuche", icon: FileSearch, title: "Interview-Vorbereitungsleitfaden", subtitle: "Fachfragen & Cheatsheet", href: "/interview-prep" },

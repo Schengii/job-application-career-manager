@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Briefcase, Building2, Search, Settings, Menu, X, BarChart3, GraduationCap, FileText } from "lucide-react";
+import { LayoutDashboard, Briefcase, Building2, Search, Settings, Menu, X, BarChart3, GraduationCap, FileText, FileSpreadsheet } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/applications", label: "Bewerbungen", icon: Briefcase },
+  { href: "/excel-view", label: "Excel-Tabelle", icon: FileSpreadsheet },
   { href: "/companies", label: "Unternehmen", icon: Building2 },
   { href: "/jobs", label: "Jobsuche", icon: Search },
   { href: "/interview-prep", label: "Interview-Prep", icon: GraduationCap },

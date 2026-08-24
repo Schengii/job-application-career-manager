@@ -23,10 +23,10 @@ export function MetricCard({
   loading?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-surface p-5 shadow-sm">
+    <div className="rounded-xl border border-border bg-surface p-5 shadow-xs card-hover-effect animate-scale-in">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-muted-foreground">{label}</p>
-        <span className={cn("flex h-9 w-9 items-center justify-center rounded-lg", ACCENT_CLASSES[accent])}>
+        <span className={cn("flex h-9 w-9 items-center justify-center rounded-lg transition-transform group-hover:scale-110", ACCENT_CLASSES[accent])}>
           <Icon className="h-4.5 w-4.5" aria-hidden />
         </span>
       </div>
