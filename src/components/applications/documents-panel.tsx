@@ -55,6 +55,17 @@ export function DocumentsPanel({
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+        <p className="text-xs text-muted-foreground">
+          {application.documents.length} Dokument(e) zugeordnet
+        </p>
+        <a href={`/api/applications/${application.id}/package`} download>
+          <Button variant="outline" size="sm">
+            <Download className="h-4 w-4" /> Bewerbungspaket (ZIP) herunterladen
+          </Button>
+        </a>
+      </div>
+
       {application.documents.length === 0 ? (
         <p className="text-sm text-muted-foreground">Dieser Bewerbung sind noch keine Dokumente zugeordnet.</p>
       ) : (

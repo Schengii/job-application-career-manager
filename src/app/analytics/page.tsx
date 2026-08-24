@@ -9,6 +9,7 @@ import { PortalBarChart } from "@/components/analytics/portal-bar-chart";
 import { TrendChart } from "@/components/analytics/trend-chart";
 import { StatTile } from "@/components/analytics/stat-tile";
 import { FunnelChart } from "@/components/analytics/funnel-chart";
+import { OfferComparisonMatrix } from "@/components/analytics/offer-comparison-matrix";
 
 type Analytics = {
   statusDistribution: { status: string; label: string; color: string; count: number }[];
@@ -142,6 +143,10 @@ export default function AnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
+            {/* Gehalts- & Benefit-Vergleichsmatrix */}
+            <div className="lg:col-span-2">
+              <OfferComparisonMatrix />
+            </div>
           </div>
         </>
       )}

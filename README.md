@@ -28,23 +28,34 @@ verloren geht.
 - **DIN 5008 Druck- & PDF-Ansicht**: Druckoptimiertes Brieflayout mit korrekter Absenderzeile, Empfängerfeld, Datum, Betreffzeile und Unterschriftsbereich (`window.print()` / PDF-Speicherung).
 - **Nachfass-E-Mail Generator**: Vorformulierte Nachfass-E-Mail auf Knopfdruck bei fehlender Rückmeldung inkl. One-Click-Copy und Mailto-Unterstützung.
 
-### 3. Dokumenten-Handling & In-App Vorschau
-- **Dokumenten-Manager**: Lebensläufe, Schul-/Ausbildungs-/Umschulungszeugnisse und Referenzen zentral verwalten.
+### 3. Dokumenten-Handling & Bewerbungspaket-Download
+- **Bewerbungs-Paket ZIP-Export**: Bündelt Anschreiben (als `.txt` und formatiertes HTML) sowie alle zugeordneten Zeugnisse/Dokumente auf Knopfdruck als fertiges ZIP-Archiv für den E-Mail-Versand.
 - **In-App Dokumentenvorschau**: PDFs und Bilddateien direkt in der App per Modal ansehen, ohne sie erst separat herunterladen zu müssen.
-- **Wiederverwendbarkeit**: Dokumente einmalig hochladen und beliebig vielen Bewerbungen flexibel zuordnen.
+- **Dokumenten-Manager**: Lebensläufe, Schul-/Ausbildungs-/Umschulungszeugnisse und Referenzen zentral verwalten und Bewerbungen zuordnen.
 
-### 4. Jobsuche & Stellenanzeigen-Erfassung
+### 4. Interview-Vorbereitungsleitfaden & Fachfragen (`/interview-prep`)
+- **Interaktiver Fragenkatalog**: Strukturierte Fragen, Musterantworten und Interview-Tipps für:
+  - *React & Frontend* (Server Components, Performance, Re-Renders, SWR-Caching)
+  - *TypeScript & JavaScript* (Generics, Type Narrowing, Event Loop, Closures)
+  - *CSS & UI/UX* (Flexbox vs. Grid, A11y / Barrierefreiheit / WCAG, Tailwind)
+  - *Architektur & Testing* (Vitest, REST API Design mit Zod, CI/CD)
+  - *Werdegang & Praxisprojekte* (Elektroniker $\rightarrow$ Fachinformatiker, *electroCheck-ai*)
+  - *Gegenfragen an den Arbeitgeber* (Onboarding, Code Reviews, Release-Zyklen)
+- **Stellen-spezifischer Tech-Stack-Filter**: Wählt man eine konkrete Bewerbung aus, filtert der Leitfaden automatisch die passenden Fragen zum Tech-Stack der ausgeschriebenen Stelle.
+- **Checklisten-Fortschritt**: Fragen als vorbereitet markieren mit visueller Fortschrittsanzeige.
+
+### 5. Jobsuche & Stellenanzeigen-Erfassung
 - **Job-Portal-Simulator**: Simuliert Stellenangebote von Stepstone, Indeed, GetInIT und der Agentur für Arbeit inkl. **Match-Score-Berechnung** auf Basis der hinterlegten Präferenzen.
 - **Stellenanzeigen-Schnellerfassung (Smart Parser)**: Beliebigen Freitext einer Stellenanzeige (LinkedIn, Stepstone, E-Mail) einfügen – der Parser extrahiert automatisch Titel, Unternehmen, Ort, Remote-Option, Gehalt, Tech-Stack und berechnet sofort den Match-Score.
 - **1-Klick „Bewerben“**: Legt direkt eine neue Bewerbung im System an und verknüpft das Stellenangebot.
 
-### 5. Analytics & Karriere-Insights
+### 6. Analytics & Gehalts-Vergleichsmatrix
+- **Gehalts- & Benefit-Vergleichsrechner**: Vergleicht vorliegende Angebote (`OFFER`) anhand von Brutto-/Netto-Gehalt, Home-Office-Tagen, Urlaubstagen, Fahrtkostenersparnis und Gesamt-Score.
 - **Bewerbungs-Trichter (Conversion Funnel)**: Visualisiert die Phasen *Verschickt $\rightarrow$ Rückmeldung $\rightarrow$ Gespräch $\rightarrow$ Angebot*.
 - **Portal-Effizienz & Einladungsquoten**: Zeigt auf, welche Portale (z. B. GetInIT, Stepstone, LinkedIn) die höchste Einladungsquote aufweisen.
 - **Reaktionszeiten & Erfolgsquote**: Durchschnittliche Dauer bis zur ersten Rückmeldung und Zusagequote.
-- **Interaktive Charts**: Reine Inline-SVG-Diagramme für monatliche Bewerbungstrends und Statusverteilungen.
 
-### 6. Datensicherheit & Backup
+### 7. Datensicherheit & Backup
 - **1-Klick JSON-Backup & Restore**: Vollständige Sicherung und Wiederherstellung aller Tabellen unter *Einstellungen $\rightarrow$ Backup & Daten*.
 - **Excel-Bewerbungslisten-Import (`scripts/import-bewerbungsliste.ts`)**: Überträgt historische Excel-Bewerbungslisten in die SQLite-Datenbank.
 - **Datenschutz**: Trennung zwischen Code/Vorlage (`scripts/profile-data.example.json`) und gitignorten Echtdaten (`profile-data.local.json`).
@@ -59,7 +70,7 @@ verloren geht.
 | Backend   | Next.js Route Handler (REST-API unter `/api/*`), Zod-Validierung          |
 | Datenbank | SQLite via Prisma 7 ORM (Adapter: `better-sqlite3`)                       |
 | State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
-| Testing   | Vitest (19 automatisierte Unit- & Integrationstests)                      |
+| Testing   | Vitest (23 automatisierte Unit- & Integrationstests)                      |
 
 ---
 
@@ -71,14 +82,17 @@ prisma/
   seed.ts               Beispieldaten (Profil, Unternehmen, Jobs, Bewerbungen)
 src/
   app/
-    api/                 REST-API-Route-Handler (CRUD, Backup, Analytics, Generator)
+    api/                 REST-API-Route-Handler (CRUD, Backup, Analytics, ZIP-Package, Generator)
     (Seiten)/             Dashboard (/), Bewerbungen (/applications), Unternehmen (/companies),
-                         Jobsuche (/jobs), Auswertungen (/analytics), Einstellungen (/settings)
-  components/            UI-Primitives, Modals, Kanban, Charts, Dokumenten-Vorschau, Suche
+                         Jobsuche (/jobs), Interview-Prep (/interview-prep), Auswertungen (/analytics), Einstellungen (/settings)
+  components/            UI-Primitives, Modals, Kanban, Charts, Dokumenten-Vorschau, Suche, Rechner
   lib/
     prisma.ts            Prisma-Client-Singleton (better-sqlite3-Adapter)
     matching.ts           Match-Score-Berechnung (Tech-Stack, Standort, Rolle)
     coverLetterGenerator.ts Multi-Tone Anschreiben & Nachfass-E-Mail Generator
+    interviewGuide.ts     Fachfragenkatalog & Tech-Stack-Filter
+    salaryCalculator.ts   Gehalts- & Benefit-Vergleichsrechner
+    zipPackage.ts         ZIP-Bewerbungspaket Generator
     followUp.ts           Wiedervorlage- und Fristen-Engine
     ical.ts               iCal / .ics Kalenderdatei-Generator
     jobParser.ts          Freitext-Stellenanzeigen Parser
@@ -123,7 +137,7 @@ Die Anwendung läuft anschließend unter **http://localhost:3000**.
 | `npm run dev`               | Entwicklungsserver (Turbopack) starten                            |
 | `npm run build`             | Produktions-Build erstellen (inkl. TypeScript-Check)               |
 | `npm run lint`               | ESLint ausführen                                                    |
-| `npm run test`                | Testsuite (Vitest, 19 Tests) einmalig ausführen                     |
+| `npm run test`                | Testsuite (Vitest, 23 Tests) einmalig ausführen                     |
 | `npm run test:watch`           | Testsuite im Watch-Modus ausführen                                    |
 | `npx prisma studio`          | Datenbank-Inhalte im Browser ansehen/bearbeiten                     |
 | `npx prisma db push`         | Schema-Änderungen direkt auf SQLite anwenden                        |

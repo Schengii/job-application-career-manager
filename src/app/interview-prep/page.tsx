@@ -1,0 +1,280 @@
+"use client";
+
+// -----------------------------------------------------------------------------
+// Interview-Vorbereitungsleitfaden & Fachfragen-Cheatsheet
+// -----------------------------------------------------------------------------
+import { useState, useMemo } from "react";
+import useSWR from "swr";
+import {
+  Sparkles,
+  CheckCircle2,
+  MessageSquare,
+  Search,
+  Building2,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { fetcher } from "@/lib/api";
+import type { ApplicationListItem } from "@/types";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select } from "@/components/ui/form";
+import {
+  INTERVIEW_QUESTIONS,
+  QuestionCategory,
+  InterviewQuestion,
+} from "@/lib/interviewGuide";
+
+const CATEGORIES: { id: "ALL" | QuestionCategory; label: string }[] = [
+  { id: "ALL", label: "Alle Bereiche" },
+  { id: "FRONTEND_REACT", label: "React & Frontend" },
+  { id: "TYPESCRIPT_JS", label: "TypeScript & JavaScript" },
+  { id: "CSS_UI_UX", label: "CSS & UI/UX" },
+  { id: "ARCHITECTURE_TESTING", label: "Architektur & Testing" },
+  { id: "CAREER_BACKGROUND", label: "Werdegang & Praxis" },
+  { id: "QUESTIONS_FOR_EMPLOYER", label: "Gegenfragen an Arbeitgeber" },
+];
+
+export default function InterviewPrepPage() {
+  const { data: applications } = useSWR<ApplicationListItem[]>("/api/applications", fetcher);
+
+  const [selectedAppId, setSelectedAppId] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<"ALL" | QuestionCategory>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [checkedQuestions, setCheckedQuestions] = useState<Set<string>>(new Set());
+
+  const selectedApp = useMemo(
+    () => applications?.find((a) => a.id === selectedAppId),
+    [applications, selectedAppId]
+  );
+
+  const relevantQuestions = useMemo(() => {
+    let list: InterviewQuestion[] = INTERVIEW_QUESTIONS;
+
+    // Falls ein Bewerbungs-TechStack vorliegt, priorisieren wir relevante Fragen
+    if (selectedApp?.jobPosting?.techStack) {
+      const appTech = selectedApp.jobPosting.techStack.toLowerCase();
+      list = INTERVIEW_QUESTIONS.filter((q) => {
+        if (q.category === "CAREER_BACKGROUND" || q.category === "QUESTIONS_FOR_EMPLOYER") return true;
+        return q.keywords.some((kw) => appTech.includes(kw.toLowerCase()));
+      });
+      // Fallback falls keine Schnittmenge
+      if (list.length === 0) list = INTERVIEW_QUESTIONS;
+    }
+
+    if (selectedCategory !== "ALL") {
+      list = list.filter((q) => q.category === selectedCategory);
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (item) =>
+          item.question.toLowerCase().includes(q) ||
+          item.answerSummary.toLowerCase().includes(q) ||
+          item.keywords.some((k) => k.toLowerCase().includes(q))
+      );
+    }
+
+    return list;
+  }, [selectedApp, selectedCategory, searchQuery]);
+
+  function toggleCheck(id: string) {
+    setCheckedQuestions((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const progressPct =
+    INTERVIEW_QUESTIONS.length > 0
+      ? Math.round((checkedQuestions.size / INTERVIEW_QUESTIONS.length) * 100)
+      : 0;
+
+  return (
+    <div className="flex flex-col gap-6">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Interview-Vorbereitungsleitfaden</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Strukturierte Fachfragen, Best Practices und Gegenfragen für dein nächstes Vorstellungsgespräch.
+          </p>
+        </div>
+      </header>
+
+      {/* Bewerbungs-Filter / Kontexterkennung */}
+      <Card className="bg-primary-soft/30 border-primary/20">
+        <CardContent className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-white">
+              <Building2 className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-primary uppercase tracking-wider">
+                Vorbereitung auf eine konkrete Stelle:
+              </p>
+              <Select
+                value={selectedAppId}
+                onChange={(e) => setSelectedAppId(e.target.value)}
+                className="mt-1 h-8 text-xs font-medium w-auto"
+              >
+                <option value="">Allgemeine Vorbereitung (Alle Fragen)</option>
+                {applications?.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.company.name} – {a.position}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          </div>
+
+          <div className="text-right">
+            <p className="text-xs text-muted-foreground">Vorbereitungs-Fortschritt</p>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="h-2.5 w-32 rounded-full bg-border overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+              <span className="text-xs font-bold text-foreground">{progressPct}%</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Filter & Suche */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-1.5" role="tablist">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              role="tab"
+              aria-selected={selectedCategory === cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                selectedCategory === cat.id
+                  ? "bg-primary text-white"
+                  : "border border-border bg-surface text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Frage oder Keyword suchen …"
+            className="w-full rounded-md border border-border bg-surface py-1.5 pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
+      </div>
+
+      {/* Fragen-Liste */}
+      <div className="flex flex-col gap-3">
+        {relevantQuestions.length === 0 && (
+          <p className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+            Keine Fragen für diese Filterauswahl gefunden.
+          </p>
+        )}
+
+        {relevantQuestions.map((q) => {
+          const isExpanded = expandedId === q.id;
+          const isChecked = checkedQuestions.has(q.id);
+
+          return (
+            <Card
+              key={q.id}
+              className={`transition-all duration-200 ${
+                isChecked ? "border-success/40 bg-success-soft/20" : ""
+              }`}
+            >
+              <div
+                className="flex items-start justify-between gap-3 p-4 cursor-pointer"
+                onClick={() => setExpandedId(isExpanded ? null : q.id)}
+              >
+                <div className="flex items-start gap-3 min-w-0">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleCheck(q.id);
+                    }}
+                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ${
+                      isChecked
+                        ? "border-success bg-success text-white"
+                        : "border-border hover:border-primary text-transparent"
+                    }`}
+                    title={isChecked ? "Als unvorbereitet markieren" : "Als vorbereitet markieren"}
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                  </button>
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="rounded bg-surface-hover px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        {q.categoryLabel}
+                      </span>
+                    </div>
+                    <p className={`text-sm font-semibold ${isChecked ? "text-success-foreground" : "text-foreground"}`}>
+                      {q.question}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="rounded p-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+                  aria-label="Details umschalten"
+                >
+                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+              </div>
+
+              {isExpanded && (
+                <CardContent className="pt-0 pb-4 px-4 pl-12 border-t border-border/50 mt-1">
+                  <div className="rounded-lg bg-surface-hover/60 p-3.5 space-y-2 mt-3 text-xs leading-relaxed">
+                    <div>
+                      <p className="font-semibold text-foreground mb-0.5 flex items-center gap-1.5">
+                        <MessageSquare className="h-3.5 w-3.5 text-primary" /> Kernantwort & Leitfaden:
+                      </p>
+                      <p className="text-muted-foreground">{q.answerSummary}</p>
+                    </div>
+
+                    {q.tips && (
+                      <div className="border-t border-border/60 pt-2 text-primary">
+                        <span className="font-semibold flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" /> Interview-Tipp:
+                        </span>
+                        <p className="text-muted-foreground">{q.tips}</p>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {q.keywords.map((kw) => (
+                        <span
+                          key={kw}
+                          className="rounded-full bg-surface border border-border px-2 py-0.5 text-[10px] text-muted-foreground"
+                        >
+                          #{kw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
