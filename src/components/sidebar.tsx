@@ -1,0 +1,110 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { LayoutDashboard, Briefcase, Building2, Search, Settings, Menu, X } from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+const NAV_ITEMS = [
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/applications", label: "Bewerbungen", icon: Briefcase },
+  { href: "/companies", label: "Unternehmen", icon: Building2 },
+  { href: "/jobs", label: "Jobsuche", icon: Search },
+  { href: "/settings", label: "Einstellungen", icon: Settings },
+];
+
+function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+  const pathname = usePathname();
+  return (
+    <nav className="flex flex-1 flex-col gap-1 px-3" aria-label="Hauptnavigation">
+      {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+        return (
+          <Link
+            key={href}
+            href={href}
+            onClick={onNavigate}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              active
+                ? "bg-primary-soft text-primary"
+                : "text-muted-foreground hover:bg-surface-hover hover:text-foreground",
+            )}
+          >
+            <Icon className="h-4 w-4 shrink-0" aria-hidden />
+            {label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+export function Sidebar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  return (
+    <>
+      {/* Mobile Topbar */}
+      <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 md:hidden">
+        <span className="text-base font-semibold">Career Manager</span>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Menü öffnen"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-border"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div className="absolute inset-y-0 left-0 flex w-72 flex-col bg-surface py-4">
+            <div className="flex items-center justify-between px-4 pb-4">
+              <span className="text-base font-semibold">Career Manager</span>
+              <button
+                type="button"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Menü schließen"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <NavLinks onNavigate={() => setMobileOpen(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Sidebar */}
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-surface py-5 md:flex">
+        <div className="flex items-center justify-between px-4 pb-6">
+          <Link href="/" className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground">
+              JM
+            </span>
+            <span className="text-base font-semibold leading-tight">
+              Career
+              <br />
+              Manager
+            </span>
+          </Link>
+        </div>
+        <NavLinks />
+        <div className="flex items-center justify-between border-t border-border px-4 pt-4">
+          <span className="text-xs text-muted-foreground">Fachinformatiker AE · Frontend</span>
+          <ThemeToggle />
+        </div>
+      </aside>
+    </>
+  );
+}

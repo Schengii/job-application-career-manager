@@ -1,0 +1,227 @@
+// ---------------------------------------------------------------------------
+// Prisma Schema — Job Application & Career Manager
+// ---------------------------------------------------------------------------
+// Datenbank: SQLite (lokale Datei, siehe .env -> DATABASE_URL).
+// SQLite unterstützt in Prisma keine nativen Enums, daher werden Status- und
+// Kategorie-Felder als String abgebildet und auf Anwendungsebene über
+// TypeScript-Literal-Unions + Zod validiert (siehe src/lib/constants.ts).
+// ---------------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------------------------------------------------------------------------
+// Unternehmen — jede Firma, bei der man sich beworben hat oder bewerben könnte
+// ---------------------------------------------------------------------------
+model Company {
+  id            String   @id @default(cuid())
+  name          String
+  street        String?
+  postalCode    String?
+  city          String?
+  country       String   @default("Deutschland")
+  website       String?
+  contactName   String? // Ansprechpartner
+  contactEmail  String?
+  contactPhone  String?
+  notes         String? // Freitext-Notizen zum Unternehmen
+  status        String   @default("LEAD") // LEAD | CONTACTED | IN_PROGRESS | PARTNER | REJECTED | ARCHIVED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  jobPostings   JobPosting[]
+  applications  Application[]
+
+  @@index([status])
+  @@index([name])
+}
+
+// ---------------------------------------------------------------------------
+// Stellenangebote — gecrawlte / simulierte Jobs von den Jobportalen
+// ---------------------------------------------------------------------------
+model JobPosting {
+  id                  String   @id @default(cuid())
+  title               String
+  description         String
+  portalSource        String // STEPSTONE | INDEED | GETINIT | ARBEITSAGENTUR | OTHER
+  sourceUrl           String?
+  location             String?
+  remote              Boolean  @default(false)
+  requirementsProfile String? // Freitext Anforderungsprofil
+  techStack           String? // kommasepariert, z.B. "TypeScript,React,CSS"
+  salaryInfo          String?
+  matchScore          Int? // zuletzt berechneter Match-Score in % (0-100)
+  postedAt            DateTime @default(now())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  companyId    String?
+  company      Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  applications Application[]
+
+  @@index([portalSource])
+  @@index([companyId])
+}
+
+// ---------------------------------------------------------------------------
+// Bewerbungen — Kernentität: verknüpft Unternehmen, Stelle, Status & Dokumente
+// ---------------------------------------------------------------------------
+model Application {
+  id              String    @id @default(cuid())
+  position        String // Job-Titel (denormalisiert, falls kein JobPosting verknüpft ist)
+  status          String    @default("DRAFT") // DRAFT | SENT | INTERVIEW | OFFER | REJECTED | WITHDRAWN
+  applicationDate DateTime? // Datum, an dem die Bewerbung abgeschickt wurde
+  nextStep        String? // z.B. "Rückmeldung abwarten", "Vorstellungsgespräch am ..."
+  nextStepDate    DateTime?
+  notes           String?
+  source          String? // z.B. "Stepstone", "Initiativbewerbung"
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  companyId    String
+  company      Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  jobPostingId String?
+  jobPosting   JobPosting? @relation(fields: [jobPostingId], references: [id], onDelete: SetNull)
+
+  statusEvents      ApplicationStatusEvent[]
+  documents         ApplicationDocument[]
+  coverLetter       CoverLetter?
+
+  @@index([companyId])
+  @@index([jobPostingId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Status-Historie — jede Statusänderung einer Bewerbung wird protokolliert
+// ---------------------------------------------------------------------------
+model ApplicationStatusEvent {
+  id            String   @id @default(cuid())
+  status        String
+  note          String?
+  changedAt     DateTime @default(now())
+
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+}
+
+// ---------------------------------------------------------------------------
+// Dokumente — Lebenslauf, Zeugnisse, Referenzen etc. (wiederverwendbar)
+// ---------------------------------------------------------------------------
+model Document {
+  id          String   @id @default(cuid())
+  name        String
+  category    String // LEBENSLAUF | ZEUGNIS_SCHULE | ZEUGNIS_AUSBILDUNG | ZEUGNIS_UMSCHULUNG | REFERENZ | SONSTIGES
+  description String?
+  fileName    String?
+  fileUrl     String? // Pfad unter /public/uploads
+  mimeType    String?
+  fileSize    Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  applications ApplicationDocument[]
+
+  @@index([category])
+}
+
+// Join-Tabelle: n:m zwischen Bewerbung und (wiederverwendbaren) Dokumenten
+model ApplicationDocument {
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  attachedAt DateTime @default(now())
+
+  @@id([applicationId, documentId])
+  @@index([documentId])
+}
+
+// ---------------------------------------------------------------------------
+// Anschreiben — automatisch generiert, 1:1 an eine Bewerbung gebunden
+// ---------------------------------------------------------------------------
+model CoverLetter {
+  id          String   @id @default(cuid())
+  content     String
+  status      String   @default("DRAFT") // DRAFT | SENT
+  generatedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  applicationId String      @unique
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// Präferenzen & Profil — Job-Suchpräferenzen (Singleton, id = "default")
+// ---------------------------------------------------------------------------
+model Preferences {
+  id      String  @id @default("default")
+  // Absender-/Kontaktdaten des Bewerbers, werden im Anschreiben-Kopf verwendet
+  fullName    String?
+  email       String?
+  phone       String?
+  street      String?
+  postalCode  String?
+  city        String?
+
+  desiredRole        String   @default("Fachinformatiker für Anwendungsentwicklung")
+  techStack          String   @default("TypeScript,JavaScript,CSS,React,Next.js,HTML")
+  preferredLocations String   @default("Bonn,Dortmund,Remote")
+  searchRadiusKm     Int      @default(50)
+  remotePreference   String   @default("HYBRID") // ONSITE | HYBRID | REMOTE | ANY
+  minSalary          Int?
+  profileSummary     String? // Kurzprofil für den Anschreiben-Generator
+  updatedAt          DateTime @updatedAt
+
+  educationEntries EducationEntry[]
+  projectEntries   ProjectEntry[]
+}
+
+// ---------------------------------------------------------------------------
+// Ausbildungs-/Bildungsdaten (Schule, Ausbildung, Umschulung, Weiterbildung)
+// ---------------------------------------------------------------------------
+model EducationEntry {
+  id          String    @id @default(cuid())
+  type        String // SCHULE | AUSBILDUNG | UMSCHULUNG | WEITERBILDUNG
+  title       String // z.B. "Fachinformatiker für Anwendungsentwicklung (Umschulung)"
+  institution String?
+  startDate   DateTime?
+  endDate     DateTime?
+  description String?
+  sortOrder   Int       @default(0)
+
+  preferencesId String      @default("default")
+  preferences   Preferences @relation(fields: [preferencesId], references: [id], onDelete: Cascade)
+
+  @@index([preferencesId])
+}
+
+// ---------------------------------------------------------------------------
+// Projekt-/Referenzdaten (z.B. "electroCheck-ai")
+// ---------------------------------------------------------------------------
+model ProjectEntry {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  techStack   String? // kommasepariert
+  url         String?
+  role        String?
+  sortOrder   Int     @default(0)
+
+  preferencesId String      @default("default")
+  preferences   Preferences @relation(fields: [preferencesId], references: [id], onDelete: Cascade)
+
+  @@index([preferencesId])
+}

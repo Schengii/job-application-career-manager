@@ -39,3 +39,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# SQLite-Datenbank (lokale Entwicklungsdaten, nicht versionieren)
+/prisma/dev.db
+/prisma/dev.db-journal
+/dev.db
+/dev.db-journal
+
+# Hochgeladene Bewerbungsunterlagen (persönliche Dokumente, nicht versionieren)
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# Von `prisma init` installierte generische Prisma-CLI-Referenzdokumente für
+# KI-Coding-Assistenten (nicht projektspezifisch, daher nicht versioniert)
+/.agents/
+/.claude/skills/
+/.windsurf/
+skills-lock.json
