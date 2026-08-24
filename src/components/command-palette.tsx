@@ -104,6 +104,7 @@ export function CommandPalette() {
       { id: "page-companies", group: "Unternehmen", icon: Building2, title: "Unternehmen", subtitle: "Firmenübersicht", href: "/companies" },
       { id: "page-jobs", group: "Jobsuche", icon: FileSearch, title: "Jobsuche & Parser", subtitle: "Stellenangebote durchsuchen", href: "/jobs" },
       { id: "page-prep", group: "Jobsuche", icon: FileSearch, title: "Interview-Vorbereitungsleitfaden", subtitle: "Fachfragen & Cheatsheet", href: "/interview-prep" },
+      { id: "page-cv", group: "Bewerbungen", icon: Briefcase, title: "Lebenslauf-Generator (CV-Designer)", subtitle: "PDF-Vorschau & Druck", href: "/cv-designer" },
       { id: "page-analytics", group: "Bewerbungen", icon: Briefcase, title: "Auswertungen", subtitle: "Conversion Funnel & Analytics", href: "/analytics" },
     ];
 

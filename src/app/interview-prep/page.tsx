@@ -17,12 +17,14 @@ import {
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/form";
 import {
   INTERVIEW_QUESTIONS,
   QuestionCategory,
   InterviewQuestion,
 } from "@/lib/interviewGuide";
+import { MockInterviewModal } from "@/components/interview/mock-interview-modal";
 
 const CATEGORIES: { id: "ALL" | QuestionCategory; label: string }[] = [
   { id: "ALL", label: "Alle Bereiche" },
@@ -42,6 +44,8 @@ export default function InterviewPrepPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [checkedQuestions, setCheckedQuestions] = useState<Set<string>>(new Set());
+
+  const [mockInterviewOpen, setMockInterviewOpen] = useState(false);
 
   const selectedApp = useMemo(
     () => applications?.find((a) => a.id === selectedAppId),
@@ -102,6 +106,9 @@ export default function InterviewPrepPage() {
             Strukturierte Fachfragen, Best Practices und Gegenfragen für dein nächstes Vorstellungsgespräch.
           </p>
         </div>
+        <Button size="sm" onClick={() => setMockInterviewOpen(true)}>
+          <Sparkles className="h-4 w-4" /> Mock-Interview starten (5 Fragen)
+        </Button>
       </header>
 
       {/* Bewerbungs-Filter / Kontexterkennung */}
@@ -275,6 +282,12 @@ export default function InterviewPrepPage() {
           );
         })}
       </div>
+
+      <MockInterviewModal
+        open={mockInterviewOpen}
+        onClose={() => setMockInterviewOpen(false)}
+        questions={relevantQuestions}
+      />
     </div>
   );
 }

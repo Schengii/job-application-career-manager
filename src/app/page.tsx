@@ -11,20 +11,25 @@ import {
   ArrowRight,
   AlertCircle,
   MailQuestion,
+  Mail,
 } from "lucide-react";
+import { useState } from "react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem, Metrics } from "@/types";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { ApplicationStatusBadge } from "@/components/status-badge";
 import { formatDate } from "@/lib/utils";
 import { getFollowUpStatus } from "@/lib/followUp";
+import { EmailResponseModal } from "@/components/applications/email-response-modal";
 
 export default function DashboardPage() {
-  const { data: metrics, isLoading: metricsLoading } = useSWR<Metrics>("/api/metrics", fetcher, {
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const { data: metrics, isLoading: metricsLoading, mutate: mutateMetrics } = useSWR<Metrics>("/api/metrics", fetcher, {
     refreshInterval: 15000,
   });
-  const { data: applications, isLoading: appsLoading } = useSWR<ApplicationListItem[]>(
+  const { data: applications, isLoading: appsLoading, mutate: mutateApps } = useSWR<ApplicationListItem[]>(
     "/api/applications",
     fetcher,
   );
@@ -46,11 +51,16 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header>
-        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Überblick über deine Jobsuche als Fachinformatiker für Anwendungsentwicklung.
-        </p>
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Überblick über deine Jobsuche als Fachinformatiker für Anwendungsentwicklung.
+          </p>
+        </div>
+        <Button size="sm" variant="outline" onClick={() => setEmailModalOpen(true)}>
+          <Mail className="h-4 w-4" /> E-Mail erfassen
+        </Button>
       </header>
 
       {/* KPI-Karten */}
@@ -171,6 +181,15 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <EmailResponseModal
+        open={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        onUpdated={() => {
+          mutateApps();
+          mutateMetrics();
+        }}
+      />
     </div>
   );
 }

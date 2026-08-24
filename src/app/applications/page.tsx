@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
-import { Plus, ArrowUpRight, Table2, LayoutGrid, Download } from "lucide-react";
+import { Plus, ArrowUpRight, Table2, LayoutGrid, Download, Mail } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem } from "@/types";
 import { Card } from "@/components/ui/card";
@@ -15,6 +15,7 @@ import { ApplicationFormDialog, quickUpdateStatus } from "@/components/applicati
 import { KanbanBoard } from "@/components/applications/kanban-board";
 import { useToast } from "@/components/ui/toast";
 import { applicationsToCsv, downloadCsv } from "@/lib/csv";
+import { EmailResponseModal } from "@/components/applications/email-response-modal";
 
 type ViewMode = "table" | "kanban";
 
@@ -25,6 +26,7 @@ export default function ApplicationsPage() {
 
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [view, setView] = useState<ViewMode>("table");
 
   const filtered = useMemo(() => {
@@ -68,6 +70,9 @@ export default function ApplicationsPage() {
           <p className="mt-1 text-sm text-muted-foreground">Alle Bewerbungen im Überblick, mit direktem Status-Update.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setEmailModalOpen(true)}>
+            <Mail className="h-4 w-4" /> E-Mail erfassen
+          </Button>
           <Button variant="outline" onClick={handleExport}>
             <Download className="h-4 w-4" /> CSV-Export
           </Button>
@@ -192,6 +197,14 @@ export default function ApplicationsPage() {
       )}
 
       <ApplicationFormDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+      <EmailResponseModal
+        open={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        onUpdated={() => {
+          mutate("/api/applications");
+          mutate("/api/metrics");
+        }}
+      />
     </div>
   );
 }
