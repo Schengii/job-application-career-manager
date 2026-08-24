@@ -102,6 +102,26 @@ npm run dev
 
 Die Anwendung läuft anschließend unter **http://localhost:3000**.
 
+## Eigene Bewerbungsliste importieren
+
+`scripts/import-bewerbungsliste.ts` überträgt eine persönliche Excel-Bewerbungsliste (Spalten:
+Datum, Unternehmen, Homepage, Anzeigeportal, Stellenbezeichnung, Ansprechpartner, Adresse,
+Telefonnummer, Emailadresse, "beworben am…", Wiedervorlage, Anmerkungen, Absagen-Datum) sowie
+Profil-/Zeugnisdaten in die Datenbank — inklusive automatisch generierter Anschreiben je
+Unternehmen. Das Skript selbst enthält keine personenbezogenen Daten und ist git-versioniert;
+gelesen werden nur lokale, per `.gitignore` ausgeschlossene Dateien.
+
+```bash
+npm run import:bewerbungsliste
+# oder mit explizitem Pfad:
+npm run import:bewerbungsliste -- "Pfad/zur/Bewerbungsliste.xlsx"
+```
+
+> **Sicherheitshinweis:** `xlsx` (SheetJS) hat aktuell zwei ungepatchte Advisories (Prototype
+> Pollution, ReDoS) und ist deshalb bewusst nur als `devDependency` eingebunden — genutzt wird es
+> ausschließlich in diesem lokalen Import-Skript mit selbst erstellten, vertrauenswürdigen
+> Dateien, niemals zur Laufzeit der Web-Anwendung oder für von außen hochgeladene Dateien.
+
 ### Nützliche Befehle
 
 | Befehl                    | Zweck                                                          |

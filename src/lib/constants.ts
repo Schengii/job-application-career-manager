@@ -43,6 +43,10 @@ export const JOB_PORTALS = [
   { value: "INDEED", label: "Indeed" },
   { value: "GETINIT", label: "GetInIT" },
   { value: "ARBEITSAGENTUR", label: "Agentur für Arbeit" },
+  { value: "JOBWARE", label: "Jobware" },
+  { value: "LINKEDIN", label: "LinkedIn" },
+  { value: "JOBOO", label: "Joboo" },
+  { value: "STELLENANZEIGEN_DE", label: "Stellenanzeigen.de" },
   { value: "OTHER", label: "Sonstige" },
 ] as const;
 

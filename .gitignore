@@ -57,6 +57,7 @@ next-env.d.ts
 # Bewerbungen etc.) – enthält sensible personenbezogene Daten und darf NIEMALS
 # in dieses (öffentliche!) Repository gelangen.
 /Bewerbungsunterlagen final/
+/scripts/profile-data.local.json
 
 # Von `prisma init` installierte generische Prisma-CLI-Referenzdokumente für
 # KI-Coding-Assistenten (nicht projektspezifisch, daher nicht versioniert)

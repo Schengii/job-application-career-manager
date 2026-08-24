@@ -1,0 +1,63 @@
+{
+  "_hinweis": "Vorlage für scripts/profile-data.local.json (gitignored). Kopieren, mit den eigenen Daten befüllen und unter genau diesem Dateinamen im scripts/-Ordner speichern, bevor 'npm run import:bewerbungsliste' ausgeführt wird.",
+  "profile": {
+    "fullName": "Max Mustermann",
+    "email": "max.mustermann@example.com",
+    "phone": "+49 151 12345678",
+    "street": "Musterstraße 1",
+    "postalCode": "53111",
+    "city": "Bonn",
+    "desiredRole": "Fachinformatiker für Anwendungsentwicklung",
+    "techStack": "TypeScript,JavaScript,CSS,React,Next.js,HTML",
+    "preferredLocations": "Bonn,Dortmund,Remote",
+    "searchRadiusKm": 60,
+    "remotePreference": "HYBRID",
+    "minSalary": 42000,
+    "profileSummary": "Kurzes Profil, das der Anschreiben-Generator als Fallback verwendet, wenn eine Stellenanzeige kein eigenes Anforderungsprofil liefert."
+  },
+  "educationEntries": [
+    {
+      "type": "SCHULE",
+      "title": "Mittlere Reife",
+      "institution": "Realschule Bonn",
+      "startDate": "2017-08-01",
+      "endDate": "2018-07-31",
+      "description": "",
+      "sortOrder": 0
+    },
+    {
+      "type": "AUSBILDUNG",
+      "title": "Elektroniker für Betriebstechnik",
+      "institution": "Musterfirma GmbH, Bonn",
+      "startDate": "2018-08-01",
+      "endDate": "2022-01-31",
+      "description": "",
+      "sortOrder": 1
+    },
+    {
+      "type": "UMSCHULUNG",
+      "title": "Fachinformatiker für Anwendungsentwicklung",
+      "institution": "IHK-Umschulung, Bonn",
+      "startDate": "2024-01-01",
+      "endDate": "2026-06-30",
+      "description": "",
+      "sortOrder": 2
+    }
+  ],
+  "projectEntries": [
+    {
+      "title": "electroCheck-ai",
+      "description": "eine KI-gestützte Web-Anwendung zur Prüfung elektrischer Anlagen",
+      "techStack": "TypeScript,React,CSS",
+      "role": "Konzeption & Frontend-Entwicklung",
+      "sortOrder": 0
+    }
+  ],
+  "documents": [
+    {
+      "file": "Lebenslauf.pdf",
+      "name": "Lebenslauf",
+      "category": "LEBENSLAUF"
+    }
+  ]
+}
