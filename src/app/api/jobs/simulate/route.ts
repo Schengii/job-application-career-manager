@@ -16,10 +16,11 @@ import { getOrCreatePreferences } from "@/lib/preferences";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const count = typeof body.count === "number" ? Math.min(20, Math.max(1, body.count)) : 6;
+    const count = typeof body.count === "number" ? Math.min(30, Math.max(1, body.count)) : 10;
+    const portal = typeof body.portal === "string" ? body.portal : undefined;
 
     const preferences = await getOrCreatePreferences();
-    const simulated = generateSimulatedJobPostings(count);
+    const simulated = generateSimulatedJobPostings(count, portal);
 
     const created = [];
     for (const item of simulated) {

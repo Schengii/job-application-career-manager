@@ -10,6 +10,7 @@ import { PreferencesForm } from "@/components/settings/preferences-form";
 import { EducationProjectsManager } from "@/components/settings/education-projects-manager";
 import { DocumentsManager } from "@/components/settings/documents-manager";
 import { BackupManager } from "@/components/settings/backup-manager";
+import { MatchingWeightsCard } from "@/components/settings/matching-weights-card";
 
 const TABS = [
   { id: "preferences", label: "Profil & Präferenzen" },
@@ -58,11 +59,14 @@ export default function SettingsPage() {
       {preferences && (
         <>
           {tab === "preferences" && (
-            <Card>
-              <CardContent className="pt-5">
-                <PreferencesForm preferences={preferences} />
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <Card>
+                <CardContent className="pt-5">
+                  <PreferencesForm preferences={preferences} />
+                </CardContent>
+              </Card>
+              <MatchingWeightsCard />
+            </div>
           )}
           {tab === "education" && <EducationProjectsManager preferences={preferences} />}
           {tab === "documents" && <DocumentsManager />}

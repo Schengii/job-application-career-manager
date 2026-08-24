@@ -16,6 +16,8 @@ import { StatusTimeline } from "@/components/applications/status-timeline";
 import { DocumentsPanel } from "@/components/applications/documents-panel";
 import { CoverLetterPanel } from "@/components/applications/cover-letter-panel";
 import { VoiceMemoPanel } from "@/components/applications/voice-memo-panel";
+import { InterviewNotesEditor } from "@/components/applications/interview-notes-editor";
+import { apiPut } from "@/lib/api";
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -95,6 +97,16 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
               <ApplicationDetailsForm application={application} onSaved={refresh} />
             </CardContent>
           </Card>
+
+          <InterviewNotesEditor
+            applicationId={application.id}
+            companyName={application.company.name}
+            initialNotes={application.notes}
+            onSaveNotes={async (updatedNotes) => {
+              await apiPut(`/api/applications/${application.id}`, { notes: updatedNotes });
+              refresh();
+            }}
+          />
 
           <Card>
             <CardHeader>

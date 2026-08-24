@@ -9,6 +9,13 @@
 //   10% Bonus für explizit im Anforderungsprofil genannte Präferenz-Skills
 // -----------------------------------------------------------------------------
 
+export type MatchWeights = {
+  techWeight?: number; // default 0.5 (50%)
+  locationWeight?: number; // default 0.25 (25%)
+  roleWeight?: number; // default 0.15 (15%)
+  bonusWeight?: number; // default 0.1 (10%)
+};
+
 export type MatchInput = {
   job: {
     title: string;
@@ -24,6 +31,7 @@ export type MatchInput = {
     remotePreference: string; // ONSITE | HYBRID | REMOTE | ANY
     desiredRole: string;
   };
+  weights?: MatchWeights;
 };
 
 // Deutsche Füllwörter, die bei der Rollen-Keyword-Analyse ignoriert werden,
@@ -69,7 +77,12 @@ function toRoleKeywords(value: string): string[] {
     .filter((w) => w.length > 2 && !STOPWORDS.has(w));
 }
 
-export function computeMatchScore({ job, preferences }: MatchInput): number {
+export function computeMatchScore({ job, preferences, weights }: MatchInput): number {
+  const wTech = weights?.techWeight ?? 0.5;
+  const wLoc = weights?.locationWeight ?? 0.25;
+  const wRole = weights?.roleWeight ?? 0.15;
+  const wBonus = weights?.bonusWeight ?? 0.1;
+
   const prefTech = toKeywordList(preferences.techStack);
   const jobTech = toKeywordList(job.techStack);
   const haystack = `${job.title} ${job.description} ${job.requirementsProfile ?? ""}`.toLowerCase();
@@ -100,7 +113,7 @@ export function computeMatchScore({ job, preferences }: MatchInput): number {
   const roleHits = roleKeywords.filter((kw) => haystack.includes(kw)).length;
   const roleScore = roleKeywords.length > 0 ? roleHits / roleKeywords.length : 0;
 
-  const total = techScore * 0.5 + locationScore * 0.25 + roleScore * 0.15 + (techHits > 0 ? 0.1 : 0);
+  const total = techScore * wTech + locationScore * wLoc + roleScore * wRole + (techHits > 0 ? wBonus : 0);
 
   return Math.round(Math.min(1, total) * 100);
 }

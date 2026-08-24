@@ -109,4 +109,30 @@ describe("computeMatchScore", () => {
     expect(score).toBeLessThanOrEqual(100);
     expect(score).toBeGreaterThanOrEqual(0);
   });
+
+  it("berücksichtigt benutzerdefinierte Gewichtungen (Tech vs. Location)", () => {
+    const job = {
+      title: "Frontend Developer",
+      description: "TypeScript und React",
+      location: "München",
+      remote: false,
+      requirementsProfile: null,
+      techStack: "TypeScript,React",
+    };
+
+    // Hohe Tech-Gewichtung (80%) vs. niedrige Tech-Gewichtung (20%)
+    const highTech = computeMatchScore({
+      job,
+      preferences,
+      weights: { techWeight: 0.8, locationWeight: 0.1, roleWeight: 0.1, bonusWeight: 0 },
+    });
+
+    const lowTech = computeMatchScore({
+      job,
+      preferences,
+      weights: { techWeight: 0.2, locationWeight: 0.7, roleWeight: 0.1, bonusWeight: 0 },
+    });
+
+    expect(highTech).toBeGreaterThan(lowTech);
+  });
 });

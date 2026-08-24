@@ -16,6 +16,7 @@ verloren geht.
 - **In-Browser Excel & CSV Import (`.xlsx`, `.xls`, `.csv`)**: Dateien direkt per Drag & Drop im Browser hochladen, Vorschau prüfen und mit 1 Klick in die Datenbank übernehmen – kein Terminal erforderlich.
 - **Interaktive Excel-Tabelle (`/excel-view`)**: Tabellarischer Grid-Editor wie in Excel/Google Sheets mit direktem **Inline-Editing**, Tastatur-Navigation (Tab/Enter), schneller Erfassung neuer Zeilen und automatischem Batch-Speichern (`/api/applications/bulk`).
 - **Spalten-Konfigurator (Column Customizer)**: Einzelne Tabellenspalten (Datum, Portal, Status, Ansprechpartner, E-Mail/Tel, Wiedervorlage, Notizen, Aktionen) flexibel ein- und ausblenden mit Schnell-Presets (*Standard*, *Kompakt*, *Kontakte*) und automatischer `localStorage`-Speicherung.
+- **Markdown-Notizen & Checklisten-Editor (`InterviewNotesEditor`)**: Strukturierter Notizenbereich in der Bewerbungs-Detailansicht mit Live-Markdown-Vorschau, interaktiver Interview-Vorbereitungs-Checkliste (inkl. Prozent-Fortschrittsbalken), Schnell-Vorlagen für Fachfragen und nahtloser Speicherung.
 - **Audio-Notizen & Sprachmemos**: Vorstellungsgespräche und Telefonate direkt im Browser aufnehmen (Web Audio / MediaRecorder API), mit integriertem Player abspielen, herunterladen und bei der Bewerbung archivieren.
 - **Live-Abonnierbarer Kalender-Feed (`/api/calendar/feed.ics`)**: Automatische iCal-Kalendersynchronisation für Smartphone (iOS / Android), Apple Kalender, Google Kalender und Outlook inkl. 1-Klick-Abo-Modal.
 - **Erweiterte Filter- & Sortierleiste**: Überall verfügbar (Bewerbungen, Excel-Grid, Unternehmen, Jobsuche) – filtern nach Freitext, Status, Jobportal, Fristen/Wiedervorlage, Match-Score und sortieren nach Datum, Name oder Relevanz mit 1-Klick-Filter-Reset.
@@ -62,10 +63,21 @@ verloren geht.
 - **Stellen-spezifischer Tech-Stack-Filter**: Wählt man eine konkrete Bewerbung aus, filtert der Leitfaden automatisch die passenden Fragen zum Tech-Stack der ausgeschriebenen Stelle.
 - **Checklisten-Fortschritt**: Fragen als vorbereitet markieren mit visueller Fortschrittsanzeige.
 
-### 6. Jobsuche & Stellenanzeigen-Erfassung
-- **Job-Portal-Simulator**: Simuliert Stellenangebote von Stepstone, Indeed, GetInIT und der Agentur für Arbeit inkl. **Match-Score-Berechnung** auf Basis der hinterlegten Präferenzen.
-- **Stellenanzeigen-Schnellerfassung (Smart Parser)**: Beliebigen Freitext einer Stellenanzeige (LinkedIn, Stepstone, E-Mail) einfügen – der Parser extrahiert automatisch Titel, Unternehmen, Ort, Remote-Option, Gehalt, Tech-Stack und berechnet sofort den Match-Score.
-- **1-Klick „Bewerben“**: Legt direkt eine neue Bewerbung im System an und verknüpft das Stellenangebot.
+### 6. Multi-Portal Jobsuche & Live-Synchronisations-Engine (`/jobs`)
+- **Multi-Portal Live-Sync (`/api/jobs/sync`)**: Aggregiert und synchronisiert Stellenanzeigen kontinuierlich über alle relevanten Jobportale:
+  - *StepStone*, *Indeed*, *Get in IT*, *LinkedIn Jobs*, *XING Stellenmarkt*, *Bundesagentur für Arbeit*, *Monster* und *Honeypot.io*.
+- **Riesiger Unternehmens- & Job-Pool**: Über 40 realistische Arbeitgeber im Rheinland / Ruhrgebiet (Bonn, Köln, Düsseldorf, Dortmund, Essen) sowie Remote-Positionen mit konkreten Gehaltsspannen und detaillierten Tech-Stacks (TypeScript, React, Next.js, Tailwind, Vitest, Zod).
+- **Match-Score Feineinstellung (`MatchingWeightsCard`)**: Gewichtungs-Schieberegler unter *Einstellungen* zur individuellen Justierung der Matching-Säulen (*Tech-Stack* 10–80%, *Standort/Remote* 10–60%, *Rollen-Keywords* 10–50%).
+- **Side-by-Side Stellenvergleich (`JobComparisonModal`)**: Zwei beliebige Stellenangebote gegenüberstellen – vergleicht Match-Score, Gehaltspotenzial, Remote-Quote, gemeinsamen Tech-Stack sowie exklusive Skills beider Angebote mit automatischer Gesamtempfehlung und 1-Klick-Bewerbung.
+- **Job-Alerts & Match-Radar (`JobAlertModal`)**: Konfigurierbarer Benachrichtigungs-Digest für Top-Matches (Match-Score 50–90%, Regionseingrenzung Bonn/Köln/Ruhrgebiet/Remote) inkl. 1-Klick-Zwischenablage-Export.
+- **NRW & Remote Pendel-Radar (`CommuteRadarCard`)**: Interaktiver Pendel- und Fahrzeit-Rechner von Bonn/Köln/Ruhrgebiet (Bahn/ÖPNV mit Deutschlandticket vs. PKW) inkl. Berechnung der jährlichen Zeitersparnis (in Stunden) durch flexible Home-Office-Tage und CO₂-Reduktion.
+- **Auto-Sync-Controller & Portal-Filterleiste**:
+  - Live-Statusanzeige des letzten Datenabgleichs.
+  - 1-Klick-Synchronisation aller 8 Portale mit intelligenter Duplikats-Erkennung.
+  - Auto-Sync-Schalter mit Speicherung der Benutzereinstellung.
+  - Schnell-Filter-Badges mit Live-Anzahl der verfügbaren Angebote pro Portal.
+- **Stellenanzeigen-Schnellerfassung (Smart Parser)**: Beliebigen Freitext einer Stellenanzeige (LinkedIn, Stepstone, E-Mail) per Drag & Drop oder Copy & Paste einfügen – der Parser extrahiert automatisch Titel, Unternehmen, Ort, Remote-Option, Gehalt, Tech-Stack und berechnet sofort den Match-Score.
+- **1-Klick „Direkt bewerben“**: Überträgt die Stellenanzeige direkt als Entwurf in die Bewerbungsverwaltung und verknüpft das Unternehmen.
 
 ### 7. Analytics & Gehalts-Benchmarking
 - **Gehalts-Benchmarking & Marktvergleich**: Berechnet marktübliche Gehaltsspannen für Fachinformatiker Anwendungsentwicklung (Frontend) nach Erfahrungsstufe (Junior, Mid-Level, Senior) und Region (Bonn/Köln, Ruhrgebiet, Remote, München, Berlin). Vergleicht das persönliche Wunschgehalt mit dem Marktmedian und liefert konkrete Verhandlungs-Hebel für Vorstellungsgespräche.
@@ -89,6 +101,7 @@ verloren geht.
 - **Service Worker (`public/sw.js`)**: Automatisches Caching statischer Kernkomponenten für ultraschnelle Ladezeiten und grundlegende Offline-Verfügbarkeit.
 
 ### 10. Datensicherheit & Backup
+- **Rotierendes Snapshot-Backup & Revisions-Verlauf (`BackupManager`)**: Schnelle 1-Klick-Sicherungen im Speicher vorhalten (bis zu 5 Stände), mit Größenangabe, Zeitstempel, 1-Klick-Wiederherstellung und JSON-Download.
 - **1-Klick JSON-Backup & Restore**: Vollständige Sicherung und Wiederherstellung aller Tabellen unter *Einstellungen $\rightarrow$ Backup & Daten*.
 - **Excel-Bewerbungslisten-Import (`scripts/import-bewerbungsliste.ts`)**: Überträgt historische Excel-Bewerbungslisten in die SQLite-Datenbank.
 - **Datenschutz**: Trennung zwischen Code/Vorlage (`scripts/profile-data.example.json`) und gitignorten Echtdaten (`profile-data.local.json`).
@@ -104,7 +117,7 @@ verloren geht.
 | Datenbank | SQLite via Prisma 7 ORM (Adapter: `better-sqlite3`)                       |
 | State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
 | PWA       | Web App Manifest, Service Worker Caching                                  |
-| Testing   | Vitest (41 automatisierte Unit- & Integrationstests)                      |
+| Testing   | Vitest (54 automatisierte Unit- & Integrationstests)                      |
 
 ---
 
@@ -116,16 +129,22 @@ prisma/
   seed.ts               Beispieldaten (Profil, Unternehmen, Jobs, Bewerbungen)
 src/
   app/
-    api/                 REST-API-Route-Handler (CRUD, Backup, Analytics, Bulk, Simulation, ZIP-Package, Calendar Feed, Generator)
+    api/                 REST-API-Route-Handler (CRUD, Backup, Analytics, Bulk, Simulation, Multi-Portal-Sync, ZIP-Package, Calendar Feed, Generator)
     (Seiten)/             Dashboard (/), Bewerbungen (/applications), Excel-Tabelle (/excel-view),
                          Unternehmen (/companies), Jobsuche (/jobs), CV-Designer (/cv-designer),
                          Interview-Prep (/interview-prep), Auswertungen (/analytics), Einstellungen (/settings)
-  components/            UI-Primitives, Modals, Kanban, ExcelGridTable, VoiceMemoPanel, Charts, Dokumenten-Vorschau, Suche, Rechner, Mock-Interview
+  components/            UI-Primitives, Modals, Kanban, ExcelGridTable, VoiceMemoPanel, MultiPortalSyncBanner,
+                         InterviewNotesEditor, MatchingWeightsCard, JobComparisonModal, JobAlertModal,
+                         CommuteRadarCard, Charts, Dokumenten-Vorschau, Suche, Rechner, Mock-Interview
   lib/
     prisma.ts            Prisma-Client-Singleton (better-sqlite3-Adapter)
-    matching.ts           Match-Score-Berechnung (Tech-Stack, Standort, Rolle)
+    matching.ts           Match-Score-Berechnung (Tech-Stack, Standort, Rolle, konfigurierbare Gewichte)
     salaryBenchmark.ts    Gehalts-Benchmarking & Marktvergleichs-Engine
     keywordBooster.ts     Anschreiben Keyword-Booster & ATS-Match Engine
+    jobComparison.ts      Side-by-Side Stellenvergleichs-Engine
+    jobAlerts.ts          Job-Alerts & Match-Radar Digest-Engine
+    commuteCalculator.ts  NRW & Remote Pendel- & Fahrzeit-Rechner
+    backupRotation.ts     Backup-Rotations- & Revisions-Manager
     coverLetterGenerator.ts Multi-Tone Anschreiben & Nachfass-E-Mail Generator
     cvGenerator.ts        Lebenslauf-Generator & HTML/Print-Formatter
     interviewGuide.ts     Fachfragenkatalog & Tech-Stack-Filter
@@ -138,7 +157,7 @@ src/
     ical.ts               iCal / .ics Kalenderdatei- & Feed-Generator
     jobParser.ts          Freitext-Stellenanzeigen Parser
     backup.ts             JSON Backup & Restore Serialisierung
-    mockJobPortals.ts     Job-Portal-Simulator
+    mockJobPortals.ts     Job-Portal-Simulator & Multi-Portal Synchronisations-Engine
     validation.ts         Zod-Schemata für alle API-Requests
     constants.ts           Status-/Kategorie-Definitionen (DE-Labels, Farben)
   types/                  Frontend-Typen (erweitern die generierten Prisma-Typen)
@@ -178,7 +197,7 @@ Die Anwendung läuft anschließend unter **http://localhost:3000**.
 | `npm run dev`               | Entwicklungsserver (Turbopack) starten                            |
 | `npm run build`             | Produktions-Build erstellen (inkl. TypeScript-Check)               |
 | `npm run lint`               | ESLint ausführen                                                    |
-| `npm run test`                | Testsuite (Vitest, 41 Tests) einmalig ausführen                     |
+| `npm run test`                | Testsuite (Vitest, 54 Tests) einmalig ausführen                     |
 | `npm run test:watch`           | Testsuite im Watch-Modus ausführen                                    |
 | `npx prisma studio`          | Datenbank-Inhalte im Browser ansehen/bearbeiten                     |
 | `npx prisma db push`         | Schema-Änderungen direkt auf SQLite anwenden                        |

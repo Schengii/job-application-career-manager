@@ -4,7 +4,19 @@ import { useMemo, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { RefreshCw, ExternalLink, MapPin, Building2, Send, Sparkles, Search, X } from "lucide-react";
+import {
+  ExternalLink,
+  MapPin,
+  Building2,
+  Send,
+  Sparkles,
+  Search,
+  X,
+  Briefcase,
+  Scale,
+  BellRing,
+  Compass,
+} from "lucide-react";
 import { fetcher, apiPost } from "@/lib/api";
 import type { JobPostingWithCompany } from "@/types";
 import { Card } from "@/components/ui/card";
@@ -14,6 +26,10 @@ import { cn } from "@/lib/utils";
 import { JOB_PORTALS, findStatusMeta } from "@/lib/constants";
 import { useToast } from "@/components/ui/toast";
 import { JobTextParserModal } from "@/components/jobs/job-text-parser-modal";
+import { MultiPortalSyncBanner } from "@/components/jobs/multi-portal-sync-banner";
+import { JobComparisonModal } from "@/components/jobs/job-comparison-modal";
+import { JobAlertModal } from "@/components/jobs/job-alert-modal";
+import { CommuteRadarCard } from "@/components/jobs/commute-radar-card";
 
 function matchColor(score: number) {
   if (score >= 75) return "text-success border-success/30 bg-success-soft/40";
@@ -24,7 +40,7 @@ function matchColor(score: number) {
 type SortOption = "SCORE_DESC" | "DATE_DESC" | "COMPANY_ASC";
 
 export default function JobsPage() {
-  const { data: jobs, isLoading } = useSWR<JobPostingWithCompany[]>("/api/jobs", fetcher);
+  const { data: jobs, isLoading, mutate: mutateJobs } = useSWR<JobPostingWithCompany[]>("/api/jobs", fetcher);
   const { mutate } = useSWRConfig();
   const toast = useToast();
   const router = useRouter();
@@ -35,9 +51,11 @@ export default function JobsPage() {
   const [remoteFilter, setRemoteFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState<SortOption>("SCORE_DESC");
 
-  const [simulating, setSimulating] = useState(false);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [parserOpen, setParserOpen] = useState(false);
+  const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [showCommuteRadar, setShowCommuteRadar] = useState(true);
 
   const filtered = useMemo(() => {
     if (!jobs) return [];
@@ -92,26 +110,14 @@ export default function JobsPage() {
     return list;
   }, [jobs, portalFilter, matchFilter, remoteFilter, searchQuery, sortBy]);
 
-  const hasActiveFilters = portalFilter !== "ALL" || matchFilter !== "ALL" || remoteFilter !== "ALL" || searchQuery.trim() !== "";
+  const hasActiveFilters =
+    portalFilter !== "ALL" || matchFilter !== "ALL" || remoteFilter !== "ALL" || searchQuery.trim() !== "";
 
   function resetFilters() {
     setPortalFilter("ALL");
     setMatchFilter("ALL");
     setRemoteFilter("ALL");
     setSearchQuery("");
-  }
-
-  async function handleSimulate() {
-    setSimulating(true);
-    try {
-      await apiPost("/api/jobs/simulate", { count: 6 });
-      await mutate("/api/jobs");
-      toast.success("Neue Stellenangebote von den Jobportalen abgerufen.");
-    } catch {
-      toast.error("Job-Suche fehlgeschlagen.");
-    } finally {
-      setSimulating(false);
-    }
   }
 
   async function handleApply(jobId: string) {
@@ -131,21 +137,51 @@ export default function JobsPage() {
     <div className="flex flex-col gap-6 animate-fade-in">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Jobsuche</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Jobsuche & Live-Stellenportal</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Stellenangebote durchsuchen, nach Match-Score filtern und automatisch anhand deiner Präferenzen abgleichen.
+            Automatisch aggregierte Stellenangebote von allen großen Portalen, abgeglichen mit deinem Entwicklerprofil.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setParserOpen(true)} className="card-hover-effect">
-            <Sparkles className="h-4 w-4" /> Anzeige einfügen (Parser)
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setComparisonOpen(true)}
+            className="card-hover-effect"
+            disabled={!jobs || jobs.length < 2}
+          >
+            <Scale className="h-4 w-4 text-primary" /> Stellen vergleichen
           </Button>
-          <Button onClick={handleSimulate} disabled={simulating} className="card-hover-effect">
-            <RefreshCw className={cn("h-4 w-4", simulating && "animate-spin")} />
-            {simulating ? "Suche läuft …" : "Portale durchsuchen"}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAlertOpen(true)}
+            className="card-hover-effect"
+          >
+            <BellRing className="h-4 w-4 text-amber-500" /> Job-Alerts
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCommuteRadar(!showCommuteRadar)}
+            className="card-hover-effect"
+          >
+            <Compass className="h-4 w-4 text-sky-500" /> {showCommuteRadar ? "Pendel-Radar verbergen" : "Pendel-Radar"}
+          </Button>
+
+          <Button variant="outline" size="sm" onClick={() => setParserOpen(true)} className="card-hover-effect">
+            <Sparkles className="h-4 w-4 text-primary" /> Smart Parser
           </Button>
         </div>
       </header>
+
+      {/* Multi-Portal Sync Banner */}
+      <MultiPortalSyncBanner jobs={jobs ?? []} onSyncComplete={() => mutateJobs()} />
+
+      {/* NRW & Remote Pendel-Radar Card */}
+      {showCommuteRadar && <CommuteRadarCard />}
 
       {/* Filter- & Suchleiste */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface p-3.5 glass-card">
@@ -224,7 +260,7 @@ export default function JobsPage() {
           )}
         </div>
 
-        <span className="text-xs text-muted-foreground">
+        <span className="text-xs font-semibold text-muted-foreground">
           {filtered.length} von {jobs?.length ?? 0} Angeboten
         </span>
       </div>
@@ -232,76 +268,99 @@ export default function JobsPage() {
       {isLoading && <p className="text-sm text-muted-foreground">Lade Stellenangebote …</p>}
       {!isLoading && filtered.length === 0 && (
         <div className="rounded-xl border border-border bg-surface p-12 text-center text-sm text-muted-foreground">
-          Keine Stellenangebote für diesen Filter gefunden. Klicke auf „Jobportale durchsuchen“, um neue Angebote abzurufen.
+          <Briefcase className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+          <p className="font-semibold text-foreground">Keine Stellenangebote für diese Filterauswahl gefunden.</p>
+          <p className="mt-1 text-xs">
+            Klicke oben auf „Jetzt alle Portale abgleichen“ oder setze die Filter zurück.
+          </p>
         </div>
       )}
 
+      {/* Grid der Stellenanzeigen */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {filtered.map((job) => (
-          <Card key={job.id} className="flex flex-col gap-3 p-5 card-hover-effect">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate font-semibold text-foreground">{job.title}</p>
-                <p className="mt-0.5 flex items-center gap-1 truncate text-sm text-muted-foreground">
-                  <Building2 className="h-3.5 w-3.5 shrink-0" /> {job.company?.name ?? "Unbekanntes Unternehmen"}
-                </p>
+          <Card key={job.id} className="flex flex-col justify-between gap-3 p-5 card-hover-effect border-border/80">
+            <div className="space-y-2.5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-bold text-foreground text-sm leading-snug">{job.title}</p>
+                  <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-muted-foreground font-medium">
+                    <Building2 className="h-3.5 w-3.5 shrink-0 text-primary" /> {job.company?.name ?? "Unbekanntes Unternehmen"}
+                  </p>
+                </div>
+                <div className={cn("shrink-0 rounded-lg border px-2.5 py-1 text-center font-bold", matchColor(job.matchScore ?? 0))}>
+                  <p className="text-base font-semibold leading-none">{job.matchScore ?? 0}%</p>
+                  <p className="text-[10px] uppercase opacity-75">Match</p>
+                </div>
               </div>
-              <div className={cn("shrink-0 rounded-lg border px-2.5 py-1 text-center font-bold", matchColor(job.matchScore ?? 0))}>
-                <p className="text-base font-semibold leading-none">{job.matchScore ?? 0}%</p>
-                <p className="text-[10px] uppercase opacity-75">Match</p>
+
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5 text-muted-foreground" /> {job.location ?? "—"} {job.remote && "(Remote)"}
+                </span>
+                <span className="rounded bg-surface-hover px-1.5 py-0.5 text-[11px] font-medium text-foreground">
+                  {findStatusMeta(JOB_PORTALS, job.portalSource)?.label ?? job.portalSource}
+                </span>
+                {job.salaryInfo && <span className="font-medium text-foreground">{job.salaryInfo}</span>}
               </div>
+
+              <p className="line-clamp-2 text-xs text-muted-foreground leading-relaxed">{job.description}</p>
+
+              {job.techStack && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {job.techStack.split(",").map((t) => (
+                    <span key={t} className="rounded-md bg-surface-hover/80 border border-border/50 px-2 py-0.5 text-[11px] font-medium text-foreground">
+                      {t.trim()}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3.5 w-3.5" /> {job.location ?? "—"} {job.remote && "(Remote)"}
-              </span>
-              <span>{findStatusMeta(JOB_PORTALS, job.portalSource)?.label ?? job.portalSource}</span>
-              {job.salaryInfo && <span>{job.salaryInfo}</span>}
-            </div>
-
-            <p className="line-clamp-2 text-sm text-muted-foreground">{job.description}</p>
-
-            {job.techStack && (
-              <div className="flex flex-wrap gap-1.5">
-                {job.techStack.split(",").map((t) => (
-                  <span key={t} className="rounded-full bg-surface-hover px-2 py-0.5 text-xs text-muted-foreground">
-                    {t.trim()}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-auto flex items-center justify-between gap-2 pt-2 border-t border-border/50">
+            <div className="mt-2 flex items-center justify-between gap-2 pt-3 border-t border-border/50">
               {job.sourceUrl ? (
                 <a
                   href={job.sourceUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1 text-xs text-primary hover:underline"
+                  className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                 >
-                  Anzeige ansehen <ExternalLink className="h-3 w-3" />
+                  Original-Anzeige öffnen <ExternalLink className="h-3 w-3" />
                 </a>
               ) : (
                 <span />
               )}
               <Button size="sm" onClick={() => handleApply(job.id)} disabled={applyingId === job.id} className="card-hover-effect">
-                <Send className="h-3.5 w-3.5" /> {applyingId === job.id ? "…" : "Bewerben"}
+                <Send className="h-3.5 w-3.5 text-white" />
+                <span>{applyingId === job.id ? "Wird angelegt …" : "Direkt bewerben"}</span>
               </Button>
             </div>
           </Card>
         ))}
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Präferenzen für das Matching lassen sich unter{" "}
-        <Link href="/settings" className="text-primary hover:underline">
+      <p className="text-xs text-muted-foreground text-center pt-2">
+        Matching-Präferenzen (Standort, Wunschgehalt, Tech-Stack) können jederzeit unter{" "}
+        <Link href="/settings" className="text-primary font-semibold hover:underline">
           Einstellungen
         </Link>{" "}
-        anpassen.
+        angepasst werden.
       </p>
 
+      {/* Modale */}
       <JobTextParserModal open={parserOpen} onClose={() => setParserOpen(false)} />
+      <JobComparisonModal
+        open={comparisonOpen}
+        onClose={() => setComparisonOpen(false)}
+        allJobs={jobs ?? []}
+        onApply={handleApply}
+      />
+      <JobAlertModal
+        open={alertOpen}
+        onClose={() => setAlertOpen(false)}
+        allJobs={jobs ?? []}
+        onApply={handleApply}
+      />
     </div>
   );
 }
