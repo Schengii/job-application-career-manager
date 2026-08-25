@@ -6,6 +6,7 @@ import { ToastProvider } from "@/components/ui/toast";
 import { Sidebar } from "@/components/sidebar";
 import { CommandPalette } from "@/components/command-palette";
 import { PwaRegister } from "@/components/pwa-register";
+import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <ToastProvider>
             <PwaRegister />
             <CommandPalette />
+            <KeyboardShortcutsDialog />
             <div className="flex min-h-screen flex-col md:flex-row">
               <Sidebar />
               <main className="flex-1 overflow-x-hidden px-4 py-6 md:px-8 md:py-8">

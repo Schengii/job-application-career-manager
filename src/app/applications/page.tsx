@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
 import {
@@ -15,6 +15,7 @@ import {
   Search,
   SlidersHorizontal,
   X,
+  Video,
 } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem } from "@/types";
@@ -30,6 +31,8 @@ import { applicationsToCsv, downloadCsv } from "@/lib/csv";
 import { EmailResponseModal } from "@/components/applications/email-response-modal";
 import { ExcelGridTable } from "@/components/excel/excel-grid-table";
 import { ExcelImportModal } from "@/components/excel/excel-import-modal";
+import { BatchActionBar } from "@/components/applications/batch-action-bar";
+import { parseTags, getTagStyle } from "@/lib/tags";
 
 type ViewMode = "table" | "kanban" | "excel";
 type SortOption = "DATE_DESC" | "DATE_ASC" | "COMPANY_ASC" | "STATUS";
@@ -41,14 +44,37 @@ export default function ApplicationsPage() {
 
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [portalFilter, setPortalFilter] = useState<string>("ALL");
+  const [tagFilter, setTagFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [onlyFollowUps, setOnlyFollowUps] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("DATE_DESC");
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [view, setView] = useState<ViewMode>("table");
+
+  // Global listener for shortcut 'N'
+  useEffect(() => {
+    function handleOpenDialog() {
+      setDialogOpen(true);
+    }
+    window.addEventListener("open-new-application-dialog", handleOpenDialog);
+    return () => window.removeEventListener("open-new-application-dialog", handleOpenDialog);
+  }, []);
+
+  // Aggregiere alle eindeutigen Tags
+  const availableTags = useMemo(() => {
+    if (!applications) return [];
+    const tagSet = new Set<string>();
+    for (const app of applications) {
+      for (const t of parseTags(app.tags)) {
+        tagSet.add(t);
+      }
+    }
+    return Array.from(tagSet).sort();
+  }, [applications]);
 
   const filtered = useMemo(() => {
     if (!applications) return [];
@@ -64,6 +90,11 @@ export default function ApplicationsPage() {
       list = list.filter((a) => (a.source || a.jobPosting?.portalSource) === portalFilter);
     }
 
+    // Tag Filter
+    if (tagFilter !== "ALL") {
+      list = list.filter((a) => parseTags(a.tags).includes(tagFilter));
+    }
+
     // Search Query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -71,6 +102,7 @@ export default function ApplicationsPage() {
         (a) =>
           a.company.name.toLowerCase().includes(q) ||
           a.position.toLowerCase().includes(q) ||
+          (a.tags && a.tags.toLowerCase().includes(q)) ||
           (a.notes && a.notes.toLowerCase().includes(q)) ||
           (a.nextStep && a.nextStep.toLowerCase().includes(q))
       );
@@ -103,15 +135,35 @@ export default function ApplicationsPage() {
     });
 
     return list;
-  }, [applications, statusFilter, portalFilter, searchQuery, onlyFollowUps, sortBy]);
+  }, [applications, statusFilter, portalFilter, tagFilter, searchQuery, onlyFollowUps, sortBy]);
 
-  const hasActiveFilters = statusFilter !== "ALL" || portalFilter !== "ALL" || searchQuery.trim() !== "" || onlyFollowUps;
+  const hasActiveFilters =
+    statusFilter !== "ALL" ||
+    portalFilter !== "ALL" ||
+    tagFilter !== "ALL" ||
+    searchQuery.trim() !== "" ||
+    onlyFollowUps;
 
   function resetFilters() {
     setStatusFilter("ALL");
     setPortalFilter("ALL");
+    setTagFilter("ALL");
     setSearchQuery("");
     setOnlyFollowUps(false);
+  }
+
+  function handleToggleSelect(id: string) {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  }
+
+  function handleSelectAll() {
+    if (selectedIds.length === filtered.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filtered.map((a) => a.id));
+    }
   }
 
   async function handleStatusChange(id: string, status: string) {
@@ -123,7 +175,11 @@ export default function ApplicationsPage() {
     );
     try {
       await quickUpdateStatus(id, status);
-      await Promise.all([mutate("/api/applications"), mutate("/api/metrics")]);
+      await Promise.all([
+        mutate("/api/applications"),
+        mutate("/api/metrics"),
+        mutate("/api/analytics"),
+      ]);
       toast.success("Status aktualisiert.");
     } catch {
       toast.error("Status konnte nicht aktualisiert werden.");
@@ -141,12 +197,12 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 animate-fade-in">
+    <div className="flex flex-col gap-6 animate-fade-in pb-16">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Bewerbungen</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Alle Bewerbungen im Überblick, mit flexiblem Filter, Sortierung und Direkt-Update.
+            Alle Bewerbungen im Überblick mit Stapelverarbeitung, Tags, Filtern und Video-Meeting-Integration.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -160,7 +216,7 @@ export default function ApplicationsPage() {
             <Download className="h-4 w-4" /> CSV-Export
           </Button>
           <Button onClick={() => setDialogOpen(true)} className="card-hover-effect">
-            <Plus className="h-4 w-4" /> Neue Bewerbung
+            <Plus className="h-4 w-4" /> Neue Bewerbung (N)
           </Button>
         </div>
       </header>
@@ -174,7 +230,7 @@ export default function ApplicationsPage() {
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
-                placeholder="Firma, Position, Notiz suchen …"
+                placeholder="Firma, Position, Tag, Notiz suchen …"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="h-9 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
@@ -203,6 +259,22 @@ export default function ApplicationsPage() {
                 </option>
               ))}
             </Select>
+
+            {/* Tag Filter */}
+            {availableTags.length > 0 && (
+              <Select
+                value={tagFilter}
+                onChange={(e) => setTagFilter(e.target.value)}
+                className="h-9 w-auto text-xs"
+              >
+                <option value="ALL">Alle Tags</option>
+                {availableTags.map((tag) => (
+                  <option key={tag} value={tag}>
+                    #{tag}
+                  </option>
+                ))}
+              </Select>
+            )}
 
             {/* Sortierung */}
             <Select
@@ -300,11 +372,20 @@ export default function ApplicationsPage() {
       ) : (
         <Card className="overflow-hidden">
           <div className="scroll-thin overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
+            <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="border-b border-border bg-surface-hover/60 text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
+                  <th className="w-10 px-4 py-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={filtered.length > 0 && selectedIds.length === filtered.length}
+                      onChange={handleSelectAll}
+                      className="rounded border-border cursor-pointer"
+                      title="Alle auswählen"
+                    />
+                  </th>
                   <th className="px-5 py-3 font-medium">Firma</th>
-                  <th className="px-5 py-3 font-medium">Position</th>
+                  <th className="px-5 py-3 font-medium">Position & Tags</th>
                   <th className="px-5 py-3 font-medium">Datum</th>
                   <th className="px-5 py-3 font-medium">Status</th>
                   <th className="px-5 py-3 font-medium">Nächster Schritt</th>
@@ -314,71 +395,123 @@ export default function ApplicationsPage() {
               <tbody className="divide-y divide-border">
                 {isLoading && (
                   <tr>
-                    <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-5 py-8 text-center text-muted-foreground">
                       Lade Bewerbungen …
                     </td>
                   </tr>
                 )}
                 {!isLoading && filtered.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-5 py-8 text-center text-muted-foreground">
                       Keine Bewerbungen für diesen Filter gefunden.
                     </td>
                   </tr>
                 )}
-                {filtered.map((app) => (
-                  <tr
-                    key={app.id}
-                    className={cn(
-                      "hover:bg-surface-hover/60 transition-colors",
-                      app.status === "SENT" && "border-l-4 border-l-amber-500",
-                      app.status === "INTERVIEW" && "border-l-4 border-l-sky-500",
-                      app.status === "OFFER" && "border-l-4 border-l-emerald-500",
-                      app.status === "REJECTED" && "border-l-4 border-l-rose-500",
-                      app.status === "WITHDRAWN" && "border-l-4 border-l-slate-400",
-                      app.status === "DRAFT" && "border-l-4 border-l-slate-300"
-                    )}
-                  >
-                    <td className="px-5 py-3">
-                      <Link href={`/applications/${app.id}`} className="font-semibold text-foreground hover:underline">
-                        {app.company.name}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3 text-muted-foreground">{app.position}</td>
-                    <td className="px-5 py-3 text-muted-foreground">{formatDate(app.applicationDate)}</td>
-                    <td className="px-5 py-3">
-                      <label className="sr-only" htmlFor={`status-${app.id}`}>
-                        Status für {app.position}
-                      </label>
-                      <Select
-                        id={`status-${app.id}`}
-                        value={app.status}
-                        onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                        className="h-8 w-auto py-1 text-xs font-semibold"
-                      >
-                        {APPLICATION_STATUSES.map((s) => (
-                          <option key={s.value} value={s.value}>
-                            {s.label}
-                          </option>
-                        ))}
-                      </Select>
-                    </td>
-                    <td className="max-w-[220px] truncate px-5 py-3 text-muted-foreground">{app.nextStep ?? "—"}</td>
-                    <td className="px-5 py-3 text-right">
-                      <Link
-                        href={`/applications/${app.id}`}
-                        className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-                      >
-                        Details <ArrowUpRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map((app) => {
+                  const tags = parseTags(app.tags);
+                  const isSelected = selectedIds.includes(app.id);
+
+                  return (
+                    <tr
+                      key={app.id}
+                      className={cn(
+                        "hover:bg-surface-hover/60 transition-colors",
+                        isSelected && "bg-primary/5",
+                        app.status === "SENT" && "border-l-4 border-l-amber-500",
+                        app.status === "INTERVIEW" && "border-l-4 border-l-sky-500",
+                        app.status === "OFFER" && "border-l-4 border-l-emerald-500",
+                        app.status === "REJECTED" && "border-l-4 border-l-rose-500",
+                        app.status === "WITHDRAWN" && "border-l-4 border-l-slate-400",
+                        app.status === "DRAFT" && "border-l-4 border-l-slate-300"
+                      )}
+                    >
+                      <td className="w-10 px-4 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelect(app.id)}
+                          className="rounded border-border cursor-pointer"
+                        />
+                      </td>
+                      <td className="px-5 py-3">
+                        <Link href={`/applications/${app.id}`} className="font-semibold text-foreground hover:underline">
+                          {app.company.name}
+                        </Link>
+                      </td>
+                      <td className="px-5 py-3 text-muted-foreground">
+                        <div className="flex flex-col gap-1">
+                          <span className="font-medium text-foreground">{app.position}</span>
+                          {tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {tags.map((t) => (
+                                <span
+                                  key={t}
+                                  className={cn("rounded px-1.5 py-0.2 text-[10px] font-semibold", getTagStyle(t))}
+                                >
+                                  #{t}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-muted-foreground">{formatDate(app.applicationDate)}</td>
+                      <td className="px-5 py-3">
+                        <label className="sr-only" htmlFor={`status-${app.id}`}>
+                          Status für {app.position}
+                        </label>
+                        <Select
+                          id={`status-${app.id}`}
+                          value={app.status}
+                          onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                          className="h-8 w-auto py-1 text-xs font-semibold"
+                        >
+                          {APPLICATION_STATUSES.map((s) => (
+                            <option key={s.value} value={s.value}>
+                              {s.label}
+                            </option>
+                          ))}
+                        </Select>
+                      </td>
+                      <td className="max-w-[220px] px-5 py-3 text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate">{app.nextStep ?? "—"}</span>
+                          {app.meetingUrl && (
+                            <a
+                              href={app.meetingUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded bg-primary-soft p-1 text-primary hover:bg-primary hover:text-white transition-colors shrink-0"
+                              title="Online-Meeting beitreten"
+                            >
+                              <Video className="h-3.5 w-3.5" />
+                            </a>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <Link
+                          href={`/applications/${app.id}`}
+                          className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                        >
+                          Details <ArrowUpRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </Card>
       )}
+
+      {/* Stapelverarbeitungs-Leiste */}
+      <BatchActionBar
+        selectedIds={selectedIds}
+        applications={applications ?? []}
+        onClearSelection={() => setSelectedIds([])}
+      />
 
       <ApplicationFormDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
       <EmailResponseModal

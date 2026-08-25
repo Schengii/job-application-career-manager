@@ -106,6 +106,38 @@ export const COVER_LETTER_STATUS_VALUES = COVER_LETTER_STATUSES.map((c) => c.val
   ...CoverLetterStatus[],
 ];
 
+export const INTERACTION_TYPES = [
+  { value: "CALL", label: "Telefonat", icon: "Phone" },
+  { value: "EMAIL", label: "E-Mail Austausch", icon: "Mail" },
+  { value: "INTERVIEW_ROUND", label: "Gesprächsrunde", icon: "Users" },
+  { value: "FEEDBACK", label: "Feedback / Rückmeldung", icon: "MessageSquare" },
+  { value: "NOTE", label: "Notiz / Zwischenstand", icon: "FileText" },
+] as const;
+
+export type InteractionType = (typeof INTERACTION_TYPES)[number]["value"];
+export const INTERACTION_TYPE_VALUES = INTERACTION_TYPES.map((i) => i.value) as [
+  InteractionType,
+  ...InteractionType[],
+];
+
+export const REJECTION_REASONS = [
+  "Zu wenig Berufserfahrung",
+  "Gehaltsvorstellung nicht vereinbar",
+  "Stelle intern besetzt / zurückgezogen",
+  "Anderer Bewerber mit mehr spezifischem Tech-Stack",
+  "Standort / Remote-Regelung passte nicht",
+  "Keine Begründung erhalten (Standard-Absage)",
+  "Nach Erstgespräch / Culture-Fit",
+  "Sonstiges",
+] as const;
+
+export const AI_PROVIDERS = [
+  { value: "openai", label: "OpenAI (GPT-4o / GPT-4o-mini)" },
+  { value: "anthropic", label: "Anthropic Claude (Claude 3.5 Sonnet)" },
+  { value: "openrouter", label: "OpenRouter (Universal Router)" },
+  { value: "ollama", label: "Ollama (Lokales Modell auf localhost:11434)" },
+] as const;
+
 /** Hilfsfunktion, um zu einem Status-Value das passende Label/Color-Objekt zu holen. */
 export function findStatusMeta<T extends { value: string; label: string }>(
   list: readonly T[],

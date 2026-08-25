@@ -17,6 +17,7 @@ export async function GET(_request: NextRequest, { params }: Params) {
       jobPosting: true,
       coverLetter: true,
       statusEvents: { orderBy: { changedAt: "desc" } },
+      interactions: { orderBy: { interactionDate: "desc" } },
       documents: { include: { document: true } },
     },
   });
@@ -43,15 +44,33 @@ export async function PATCH(request: NextRequest, { params }: Params) {
         ...(data.applicationDate !== undefined ? { applicationDate: toDateOrNull(data.applicationDate) } : {}),
         ...(data.nextStep !== undefined ? { nextStep: data.nextStep } : {}),
         ...(data.nextStepDate !== undefined ? { nextStepDate: toDateOrNull(data.nextStepDate) } : {}),
+        ...(data.meetingUrl !== undefined ? { meetingUrl: data.meetingUrl } : {}),
+        ...(data.rejectionReason !== undefined ? { rejectionReason: data.rejectionReason } : {}),
+        ...(data.tags !== undefined ? { tags: data.tags } : {}),
         ...(data.notes !== undefined ? { notes: data.notes } : {}),
         ...(data.source !== undefined ? { source: data.source } : {}),
         ...(data.companyId !== undefined ? { companyId: data.companyId } : {}),
         ...(data.jobPostingId !== undefined ? { jobPostingId: data.jobPostingId || null } : {}),
         ...(statusChanged
-          ? { statusEvents: { create: { status: data.status!, note: "Status aktualisiert" } } }
+          ? {
+              statusEvents: {
+                create: {
+                  status: data.status!,
+                  note: data.status === "REJECTED" && data.rejectionReason
+                    ? `Absage: ${data.rejectionReason}`
+                    : "Status aktualisiert",
+                },
+              },
+            }
           : {}),
       },
-      include: { company: true, jobPosting: true, statusEvents: true, coverLetter: true },
+      include: {
+        company: true,
+        jobPosting: true,
+        statusEvents: true,
+        interactions: true,
+        coverLetter: true,
+      },
     });
 
     return NextResponse.json(application);

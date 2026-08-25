@@ -79,7 +79,7 @@ export function CommandPalette() {
       group: "Bewerbungen",
       icon: Briefcase,
       title: a.position,
-      subtitle: a.company.name,
+      subtitle: `${a.company.name}${a.tags ? ` • #${a.tags.split(",").map(t => t.trim()).join(" #")}` : ""}`,
       href: `/applications/${a.id}`,
     }));
     const companyResults: ResultItem[] = (companies ?? []).map((c) => ({
@@ -87,7 +87,7 @@ export function CommandPalette() {
       group: "Unternehmen",
       icon: Building2,
       title: c.name,
-      subtitle: c.city ?? "Unternehmen",
+      subtitle: `${c.city ?? "Unternehmen"}${c.tags ? ` • #${c.tags.split(",").map(t => t.trim()).join(" #")}` : ""}`,
       href: `/companies/${c.id}`,
     }));
     const jobResults: ResultItem[] = (jobs ?? []).map((j) => ({
@@ -156,7 +156,7 @@ export function CommandPalette() {
                 select(filtered[activeIndex]);
               }
             }}
-            placeholder="Bewerbungen, Unternehmen, Jobs durchsuchen …"
+            placeholder="Bewerbungen, Unternehmen, Jobs, Tags durchsuchen …"
             aria-label="Suchbegriff"
             className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
@@ -190,6 +190,11 @@ export function CommandPalette() {
               </button>
             );
           })}
+        </div>
+
+        <div className="flex items-center justify-between border-t border-border bg-surface-hover/30 px-4 py-2 text-[11px] text-muted-foreground">
+          <span>Drücke <kbd className="rounded border border-border px-1 py-0.5 font-mono">↵</kbd> zum Öffnen</span>
+          <span><kbd className="rounded border border-border px-1 py-0.5 font-mono">?</kbd> für alle Tastaturkürzel</span>
         </div>
       </div>
     </div>

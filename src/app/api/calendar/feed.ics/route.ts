@@ -26,14 +26,21 @@ export async function GET() {
         const date = new Date(app.nextStepDate);
         if (!isNaN(date.getTime())) {
           const isInterview = app.status === "INTERVIEW";
+          const locationStr = app.meetingUrl
+            ? app.meetingUrl
+            : app.company.city || "Online / Vor Ort";
+
           events.push({
             title: isInterview
               ? `🎯 Gespräch: ${app.position} (${app.company.name})`
               : `📌 ${app.nextStep || "Frist/Wiedervorlage"}: ${app.company.name}`,
             description: `Bewerbung: ${app.position} bei ${app.company.name}\nStatus: ${app.status}\nAnsprechpartner: ${
               app.company.contactName || "—"
-            }\nE-Mail: ${app.company.contactEmail || "—"}\nNotizen: ${app.notes || "—"}`,
-            location: app.company.city || "Online / Vor Ort",
+            }\nE-Mail: ${app.company.contactEmail || "—"}${
+              app.meetingUrl ? `\nMeeting-Link: ${app.meetingUrl}` : ""
+            }\nNotizen: ${app.notes || "—"}`,
+            location: locationStr,
+            url: app.meetingUrl || undefined,
             startDate: date,
             durationMinutes: isInterview ? 60 : 30,
           });

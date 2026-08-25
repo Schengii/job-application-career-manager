@@ -8,6 +8,7 @@ import {
   COVER_LETTER_STATUS_VALUES,
   DOCUMENT_CATEGORY_VALUES,
   EDUCATION_TYPE_VALUES,
+  INTERACTION_TYPE_VALUES,
   JOB_PORTAL_VALUES,
   REMOTE_PREFERENCE_VALUES,
 } from "./constants";
@@ -23,6 +24,7 @@ export const companySchema = z.object({
   contactEmail: z.string().email().optional().nullable().or(z.literal("")),
   contactPhone: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
+  tags: z.string().optional().nullable(),
   status: z.enum(COMPANY_STATUS_VALUES).optional(),
 });
 export const companyUpdateSchema = companySchema.partial();
@@ -48,6 +50,9 @@ export const applicationSchema = z.object({
   applicationDate: z.string().datetime().optional().nullable().or(z.literal("")),
   nextStep: z.string().optional().nullable(),
   nextStepDate: z.string().datetime().optional().nullable().or(z.literal("")),
+  meetingUrl: z.string().optional().nullable(),
+  rejectionReason: z.string().optional().nullable(),
+  tags: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   source: z.string().optional().nullable(),
   companyId: z.string().min(1),
@@ -60,6 +65,13 @@ export const applicationUpdateSchema = applicationSchema.partial().extend({
 export const statusEventSchema = z.object({
   status: z.enum(APPLICATION_STATUS_VALUES),
   note: z.string().optional().nullable(),
+});
+
+export const interactionSchema = z.object({
+  type: z.enum(INTERACTION_TYPE_VALUES),
+  title: z.string().min(1, "Titel ist erforderlich"),
+  summary: z.string().optional().nullable(),
+  interactionDate: z.string().datetime().optional().nullable().or(z.literal("")),
 });
 
 export const documentSchema = z.object({
@@ -87,6 +99,10 @@ export const preferencesSchema = z.object({
   remotePreference: z.enum(REMOTE_PREFERENCE_VALUES).optional(),
   minSalary: z.number().int().optional().nullable(),
   profileSummary: z.string().optional().nullable(),
+  weeklyGoal: z.number().int().min(1).max(50).optional(),
+  aiProvider: z.string().optional().nullable(),
+  aiApiKey: z.string().optional().nullable(),
+  aiModel: z.string().optional().nullable(),
 });
 
 export const educationEntrySchema = z.object({
@@ -119,4 +135,23 @@ export const coverLetterGenerateSchema = z.object({
 export const coverLetterUpdateSchema = z.object({
   content: z.string().optional(),
   status: z.enum(COVER_LETTER_STATUS_VALUES).optional(),
+});
+
+export const batchActionSchema = z.object({
+  action: z.enum(["SET_STATUS", "DELETE", "ADD_TAG", "REMOVE_TAG"]),
+  applicationIds: z.array(z.string()).min(1, "Mindestens eine Bewerbung auswählen"),
+  status: z.enum(APPLICATION_STATUS_VALUES).optional(),
+  rejectionReason: z.string().optional().nullable(),
+  tag: z.string().optional(),
+});
+
+export const aiRequestSchema = z.object({
+  action: z.enum(["POLISH_COVER_LETTER", "EVALUATE_INTERVIEW_ANSWER"]),
+  coverLetter: z.string().optional(),
+  jobTitle: z.string().optional(),
+  jobDescription: z.string().optional(),
+  techStack: z.string().optional(),
+  question: z.string().optional(),
+  answer: z.string().optional(),
+  idealAnswer: z.string().optional(),
 });

@@ -1,10 +1,9 @@
 # Job Application & Career Manager
 
-Eine vollständige, moderne Web-Anwendung zur zentralen Verwaltung der Jobsuche als **Fachinformatiker für
+Eine vollständige, moderne Fullstack-Web-Anwendung zur professionellen Steuerung der gesamten Jobsuche als **Fachinformatiker für
 Anwendungsentwicklung** (Schwerpunkt Frontend: TypeScript, JavaScript, CSS, React, Next.js – Region
 Bonn/Dortmund/Remote). Alle Daten – Unternehmen, Stellenangebote, Bewerbungen, Präferenzen,
-Dokumente, Historie, generierte Anschreiben und Lebensläufe – werden in einer echten Datenbank gespeichert, sodass nichts
-verloren geht.
+Dokumente, Historie, generierte Anschreiben, Interview-Dossiers und Lebensläufe – werden in einer echten SQLite-Datenbank via Prisma 7 gespeichert.
 
 ---
 
@@ -12,99 +11,104 @@ verloren geht.
 
 ### 1. Bewerbungs- & Unternehmens-Management
 - **Dashboard mit Live-Metriken**: Gesamtanzahl, Offene Bewerbungen, Gespräche, Absagen und Zusagen auf einen Blick.
-- **In-App Benachrichtigungs-Zentrale (Notification Bell)**: Interaktives Glocken-Symbol in der Kopfzeile mit Live-Badge-Counter für überfällige Schritte, anstehende Vorstellungsgespräche in den nächsten 48h und empfohlene Nachfass-Aktionen (> 14 Tage).
-- **In-Browser Excel & CSV Import (`.xlsx`, `.xls`, `.csv`)**: Dateien direkt per Drag & Drop im Browser hochladen, Vorschau prüfen und mit 1 Klick in die Datenbank übernehmen – kein Terminal erforderlich.
+- **Wochenziel- & Aktivitäts-Streak Tracker (`GoalTrackerCard`)**:
+  - Konfigurierbares Wochenziel (z. B. 5 Bewerbungen pro Woche) mit grafischem Fortschrittsring.
+  - Tägliche Aktivitäts-Streak mit Flammen-Icon 🔥 zur Motivation.
+  - Gamification-Meilensteine (z. B. *Erster Schritt*, *High Performer*, *Interview-Magnet*, *Fokus-Meister*).
 - **Interaktive Excel-Tabelle (`/excel-view`)**: Tabellarischer Grid-Editor wie in Excel/Google Sheets mit direktem **Inline-Editing**, Tastatur-Navigation (Tab/Enter), schneller Erfassung neuer Zeilen und automatischem Batch-Speichern (`/api/applications/bulk`).
-- **Spalten-Konfigurator (Column Customizer)**: Einzelne Tabellenspalten (Datum, Portal, Status, Ansprechpartner, E-Mail/Tel, Wiedervorlage, Notizen, Aktionen) flexibel ein- und ausblenden mit Schnell-Presets (*Standard*, *Kompakt*, *Kontakte*) und automatischer `localStorage`-Speicherung.
-- **Markdown-Notizen & Checklisten-Editor (`InterviewNotesEditor`)**: Strukturierter Notizenbereich in der Bewerbungs-Detailansicht mit Live-Markdown-Vorschau, interaktiver Interview-Vorbereitungs-Checkliste (inkl. Prozent-Fortschrittsbalken), Schnell-Vorlagen für Fachfragen und nahtloser Speicherung.
-- **Audio-Notizen & Sprachmemos**: Vorstellungsgespräche und Telefonate direkt im Browser aufnehmen (Web Audio / MediaRecorder API), mit integriertem Player abspielen, herunterladen und bei der Bewerbung archivieren.
-- **Live-Abonnierbarer Kalender-Feed (`/api/calendar/feed.ics`)**: Automatische iCal-Kalendersynchronisation für Smartphone (iOS / Android), Apple Kalender, Google Kalender und Outlook inkl. 1-Klick-Abo-Modal.
-- **Erweiterte Filter- & Sortierleiste**: Überall verfügbar (Bewerbungen, Excel-Grid, Unternehmen, Jobsuche) – filtern nach Freitext, Status, Jobportal, Fristen/Wiedervorlage, Match-Score und sortieren nach Datum, Name oder Relevanz mit 1-Klick-Filter-Reset.
+- **Stapelverarbeitung (Batch Action Bar)**: Mehrere Bewerbungen gleichzeitig selektieren, um Status zu ändern, Tags zuzuweisen, als CSV zu exportieren oder im Batch zu löschen.
+- **Multi-Tagging & Farb-Badges (`/lib/tags.ts`)**: Beliebige Tags (z. B. `#Prio1`, `#Remote`, `#React19`, `#Empfehlung`) an Bewerbungen und Unternehmen vergeben und danach filtern.
+- **Video-Meeting-Integration (Teams / Zoom / Meet)**: Direkte Verlinkung von Online-Vorstellungsgesprächen mit 1-Klick „Join“-Buttons auf dem Dashboard, in der Bewerbungstabelle und auf der Detailseite.
+- **Detaillierte Interaktions-Historie**: Chronologische Erfassung von Telefonaten, E-Mails, Interview-Runden und Feedback direkt in der Timeline.
+- **In-App Benachrichtigungs-Zentrale (Notification Bell)**: Glocken-Symbol in der Kopfzeile mit Live-Badge-Counter für überfällige Schritte, anstehende Vorstellungsgespräche in den nächsten 48h und empfohlene Nachfass-Aktionen (> 14 Tage).
+- **In-Browser Excel & CSV Import (`.xlsx`, `.xls`, `.csv`)**: Dateien direkt per Drag & Drop im Browser hochladen, Vorschau prüfen und mit 1 Klick in die Datenbank übernehmen.
+- **Markdown-Notizen & Checklisten-Editor (`InterviewNotesEditor`)**: Notizenbereich mit Live-Markdown-Vorschau und interaktiver Vorbereitungs-Checkliste.
+- **Audio-Notizen & Sprachmemos**: Vorstellungsgespräche und Telefonate direkt im Browser aufnehmen (Web Audio / MediaRecorder API), abspielen und archivieren.
+- **Live-Abonnierbarer Kalender-Feed (`/api/calendar/feed.ics`)**: Automatische iCal-Kalendersynchronisation für Smartphone (iOS / Android), Apple Kalender, Google Kalender und Outlook inkl. Meeting-Links.
 - **3 Ansichtsmodi in der Bewerbungsliste**: Flexibler Wechsel zwischen **Tabelle**, nativem **Kanban-Board** (Drag & Drop) und **Excel-Grid**.
 - **E-Mail-Rückmeldungs-Assistent**: Arbeitgeber-E-Mails (Absagen, Einladungen, Eingangsbestätigungen, Angebote) per Copy & Paste analysieren und mit einem Klick Status, Termine und Notizen aktualisieren.
-- **Smarte Wiedervorlage & Nachfass-Engine**: Hebt überfällige Schritte sowie Bewerbungen ohne Rückmeldung (> 14 Tage) auf dem Dashboard und in der Liste hervor.
-- **Detailansicht**: Vollständige Kontaktdaten, lückenlose Status-Historie, Notizen und verknüpfte Unterlagen.
-- **Termin- & Kalender-Export (.ics / iCal)**: Exportiert anstehende Vorstellungsgespräche und Termine mit einem Klick in Google Kalender, Outlook oder Apple Calendar.
-- **Unternehmensverwaltung**: Vollständiges CRUD (Adresse, Ansprechpartner, Telefon, E-Mail, Notizen und Status).
 
-### 2. Lebenslauf-Generator & CV-Designer (`/cv-designer`)
-- **Strukturierter CV-Generator**: Erzeugt druckoptimierte Lebensläufe direkt aus hinterlegten Profil-, Ausbildungs- und Projektdaten.
-- **3 Design-Layouts**:
-  - **Modern** (Akzentfarbe Indigo, ideal für Frontend & Web)
-  - **Klassisch** (Dezente Schiefer-Töne für Behörden & Konzerne)
-  - **Kompakt** (Platzsparend für 1–2 Seiten)
-- **Selektive Stationsauswahl & PDF-Druck**: Einzelne Ausbildungsstationen und Referenzprojekte flexibel an- oder abwählen; Live-Druckansicht (`window.print()` / PDF-Export).
+---
 
-### 3. Anschreiben-Engine 2.0 & Kommunikation
-- **Multi-Tone Anschreiben-Generator**:
-  - **Modern** (standard, lösungs- und praxisorientiert)
-  - **Klassisch** (formell für Behörden, Banken & Großkonzerne)
-  - **Startup / Agil** (dynamisch, teamorientiert, direkte Ansprache)
-  - **Detailliert** (starker Fokus auf Umschulung, Handwerk & technischen Tiefgang)
-- **Keyword-Booster & ATS-Match Optimizer**: Gleicht das Anschreiben live mit den geforderten Tech-Keywords der Stellenanzeige ab, vergibt einen ATS-Score (0-100%) und erlaubt das 1-Klick-Einfügen passender Formulierungsvorschläge für fehlende Kernkompetenzen.
-- **Projekt-Hervorhebung**: Gezielte Auswahl, welches Referenzprojekt (z. B. *electroCheck-ai*) im Anschreiben in den Mittelpunkt gestellt werden soll.
-- **DIN 5008 Druck- & PDF-Ansicht**: Druckoptimiertes Brieflayout mit korrekter Absenderzeile, Empfängerfeld, Datum, Betreffzeile, optionaler digitaler Signaturzeile, 1-Klick-HTML-Export sowie Direktdruck (`window.print()` / PDF-Speicherung).
-- **Nachfass-E-Mail Generator**: Vorformulierte Nachfass-E-Mail auf Knopfdruck bei fehlender Rückmeldung inkl. One-Click-Copy und Mailto-Unterstützung.
-
-### 4. Dokumenten-Handling & Bewerbungspaket-Download
-- **Bewerbungs-Paket ZIP-Export**: Bündelt Anschreiben (als `.txt` und formatiertes HTML) sowie alle zugeordneten Zeugnisse/Dokumente auf Knopfdruck als fertiges ZIP-Archiv für den E-Mail-Versand.
-- **In-App Dokumentenvorschau**: PDFs und Bilddateien direkt in der App per Modal ansehen, ohne sie erst separat herunterladen zu müssen.
-- **Dokumenten-Manager**: Lebensläufe, Schul-/Ausbildungs-/Umschulungszeugnisse und Referenzen zentral verwalten und Bewerbungen zuordnen.
-
-### 5. Interview-Vorbereitungsleitfaden & Mock-Interview (`/interview-prep`)
-- **Interaktiver Fragenkatalog**: Strukturierte Fachfragen, Musterantworten und Interview-Tipps für:
+### 2. Interview-Vorbereitung & Spickzettel-Generator (`/interview-prep`)
+- **Interview-Dossier & DIN A4 Spickzettel-Druck (`InterviewDossierModal`)**:
+  - Erzeugt auf Knopfdruck ein druckfertiges 1-Seiten-Dossier für anstehende Vorstellungsgespräche.
+  - Beinhaltet Firmen-Kernfakten, Ansprechpartner, Meeting-Link, 30-Sekunden-Elevator-Pitch, verknüpfte Tech-Skills, eigene Gegenfragen an das Unternehmen, Gehaltsargumente und Vorbereitungs-Checkliste.
+- **Interaktiver Fachfragenkatalog**: Strukturierte Fragen und Musterantworten für:
   - *React & Frontend* (Server Components, Performance, Re-Renders, SWR-Caching)
   - *TypeScript & JavaScript* (Generics, Type Narrowing, Event Loop, Closures)
   - *CSS & UI/UX* (Flexbox vs. Grid, A11y / Barrierefreiheit / WCAG, Tailwind)
   - *Architektur & Testing* (Vitest, REST API Design mit Zod, CI/CD)
   - *Werdegang & Praxisprojekte* (Elektroniker $\rightarrow$ Fachinformatiker, *electroCheck-ai*)
   - *Gegenfragen an den Arbeitgeber* (Onboarding, Code Reviews, Release-Zyklen)
-- **Mock-Interview Simulator**: Interaktiver 5-Fragen-Durchlauf mit automatischer Antwort-Auswertung (Score 0-100%, Keyword-Abgleich, Praxisbezug, konkretes Feedback und Musterlösung).
-- **Stellen-spezifischer Tech-Stack-Filter**: Wählt man eine konkrete Bewerbung aus, filtert der Leitfaden automatisch die passenden Fragen zum Tech-Stack der ausgeschriebenen Stelle.
-- **Checklisten-Fortschritt**: Fragen als vorbereitet markieren mit visueller Fortschrittsanzeige.
+- **Mock-Interview Simulator mit STAR-Methode**:
+  - 5-Fragen-Durchlauf mit automatischer Antwort-Auswertung.
+  - STAR-Methoden-Analyse (Situation/Aufgabe, Aktion, Ergebnis).
+  - KI-gestützte Auswertung mit Stärken- und Verbesserungsvorschlägen (oder Offline-Heuristik).
 
-### 6. Multi-Portal Jobsuche & Live-Synchronisations-Engine (`/jobs`)
-- **Multi-Portal Live-Sync (`/api/jobs/sync`)**: Aggregiert und synchronisiert Stellenanzeigen kontinuierlich über alle relevanten Jobportale:
-  - *StepStone*, *Indeed*, *Get in IT*, *LinkedIn Jobs*, *XING Stellenmarkt*, *Bundesagentur für Arbeit*, *Monster* und *Honeypot.io*.
-- **Riesiger Unternehmens- & Job-Pool**: Über 40 realistische Arbeitgeber im Rheinland / Ruhrgebiet (Bonn, Köln, Düsseldorf, Dortmund, Essen) sowie Remote-Positionen mit konkreten Gehaltsspannen und detaillierten Tech-Stacks (TypeScript, React, Next.js, Tailwind, Vitest, Zod).
-- **Match-Score Feineinstellung (`MatchingWeightsCard`)**: Gewichtungs-Schieberegler unter *Einstellungen* zur individuellen Justierung der Matching-Säulen (*Tech-Stack* 10–80%, *Standort/Remote* 10–60%, *Rollen-Keywords* 10–50%).
-- **Side-by-Side Stellenvergleich (`JobComparisonModal`)**: Zwei beliebige Stellenangebote gegenüberstellen – vergleicht Match-Score, Gehaltspotenzial, Remote-Quote, gemeinsamen Tech-Stack sowie exklusive Skills beider Angebote mit automatischer Gesamtempfehlung und 1-Klick-Bewerbung.
-- **Job-Alerts & Match-Radar (`JobAlertModal`)**: Konfigurierbarer Benachrichtigungs-Digest für Top-Matches (Match-Score 50–90%, Regionseingrenzung Bonn/Köln/Ruhrgebiet/Remote) inkl. 1-Klick-Zwischenablage-Export.
-- **NRW & Remote Pendel-Radar (`CommuteRadarCard`)**: Interaktiver Pendel- und Fahrzeit-Rechner von Bonn/Köln/Ruhrgebiet (Bahn/ÖPNV mit Deutschlandticket vs. PKW) inkl. Berechnung der jährlichen Zeitersparnis (in Stunden) durch flexible Home-Office-Tage und CO₂-Reduktion.
-- **Auto-Sync-Controller & Portal-Filterleiste**:
-  - Live-Statusanzeige des letzten Datenabgleichs.
-  - 1-Klick-Synchronisation aller 8 Portale mit intelligenter Duplikats-Erkennung.
-  - Auto-Sync-Schalter mit Speicherung der Benutzereinstellung.
-  - Schnell-Filter-Badges mit Live-Anzahl der verfügbaren Angebote pro Portal.
-- **Stellenanzeigen-Schnellerfassung (Smart Parser)**: Beliebigen Freitext einer Stellenanzeige (LinkedIn, Stepstone, E-Mail) per Drag & Drop oder Copy & Paste einfügen – der Parser extrahiert automatisch Titel, Unternehmen, Ort, Remote-Option, Gehalt, Tech-Stack und berechnet sofort den Match-Score.
-- **1-Klick „Direkt bewerben“**: Überträgt die Stellenanzeige direkt als Entwurf in die Bewerbungsverwaltung und verknüpft das Unternehmen.
+---
 
-### 7. Analytics & Gehalts-Benchmarking
-- **Gehalts-Benchmarking & Marktvergleich**: Berechnet marktübliche Gehaltsspannen für Fachinformatiker Anwendungsentwicklung (Frontend) nach Erfahrungsstufe (Junior, Mid-Level, Senior) und Region (Bonn/Köln, Ruhrgebiet, Remote, München, Berlin). Vergleicht das persönliche Wunschgehalt mit dem Marktmedian und liefert konkrete Verhandlungs-Hebel für Vorstellungsgespräche.
-- **Gehalts- & Benefit-Vergleichsrechner**: Vergleicht vorliegende Angebote (`OFFER`) anhand von Brutto-/Netto-Gehalt, Home-Office-Tagen, Urlaubstagen, Fahrtkostenersparnis und Gesamt-Score.
-- **Bewerbungs-Trichter (Conversion Funnel)**: Visualisiert die Phasen *Verschickt $\rightarrow$ Rückmeldung $\rightarrow$ Gespräch $\rightarrow$ Angebot*.
-- **Portal-Effizienz & Einladungsquoten**: Zeigt auf, welche Portale (z. B. GetInIT, Stepstone, LinkedIn) die höchste Einladungsquote aufweisen.
+### 3. Hybride KI-Veredelung & Anschreiben-Engine 2.0
+- **Optionaler KI-Assistent (OpenAI / Anthropic / OpenRouter / Ollama)**:
+  - Unter *Einstellungen* kann optional ein eigener API-Key hinterlegt werden.
+  - **100% Offline-Garantie:** Wenn kein Key hinterlegt ist, arbeitet die gesamte App vollständig offline und kostenlos mit intelligenten heuristischen Algorithmen.
+- **Multi-Tone Anschreiben-Generator**:
+  - **Modern** (standard, lösungs- und praxisorientiert)
+  - **Klassisch** (formell für Behörden, Banken & Großkonzerne)
+  - **Startup / Agil** (dynamisch, teamorientiert, direkte Ansprache)
+  - **Detailliert** (starker Fokus auf Umschulung, Handwerk & technischen Tiefgang)
+- **„Mit KI verfeinern ✨“ Button**: Poliert das Anschreiben live nach stilistischen Kriterien und passt die Argumentation an die Stellenbeschreibung an.
+- **Keyword-Booster & ATS-Match Optimizer**: Gleicht das Anschreiben live mit den geforderten Tech-Keywords der Stellenanzeige ab und vergibt einen ATS-Score (0-100%).
+- **DIN 5008 Druck- & PDF-Ansicht**: Druckoptimiertes Brieflayout mit Absenderzeile, Empfängerfeld, Betreff, digitaler Signaturzeile und One-Click-PDF-Export.
+- **Nachfass-E-Mail Generator**: Vorformulierte Nachfass-E-Mail auf Knopfdruck bei fehlender Rückmeldung.
+
+---
+
+### 4. Globale Tastaturkürzel & Navigation
+Drücke jederzeit <kbd>?</kbd> in der App, um die interaktive Tastatur-Hilfe zu öffnen:
+
+| Tastenkombination | Aktion |
+| ----------------- | ------ |
+| <kbd>⌘K</kbd> / <kbd>Strg+K</kbd> | Globale Suche (Command Palette) mit Tag- & Firmensuche |
+| <kbd>/</kbd> | Schnellsuche in Command Palette öffnen |
+| <kbd>N</kbd> | Neue Bewerbung blitzschnell anlegen |
+| <kbd>?</kbd> | Tastaturkürzel-Dialog einblenden |
+| <kbd>G</kbd> dann <kbd>D</kbd> | Zum **Dashboard** springen |
+| <kbd>G</kbd> dann <kbd>A</kbd> | Zu den **Bewerbungen** springen |
+| <kbd>G</kbd> dann <kbd>E</kbd> | Zur **Excel-Tabelle** springen |
+| <kbd>G</kbd> dann <kbd>C</kbd> | Zu den **Unternehmen** springen |
+| <kbd>G</kbd> dann <kbd>J</kbd> | Zur **Jobsuche** springen |
+| <kbd>G</kbd> dann <kbd>I</kbd> | Zum **Interview-Prep Leitfaden** springen |
+| <kbd>G</kbd> dann <kbd>V</kbd> | Zum **CV-Designer (Lebenslauf)** springen |
+| <kbd>G</kbd> dann <kbd>S</kbd> | Zu den **Einstellungen** springen |
+| <kbd>Esc</kbd> | Modale und Dialoge schließen |
+
+---
+
+### 5. Multi-Portal Jobsuche & Live-Synchronisations-Engine (`/jobs`)
+- **Multi-Portal Live-Sync (`/api/jobs/sync`)**: Aggregiert und synchronisiert Stellenanzeigen über alle relevanten Jobportale (*StepStone*, *Indeed*, *Get in IT*, *LinkedIn Jobs*, *XING*, *Arbeitsagentur*, *Monster*, *Honeypot.io*).
+- **Match-Score Feineinstellung (`MatchingWeightsCard`)**: Gewichtungs-Schieberegler zur individuellen Justierung der Matching-Säulen (*Tech-Stack* 10–80%, *Standort/Remote* 10–60%, *Rollen-Keywords* 10–50%).
+- **Side-by-Side Stellenvergleich (`JobComparisonModal`)**: Zwei beliebige Stellenangebote gegenüberstellen – vergleicht Match-Score, Gehalt, Remote-Quote und Skills mit 1-Klick-Bewerbung.
+- **Job-Alerts & Match-Radar (`JobAlertModal`)**: Konfigurierbarer Benachrichtigungs-Digest für Top-Matches.
+- **NRW & Remote Pendel-Radar (`CommuteRadarCard`)**: Pendel- und Fahrzeit-Rechner von Bonn/Köln/Ruhrgebiet (ÖPNV vs. PKW) inkl. Zeitersparnis durch Home-Office-Tage.
+- **Stellenanzeigen Smart Parser**: Beliebigen Freitext einer Stellenanzeige einfügen – der Parser extrahiert Titel, Unternehmen, Ort, Remote, Gehalt und Tech-Stack.
+
+---
+
+### 6. Analytics & Absagegründe-Analyse (`/analytics`)
+- **Absagegründe & Feedback-Analyse (`RejectionReasonsChart`)**: Strukturierte Aufschlüsselung von Absagegründen mit strategischen Handlungsempfehlungen.
+- **Gehalts-Benchmarking & Marktvergleich**: Berechnet marktübliche Gehälter nach Erfahrungsstufe und Region mit Verhandlungs-Hebeln.
+- **Gehalts- & Benefit-Vergleichsrechner**: Vergleicht vorliegende Angebote (`OFFER`) anhand von Netto-Gehalt, Home-Office, Urlaub und Fahrtkosten.
+- **Bewerbungs-Trichter (Conversion Funnel)**: Phasen *Verschickt $\rightarrow$ Rückmeldung $\rightarrow$ Gespräch $\rightarrow$ Angebot*.
+- **Portal-Effizienz & Einladungsquoten**: Zeigt die erfolgreichsten Jobportale auf.
 - **Reaktionszeiten & Erfolgsquote**: Durchschnittliche Dauer bis zur ersten Rückmeldung und Zusagequote.
 
-### 8. Farbleitsystem & Übersichtlichkeit (UI/UX)
-- **Klare Farbcodierung im gesamten Dashboard:**
-  - 🟡 **Gelb / Amber (`#f59e0b`)**: Offene & gesendete Bewerbungen (`SENT`, `DRAFT`)
-  - 🔵 **Blau / Sky (`#0ea5e9`)**: Vorstellungsgespräche (`INTERVIEW`)
-  - 🟢 **Grün / Emerald (`#10b981`)**: Zusagen & Angebote (`OFFER`)
-  - 🔴 **Rot / Rose (`#ef4444`)**: Absagen (`REJECTED`)
-  - 🟠 **Orange / Warning (`#ea580c`)**: Nachfass-Erinnerungen, überfällige Fristen und fällige Aktionen
-- **Visuelle Akzentleisten:** Tabellenzeilen und Kanban-Karten besitzen dezente linke Farbbalken für sofortige Wiedererkennung.
-- **SaaS Design System**: Feine Glassmorphism-Karten (`backdrop-blur`), flüssige Übergänge (`animate-fade-in`, `animate-scale-in`), dezent pulsierende Frist-Indikatoren (`animate-pulse-subtle`) und optimiertes Responsive-Layout für Mobilgeräte, Tablets und Desktop.
+---
 
-### 9. PWA & Offline-Fähigkeit (Progressive Web App)
-- **Web App Manifest (`/manifest.webmanifest`)**: Ermöglicht die Installation der Anwendung als eigenständige Desktop- oder Smartphone-App (Standalone Window).
-- **Service Worker (`public/sw.js`)**: Automatisches Caching statischer Kernkomponenten für ultraschnelle Ladezeiten und grundlegende Offline-Verfügbarkeit.
-
-### 10. Datensicherheit & Backup
-- **Rotierendes Snapshot-Backup & Revisions-Verlauf (`BackupManager`)**: Schnelle 1-Klick-Sicherungen im Speicher vorhalten (bis zu 5 Stände), mit Größenangabe, Zeitstempel, 1-Klick-Wiederherstellung und JSON-Download.
-- **1-Klick JSON-Backup & Restore**: Vollständige Sicherung und Wiederherstellung aller Tabellen unter *Einstellungen $\rightarrow$ Backup & Daten*.
-- **Excel-Bewerbungslisten-Import (`scripts/import-bewerbungsliste.ts`)**: Überträgt historische Excel-Bewerbungslisten in die SQLite-Datenbank.
-- **Datenschutz**: Trennung zwischen Code/Vorlage (`scripts/profile-data.example.json`) und gitignorten Echtdaten (`profile-data.local.json`).
+### 7. Lebenslauf-Generator & Dokumenten-Handling
+- **CV-Designer (`/cv-designer`)**: Erzeugt druckoptimierte Lebensläufe in 3 Layouts (*Modern*, *Klassisch*, *Kompakt*) mit selektiver Stationsauswahl.
+- **Bewerbungs-Paket ZIP-Export**: Bündelt Anschreiben und alle Dokumente als fertiges ZIP-Archiv für den Versand.
+- **In-App Dokumentenvorschau**: PDFs und Bilddateien direkt in der App per Modal ansehen.
 
 ---
 
@@ -117,51 +121,7 @@ verloren geht.
 | Datenbank | SQLite via Prisma 7 ORM (Adapter: `better-sqlite3`)                       |
 | State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
 | PWA       | Web App Manifest, Service Worker Caching                                  |
-| Testing   | Vitest (54 automatisierte Unit- & Integrationstests)                      |
-
----
-
-## 📂 Architektur
-
-```
-prisma/
-  schema.prisma        Datenbankschema mit optimierten Indizes
-  seed.ts               Beispieldaten (Profil, Unternehmen, Jobs, Bewerbungen)
-src/
-  app/
-    api/                 REST-API-Route-Handler (CRUD, Backup, Analytics, Bulk, Simulation, Multi-Portal-Sync, ZIP-Package, Calendar Feed, Generator)
-    (Seiten)/             Dashboard (/), Bewerbungen (/applications), Excel-Tabelle (/excel-view),
-                         Unternehmen (/companies), Jobsuche (/jobs), CV-Designer (/cv-designer),
-                         Interview-Prep (/interview-prep), Auswertungen (/analytics), Einstellungen (/settings)
-  components/            UI-Primitives, Modals, Kanban, ExcelGridTable, VoiceMemoPanel, MultiPortalSyncBanner,
-                         InterviewNotesEditor, MatchingWeightsCard, JobComparisonModal, JobAlertModal,
-                         CommuteRadarCard, Charts, Dokumenten-Vorschau, Suche, Rechner, Mock-Interview
-  lib/
-    prisma.ts            Prisma-Client-Singleton (better-sqlite3-Adapter)
-    matching.ts           Match-Score-Berechnung (Tech-Stack, Standort, Rolle, konfigurierbare Gewichte)
-    salaryBenchmark.ts    Gehalts-Benchmarking & Marktvergleichs-Engine
-    keywordBooster.ts     Anschreiben Keyword-Booster & ATS-Match Engine
-    jobComparison.ts      Side-by-Side Stellenvergleichs-Engine
-    jobAlerts.ts          Job-Alerts & Match-Radar Digest-Engine
-    commuteCalculator.ts  NRW & Remote Pendel- & Fahrzeit-Rechner
-    backupRotation.ts     Backup-Rotations- & Revisions-Manager
-    coverLetterGenerator.ts Multi-Tone Anschreiben & Nachfass-E-Mail Generator
-    cvGenerator.ts        Lebenslauf-Generator & HTML/Print-Formatter
-    interviewGuide.ts     Fachfragenkatalog & Tech-Stack-Filter
-    mockInterviewEngine.ts Mock-Interview Antwort-Auswertungs-Engine
-    sampleGenerator.ts    Batch-Bewerbungs-Generator für Statistiken
-    emailResponseParser.ts E-Mail-Rückmeldungs-Parser (Absage/Einladung/Termine)
-    salaryCalculator.ts   Gehalts- & Benefit-Vergleichsrechner
-    zipPackage.ts         ZIP-Bewerbungspaket Generator
-    followUp.ts           Wiedervorlage- und Fristen-Engine
-    ical.ts               iCal / .ics Kalenderdatei- & Feed-Generator
-    jobParser.ts          Freitext-Stellenanzeigen Parser
-    backup.ts             JSON Backup & Restore Serialisierung
-    mockJobPortals.ts     Job-Portal-Simulator & Multi-Portal Synchronisations-Engine
-    validation.ts         Zod-Schemata für alle API-Requests
-    constants.ts           Status-/Kategorie-Definitionen (DE-Labels, Farben)
-  types/                  Frontend-Typen (erweitern die generierten Prisma-Typen)
-```
+| Testing   | Vitest (67 automatisierte Unit- & Integrationstests)                      |
 
 ---
 
@@ -177,7 +137,7 @@ npm install
 cp .env.example .env
 
 # 3. Datenbank anlegen & Schema migrieren
-npx prisma migrate dev
+npx prisma db push
 
 # 4. Beispieldaten laden (Profil, Unternehmen, Jobs, Bewerbungen)
 npx prisma db seed
@@ -197,7 +157,7 @@ Die Anwendung läuft anschließend unter **http://localhost:3000**.
 | `npm run dev`               | Entwicklungsserver (Turbopack) starten                            |
 | `npm run build`             | Produktions-Build erstellen (inkl. TypeScript-Check)               |
 | `npm run lint`               | ESLint ausführen                                                    |
-| `npm run test`                | Testsuite (Vitest, 54 Tests) einmalig ausführen                     |
+| `npm run test`                | Testsuite (Vitest, 67 Tests) einmalig ausführen                     |
 | `npm run test:watch`           | Testsuite im Watch-Modus ausführen                                    |
 | `npx prisma studio`          | Datenbank-Inhalte im Browser ansehen/bearbeiten                     |
 | `npx prisma db push`         | Schema-Änderungen direkt auf SQLite anwenden                        |

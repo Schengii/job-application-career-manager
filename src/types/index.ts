@@ -3,6 +3,7 @@
 // Relationen, die von den jeweiligen API-Endpunkten mitgeliefert werden.
 // -----------------------------------------------------------------------------
 import type {
+  ApplicationInteractionModel,
   ApplicationModel,
   ApplicationStatusEventModel,
   CompanyModel,
@@ -16,6 +17,7 @@ import type {
 
 export type Application = ApplicationModel;
 export type ApplicationStatusEvent = ApplicationStatusEventModel;
+export type ApplicationInteraction = ApplicationInteractionModel;
 export type Company = CompanyModel;
 export type CoverLetter = CoverLetterModel;
 export type Document = DocumentModel;
@@ -50,6 +52,7 @@ export type ApplicationDetail = Application & {
   jobPosting: JobPosting | null;
   coverLetter: CoverLetter | null;
   statusEvents: ApplicationStatusEvent[];
+  interactions: ApplicationInteraction[];
   documents: { document: Document; documentId: string; applicationId: string; attachedAt: Date }[];
 };
 

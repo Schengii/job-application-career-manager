@@ -89,14 +89,31 @@ export async function GET() {
       ? Math.round(responseDurations.reduce((sum, d) => sum + d, 0) / responseDurations.length)
       : null;
 
+  // 7) Absagegründe-Verteilung
+  const rejectionApps = applications.filter((a) => a.status === "REJECTED");
+  const reasonCounts = new Map<string, number>();
+  for (const app of rejectionApps) {
+    const r = app.rejectionReason || "Keine Begründung angegeben";
+    reasonCounts.set(r, (reasonCounts.get(r) || 0) + 1);
+  }
+  const rejectionDistribution = Array.from(reasonCounts.entries())
+    .map(([reason, count]) => ({
+      reason,
+      count,
+      pct: rejectionApps.length > 0 ? Math.round((count / rejectionApps.length) * 100) : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
+
   return NextResponse.json({
     statusDistribution,
     portalDistribution,
     monthlySeries,
     funnel,
+    rejectionDistribution,
     successRate,
     avgResponseDays,
     totalApplications: applications.length,
     respondedCount: responseDurations.length,
+    rejectedCount: rejectionApps.length,
   });
 }

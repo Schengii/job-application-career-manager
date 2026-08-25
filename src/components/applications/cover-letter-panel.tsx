@@ -46,6 +46,38 @@ export function CoverLetterPanel({
   const coverLetter = application.coverLetter;
   const projectEntries = preferences?.projectEntries ?? [];
 
+  const [polishing, setPolishing] = useState(false);
+
+  async function handleAiPolish() {
+    if (!content) return;
+    setPolishing(true);
+    try {
+      const result = await apiPost<{
+        polishedContent: string;
+        usedAi: boolean;
+        modelUsed: string;
+        improvements: string[];
+      }>("/api/ai", {
+        action: "POLISH_COVER_LETTER",
+        coverLetter: content,
+        jobTitle: application.position,
+        jobDescription: application.jobPosting?.description,
+        techStack: application.jobPosting?.techStack,
+      });
+
+      setContent(result.polishedContent);
+      toast.success(
+        result.usedAi
+          ? `Anschreiben mit ${result.modelUsed} optimiert!`
+          : "Anschreiben sprachlich geschärft (Offline-Heuristik)."
+      );
+    } catch {
+      toast.error("KI-Optimierung fehlgeschlagen.");
+    } finally {
+      setPolishing(false);
+    }
+  }
+
   async function handleGenerate() {
     setGenerating(true);
     try {
@@ -158,6 +190,21 @@ export function CoverLetterPanel({
           >
             <Mail className="h-3.5 w-3.5" /> Nachfassen
           </Button>
+
+          {coverLetter && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAiPolish}
+              disabled={polishing || !content}
+              title="Anschreiben mit KI oder Heuristik schärfen"
+              className="border-primary/40 text-primary hover:bg-primary-soft"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              {polishing ? "Optimiere …" : "Mit KI verfeinern ✨"}
+            </Button>
+          )}
 
           <Button
             type="button"

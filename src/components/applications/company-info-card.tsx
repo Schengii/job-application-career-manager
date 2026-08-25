@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
 import Link from "next/link";
@@ -11,6 +9,7 @@ import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { CompanyStatusBadge } from "@/components/status-badge";
 import { COMPANY_STATUSES } from "@/lib/constants";
+import { parseTags, getTagStyle } from "@/lib/tags";
 import type { Company } from "@/types";
 
 export function CompanyInfoCard({ company, onSaved }: { company: Company; onSaved: () => void }) {
@@ -29,6 +28,7 @@ export function CompanyInfoCard({ company, onSaved }: { company: Company; onSave
     contactEmail: company.contactEmail ?? "",
     contactPhone: company.contactPhone ?? "",
     status: company.status,
+    tags: company.tags ?? "",
     notes: company.notes ?? "",
   });
 
@@ -47,6 +47,8 @@ export function CompanyInfoCard({ company, onSaved }: { company: Company; onSave
       setSaving(false);
     }
   }
+
+  const tagsList = parseTags(company.tags);
 
   if (editing) {
     return (
@@ -96,6 +98,9 @@ export function CompanyInfoCard({ company, onSaved }: { company: Company; onSave
                 ))}
               </Select>
             </Field>
+            <Field label="Tags (kommasepariert)" htmlFor="c-tags">
+              <Input id="c-tags" value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="z. B. Startup, Bonn, Remote" />
+            </Field>
             <Field label="Notizen" htmlFor="c-notes">
               <Textarea id="c-notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} />
             </Field>
@@ -123,8 +128,16 @@ export function CompanyInfoCard({ company, onSaved }: { company: Company; onSave
           <Link href={`/companies/${company.id}`} className="font-medium text-foreground hover:underline">
             {company.name}
           </Link>
-          <div className="mt-1">
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <CompanyStatusBadge status={company.status} />
+            {tagsList.map((t) => (
+              <span
+                key={t}
+                className={`rounded-md border px-2 py-0.5 text-[10px] font-bold ${getTagStyle(t)}`}
+              >
+                #{t}
+              </span>
+            ))}
           </div>
         </div>
 

@@ -1,12 +1,11 @@
-"use client";
-
 import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
+import { Sparkles, Key } from "lucide-react";
 import { apiPatch } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { REMOTE_PREFERENCES } from "@/lib/constants";
+import { REMOTE_PREFERENCES, AI_PROVIDERS } from "@/lib/constants";
 import type { PreferencesWithProfile } from "@/types";
 
 export function PreferencesForm({ preferences }: { preferences: PreferencesWithProfile }) {
@@ -28,6 +27,10 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesWithP
     remotePreference: preferences.remotePreference,
     minSalary: preferences.minSalary ?? 0,
     profileSummary: preferences.profileSummary ?? "",
+    weeklyGoal: preferences.weeklyGoal ?? 5,
+    aiProvider: preferences.aiProvider ?? "openai",
+    aiApiKey: preferences.aiApiKey ?? "",
+    aiModel: preferences.aiModel ?? "",
   });
 
   async function handleSubmit(e: FormEvent) {
@@ -38,9 +41,15 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesWithP
         ...form,
         searchRadiusKm: Number(form.searchRadiusKm),
         minSalary: form.minSalary ? Number(form.minSalary) : null,
+        weeklyGoal: Number(form.weeklyGoal) || 5,
+        aiApiKey: form.aiApiKey || null,
+        aiModel: form.aiModel || null,
       });
-      await mutate("/api/preferences");
-      await mutate("/api/jobs"); // Match-Scores hängen von den Präferenzen ab
+      await Promise.all([
+        mutate("/api/preferences"),
+        mutate("/api/jobs"), // Match-Scores hängen von den Präferenzen ab
+        mutate("/api/applications"),
+      ]);
       toast.success("Präferenzen wurden gespeichert.");
     } catch {
       toast.error("Speichern fehlgeschlagen.");
@@ -50,9 +59,9 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesWithP
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <section>
-        <h3 className="mb-3 text-sm font-semibold text-foreground">Kontaktdaten (für Anschreiben)</h3>
+        <h3 className="mb-3 text-sm font-semibold text-foreground">Kontaktdaten (für Anschreiben & Lebenslauf)</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Vollständiger Name" htmlFor="p-name">
             <Input id="p-name" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
@@ -76,7 +85,7 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesWithP
       </section>
 
       <section>
-        <h3 className="mb-3 text-sm font-semibold text-foreground">Job-Suchpräferenzen</h3>
+        <h3 className="mb-3 text-sm font-semibold text-foreground">Job-Suchpräferenzen & Zielsetzung</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Gewünschte Rolle" htmlFor="p-role">
             <Input id="p-role" value={form.desiredRole} onChange={(e) => setForm({ ...form, desiredRole: e.target.value })} />
@@ -115,9 +124,21 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesWithP
               onChange={(e) => setForm({ ...form, minSalary: Number(e.target.value) })}
             />
           </Field>
-          <Field label="Tech-Stack-Präferenzen" htmlFor="p-tech" hint="kommagetrennt, z. B. TypeScript, React, CSS">
-            <Input id="p-tech" value={form.techStack} onChange={(e) => setForm({ ...form, techStack: e.target.value })} />
+          <Field label="Wöchentliches Bewerbungsziel" htmlFor="p-weekly-goal" hint="Bewerbungen pro Woche (für Dashboard-Tracker)">
+            <Input
+              id="p-weekly-goal"
+              type="number"
+              min={1}
+              max={50}
+              value={form.weeklyGoal}
+              onChange={(e) => setForm({ ...form, weeklyGoal: Number(e.target.value) })}
+            />
           </Field>
+          <div className="sm:col-span-2">
+            <Field label="Tech-Stack-Präferenzen" htmlFor="p-tech" hint="kommagetrennt, z. B. TypeScript, React, CSS">
+              <Input id="p-tech" value={form.techStack} onChange={(e) => setForm({ ...form, techStack: e.target.value })} />
+            </Field>
+          </div>
         </div>
       </section>
 
@@ -132,8 +153,60 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesWithP
         </Field>
       </section>
 
+      {/* Optionaler KI-Assistent */}
+      <section className="rounded-xl border border-primary/25 bg-primary-soft/20 p-4 space-y-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <span>Optionale KI-Veredelung (OpenAI / Anthropic / OpenRouter)</span>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Hinterlege optional deinen eigenen API-Key, um Anschreiben noch individueller mit LLMs zu verfeinern und im Mock-Interview detailliertes Feedback nach der STAR-Methode zu erhalten. 
+          <strong> Wenn kein Key hinterlegt ist, arbeitet die App 100% offline und kostenlos mit bewährten Heuristiken.</strong>
+        </p>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pt-1">
+          <Field label="KI-Provider" htmlFor="p-ai-provider">
+            <Select
+              id="p-ai-provider"
+              value={form.aiProvider}
+              onChange={(e) => setForm({ ...form, aiProvider: e.target.value })}
+            >
+              {AI_PROVIDERS.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field label="Modell-Name (optional)" htmlFor="p-ai-model" hint="z.B. gpt-4o-mini oder claude-3-5-sonnet">
+            <Input
+              id="p-ai-model"
+              value={form.aiModel}
+              onChange={(e) => setForm({ ...form, aiModel: e.target.value })}
+              placeholder="Standard-Modell des Providers nutzen"
+            />
+          </Field>
+
+          <div className="sm:col-span-2">
+            <Field label="API-Key" htmlFor="p-ai-key" hint="Wird nur lokal in deiner Datenbank gespeichert">
+              <div className="flex items-center gap-2">
+                <Key className="h-4 w-4 text-muted-foreground shrink-0" />
+                <Input
+                  id="p-ai-key"
+                  type="password"
+                  value={form.aiApiKey}
+                  onChange={(e) => setForm({ ...form, aiApiKey: e.target.value })}
+                  placeholder="sk-..."
+                />
+              </div>
+            </Field>
+          </div>
+        </div>
+      </section>
+
       <div className="flex justify-end">
-        <Button type="submit" disabled={saving}>
+        <Button type="submit" disabled={saving} className="card-hover-effect">
           {saving ? "Speichere …" : "Präferenzen speichern"}
         </Button>
       </div>

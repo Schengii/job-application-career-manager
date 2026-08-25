@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiUtils";
 import { z } from "zod";
 
+import { batchActionSchema } from "@/lib/validation";
+import { addTag, removeTag } from "@/lib/tags";
+
 const bulkRowSchema = z.object({
   id: z.string().optional(),
   companyName: z.string().min(1, "Unternehmensname ist erforderlich"),
@@ -28,8 +31,69 @@ const bulkPayloadSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const json = await request.json();
-    const { rows } = bulkPayloadSchema.parse(json);
 
+    // 1. Prüfe ob Batch-Aktion (z. B. Statusänderung, Löschung, Tags)
+    if (json.action && json.applicationIds) {
+      const batchData = batchActionSchema.parse(json);
+      const { action, applicationIds } = batchData;
+
+      if (action === "DELETE") {
+        await prisma.application.deleteMany({
+          where: { id: { in: applicationIds } },
+        });
+        return NextResponse.json({ success: true, count: applicationIds.length, action: "DELETE" });
+      }
+
+      if (action === "SET_STATUS" && batchData.status) {
+        for (const id of applicationIds) {
+          await prisma.application.update({
+            where: { id },
+            data: {
+              status: batchData.status,
+              rejectionReason: batchData.status === "REJECTED" ? batchData.rejectionReason : undefined,
+              statusEvents: {
+                create: {
+                  status: batchData.status,
+                  note: batchData.status === "REJECTED" && batchData.rejectionReason
+                    ? `Stapel-Absage: ${batchData.rejectionReason}`
+                    : "Status per Stapel-Aktion geändert",
+                },
+              },
+            },
+          });
+        }
+        return NextResponse.json({ success: true, count: applicationIds.length, action: "SET_STATUS" });
+      }
+
+      if (action === "ADD_TAG" && batchData.tag) {
+        for (const id of applicationIds) {
+          const app = await prisma.application.findUnique({ where: { id }, select: { tags: true } });
+          const updatedTags = addTag(app?.tags, batchData.tag);
+          await prisma.application.update({
+            where: { id },
+            data: { tags: updatedTags },
+          });
+        }
+        return NextResponse.json({ success: true, count: applicationIds.length, action: "ADD_TAG" });
+      }
+
+      if (action === "REMOVE_TAG" && batchData.tag) {
+        for (const id of applicationIds) {
+          const app = await prisma.application.findUnique({ where: { id }, select: { tags: true } });
+          const updatedTags = removeTag(app?.tags, batchData.tag);
+          await prisma.application.update({
+            where: { id },
+            data: { tags: updatedTags },
+          });
+        }
+        return NextResponse.json({ success: true, count: applicationIds.length, action: "REMOVE_TAG" });
+      }
+
+      return NextResponse.json({ error: "Ungültige Stapel-Aktion" }, { status: 400 });
+    }
+
+    // 2. Excel-Grid Zeilen-Batch Speichern
+    const { rows } = bulkPayloadSchema.parse(json);
     const results = [];
 
     for (const row of rows) {

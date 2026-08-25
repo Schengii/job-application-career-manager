@@ -31,6 +31,7 @@ model Company {
   contactEmail  String?
   contactPhone  String?
   notes         String? // Freitext-Notizen zum Unternehmen
+  tags          String? // kommasepariert, z.B. "Startup,Remote,Prio1"
   status        String   @default("LEAD") // LEAD | CONTACTED | IN_PROGRESS | PARTNER | REJECTED | ARCHIVED
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -80,6 +81,9 @@ model Application {
   applicationDate DateTime? // Datum, an dem die Bewerbung abgeschickt wurde
   nextStep        String? // z.B. "Rückmeldung abwarten", "Vorstellungsgespräch am ..."
   nextStepDate    DateTime?
+  meetingUrl      String? // z.B. Teams, Zoom, Google Meet Link oder Tel
+  rejectionReason String? // z.B. "Zu wenig Berufserfahrung", "Gehaltserwartung", "Stelle gestrichen"
+  tags            String? // kommasepariert, z.B. "Prio1,Frontend,Empfehlung"
   notes           String?
   source          String? // z.B. "Stepstone", "Initiativbewerbung"
   createdAt       DateTime  @default(now())
@@ -92,6 +96,7 @@ model Application {
   jobPosting   JobPosting? @relation(fields: [jobPostingId], references: [id], onDelete: SetNull)
 
   statusEvents      ApplicationStatusEvent[]
+  interactions      ApplicationInteraction[]
   documents         ApplicationDocument[]
   coverLetter       CoverLetter?
 
@@ -114,6 +119,23 @@ model ApplicationStatusEvent {
 
   applicationId String
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+}
+
+// ---------------------------------------------------------------------------
+// Interaktions-Historie — Telefonate, Feedback, Interview-Runden etc.
+// ---------------------------------------------------------------------------
+model ApplicationInteraction {
+  id              String   @id @default(cuid())
+  type            String   // CALL | EMAIL | INTERVIEW_ROUND | FEEDBACK | NOTE
+  title           String
+  summary         String?
+  interactionDate DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  applicationId   String
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([applicationId])
 }
@@ -186,6 +208,10 @@ model Preferences {
   remotePreference   String   @default("HYBRID") // ONSITE | HYBRID | REMOTE | ANY
   minSalary          Int?
   profileSummary     String? // Kurzprofil für den Anschreiben-Generator
+  weeklyGoal         Int      @default(5) // Wochenziel für Bewerbungen
+  aiProvider         String?  // openai | anthropic | openrouter | ollama
+  aiApiKey           String?
+  aiModel            String?
   updatedAt          DateTime @updatedAt
 
   educationEntries EducationEntry[]

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Briefcase, Building2, Search, Settings, Menu, X, BarChart3, GraduationCap, FileText, FileSpreadsheet } from "lucide-react";
+import { LayoutDashboard, Briefcase, Building2, Search, Settings, Menu, X, BarChart3, GraduationCap, FileText, FileSpreadsheet, Keyboard } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -132,7 +132,17 @@ export function Sidebar() {
         </div>
         <NavLinks />
         <div className="flex items-center justify-between border-t border-border px-4 pt-4">
-          <span className="text-xs text-muted-foreground">Fachinformatiker AE · Frontend</span>
+          <button
+            type="button"
+            onClick={() => {
+              window.dispatchEvent(new KeyboardEvent("keydown", { key: "?" }));
+            }}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+            title="Tastaturkürzel anzeigen (?)"
+          >
+            <Keyboard className="h-3.5 w-3.5" />
+            <span>Kürzel <kbd className="rounded border border-border px-1 py-0.2 font-mono text-[10px]">?</kbd></span>
+          </button>
           <ThemeToggle />
         </div>
       </aside>

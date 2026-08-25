@@ -26,6 +26,9 @@ import { getFollowUpStatus } from "@/lib/followUp";
 import { EmailResponseModal } from "@/components/applications/email-response-modal";
 import { CalendarFeedModal } from "@/components/calendar/calendar-feed-modal";
 
+import { GoalTrackerCard } from "@/components/dashboard/goal-tracker-card";
+import { Video } from "lucide-react";
+
 export default function DashboardPage() {
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [calendarModalOpen, setCalendarModalOpen] = useState(false);
@@ -70,6 +73,9 @@ export default function DashboardPage() {
           </Button>
         </div>
       </header>
+
+      {/* Wochenziel & Streak-Tracker */}
+      <GoalTrackerCard />
 
       {/* KPI-Karten */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -182,11 +188,27 @@ export default function DashboardPage() {
             <ul className="flex flex-col gap-3">
               {upcoming.map((app) => (
                 <li key={app.id}>
-                  <Link href={`/applications/${app.id}`} className="block rounded-lg border border-border p-3 hover:bg-surface-hover">
-                    <p className="text-sm font-medium text-foreground">{app.company.name}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{app.nextStep}</p>
-                    <p className="mt-1 text-xs font-medium text-primary">{formatDate(app.nextStepDate)}</p>
-                  </Link>
+                  <div className="rounded-lg border border-border p-3 hover:bg-surface-hover/60 transition-colors">
+                    <div className="flex items-start justify-between gap-2">
+                      <Link href={`/applications/${app.id}`} className="min-w-0">
+                        <p className="text-sm font-medium text-foreground hover:underline truncate">{app.company.name}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground truncate">{app.nextStep}</p>
+                        <p className="mt-1 text-xs font-medium text-primary">{formatDate(app.nextStepDate)}</p>
+                      </Link>
+                      {app.meetingUrl && (
+                        <a
+                          href={app.meetingUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex h-8 items-center gap-1 rounded-lg border border-primary/30 bg-primary-soft px-2.5 text-xs font-semibold text-primary hover:bg-primary hover:text-white transition-colors shrink-0"
+                          title="Direkt zum Meeting"
+                        >
+                          <Video className="h-3.5 w-3.5" />
+                          <span>Join</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 </li>
               ))}
             </ul>

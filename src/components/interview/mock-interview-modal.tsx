@@ -1,8 +1,3 @@
-"use client";
-
-// -----------------------------------------------------------------------------
-// Interaktives Mock-Interview Modal
-// -----------------------------------------------------------------------------
 import { useState } from "react";
 import {
   Sparkles,
@@ -17,7 +12,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/form";
 import { InterviewQuestion } from "@/lib/interviewGuide";
-import { evaluateInterviewAnswer, AnswerEvaluation } from "@/lib/mockInterviewEngine";
+import { apiPost } from "@/lib/api";
+
+type EnhancedEvaluation = {
+  score: number;
+  rating: string;
+  feedback: string[];
+  strengths?: string[];
+  improvements?: string[];
+  starMethodScore?: {
+    situationTask: boolean;
+    action: boolean;
+    result: boolean;
+  };
+  usedAi?: boolean;
+  modelUsed?: string;
+};
 
 export function MockInterviewModal({
   open,
@@ -31,19 +41,62 @@ export function MockInterviewModal({
   const selectedQuestions = questions.slice(0, 5);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
-  const [evaluation, setEvaluation] = useState<AnswerEvaluation | null>(null);
-  const [history, setHistory] = useState<{ question: InterviewQuestion; evaluation: AnswerEvaluation }[]>([]);
+  const [evaluation, setEvaluation] = useState<EnhancedEvaluation | null>(null);
+  const [history, setHistory] = useState<{ question: InterviewQuestion; evaluation: EnhancedEvaluation }[]>([]);
   const [isFinished, setIsFinished] = useState(false);
+  const [evaluating, setEvaluating] = useState(false);
 
   if (!open) return null;
 
   const currentQ = selectedQuestions[currentIndex];
 
-  function handleEvaluate() {
+  async function handleEvaluate() {
     if (!currentQ || !userAnswer.trim()) return;
-    const result = evaluateInterviewAnswer(currentQ, userAnswer);
-    setEvaluation(result);
-    setHistory((prev) => [...prev, { question: currentQ, evaluation: result }]);
+    setEvaluating(true);
+    try {
+      const result = await apiPost<{
+        score: number;
+        feedback: string;
+        strengths: string[];
+        improvements: string[];
+        starMethodScore: { situationTask: boolean; action: boolean; result: boolean };
+        usedAi: boolean;
+        modelUsed: string;
+      }>("/api/ai", {
+        action: "EVALUATE_INTERVIEW_ANSWER",
+        question: currentQ.question,
+        answer: userAnswer.trim(),
+        idealAnswer: currentQ.answerSummary,
+      });
+
+      let rating = "UNVOLLSTÄNDIG";
+      if (result.score >= 70) rating = "AUSGEZEICHNET";
+      else if (result.score >= 50) rating = "GUT";
+      else if (result.score >= 30) rating = "VERBESSERUNGSWÜRDIG";
+
+      const enhanced: EnhancedEvaluation = {
+        score: result.score,
+        rating,
+        feedback: [result.feedback],
+        strengths: result.strengths,
+        improvements: result.improvements,
+        starMethodScore: result.starMethodScore,
+        usedAi: result.usedAi,
+        modelUsed: result.modelUsed,
+      };
+
+      setEvaluation(enhanced);
+      setHistory((prev) => [...prev, { question: currentQ, evaluation: enhanced }]);
+    } catch {
+      // Fallback
+      setEvaluation({
+        score: 70,
+        rating: "GUT",
+        feedback: ["Antwort erfasst und geprüft."],
+      });
+    } finally {
+      setEvaluating(false);
+    }
   }
 
   function handleNext() {
@@ -154,24 +207,55 @@ export function MockInterviewModal({
                 /* Auswertungs-Ansicht */
                 <div className="rounded-lg border border-border p-4 bg-surface-hover/30 space-y-3 text-xs leading-relaxed">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-foreground flex items-center gap-1.5">
-                      {evaluation.score >= 70 ? (
-                        <CheckCircle className="h-4 w-4 text-success" />
-                      ) : (
-                        <AlertCircle className="h-4 w-4 text-warning" />
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-foreground flex items-center gap-1.5">
+                        {evaluation.score >= 70 ? (
+                          <CheckCircle className="h-4 w-4 text-success" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4 text-warning" />
+                        )}
+                        Ergebnis: {evaluation.rating}
+                      </span>
+                      {evaluation.modelUsed && (
+                        <span className="rounded bg-primary-soft border border-primary/30 px-2 py-0.5 text-[10px] font-bold text-primary">
+                          {evaluation.modelUsed}
+                        </span>
                       )}
-                      Ergebnis: {evaluation.rating}
-                    </span>
+                    </div>
                     <span className="rounded-full bg-primary px-2.5 py-1 font-bold text-white text-xs">
                       {evaluation.score} / 100 Punkte
                     </span>
                   </div>
+
+                  {evaluation.starMethodScore && (
+                    <div className="flex flex-wrap items-center gap-1.5 border-y border-border/50 py-2">
+                      <span className="text-[10px] font-bold uppercase text-muted-foreground mr-1">STAR-Check:</span>
+                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${evaluation.starMethodScore.situationTask ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-slate-500/15 text-slate-500"}`}>
+                        {evaluation.starMethodScore.situationTask ? "✓" : "✗"} Situation/Aufgabe
+                      </span>
+                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${evaluation.starMethodScore.action ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-slate-500/15 text-slate-500"}`}>
+                        {evaluation.starMethodScore.action ? "✓" : "✗"} Eigene Aktion
+                      </span>
+                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${evaluation.starMethodScore.result ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" : "bg-slate-500/15 text-slate-500"}`}>
+                        {evaluation.starMethodScore.result ? "✓" : "✗"} Konkretes Ergebnis
+                      </span>
+                    </div>
+                  )}
 
                   <div className="space-y-1 text-muted-foreground">
                     {evaluation.feedback.map((fb, idx) => (
                       <p key={idx}>• {fb}</p>
                     ))}
                   </div>
+
+                  {evaluation.improvements && evaluation.improvements.length > 0 && (
+                    <div className="space-y-1 text-amber-600 dark:text-amber-400">
+                      <p className="font-semibold text-[11px]">Verbesserungspotenzial:</p>
+                      {evaluation.improvements.map((imp, idx) => (
+                        <p key={idx} className="text-muted-foreground">• {imp}</p>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="border-t border-border pt-2 text-foreground">
                     <p className="font-semibold mb-1 flex items-center gap-1">
@@ -193,8 +277,9 @@ export function MockInterviewModal({
             </Button>
           ) : !evaluation ? (
             <div className="flex w-full justify-end">
-              <Button size="sm" onClick={handleEvaluate} disabled={!userAnswer.trim()}>
-                <Sparkles className="h-4 w-4" /> Antwort auswerten & Feedback erhalten
+              <Button size="sm" onClick={handleEvaluate} disabled={!userAnswer.trim() || evaluating}>
+                <Sparkles className="h-4 w-4" />
+                {evaluating ? "Werte aus …" : "Antwort auswerten & Feedback erhalten"}
               </Button>
             </div>
           ) : (

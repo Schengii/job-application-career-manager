@@ -14,16 +14,19 @@ import { StatTile } from "@/components/analytics/stat-tile";
 import { FunnelChart } from "@/components/analytics/funnel-chart";
 import { OfferComparisonMatrix } from "@/components/analytics/offer-comparison-matrix";
 import { SalaryBenchmarkCard } from "@/components/analytics/salary-benchmark-card";
+import { RejectionReasonsChart } from "@/components/analytics/rejection-reasons-chart";
 
 type Analytics = {
   statusDistribution: { status: string; label: string; color: string; count: number }[];
   portalDistribution: { portal: string; label: string; count: number; interviewCount?: number; interviewRate?: number }[];
   monthlySeries: { label: string; count: number }[];
+  rejectionDistribution?: { reason: string; count: number; pct: number }[];
   funnel?: { stage: string; count: number; rate: number }[];
   successRate: number | null;
   avgResponseDays: number | null;
   totalApplications: number;
   respondedCount: number;
+  rejectedCount?: number;
 };
 
 export default function AnalyticsPage() {
@@ -138,8 +141,18 @@ export default function AnalyticsPage() {
               </CardContent>
             </Card>
 
-            {/* Portal Verteilung */}
+            {/* Absagegründe Analyse */}
             <Card>
+              <CardHeader>
+                <CardTitle>Absagegründe & Feedback-Analyse</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <RejectionReasonsChart data={data.rejectionDistribution ?? []} />
+              </CardContent>
+            </Card>
+
+            {/* Portal Verteilung */}
+            <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle>Bewerbungen je Jobportal</CardTitle>
               </CardHeader>
