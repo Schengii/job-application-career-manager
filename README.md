@@ -129,8 +129,41 @@ Drücke jederzeit <kbd>?</kbd> in der App, um die interaktive Tastatur-Hilfe zu 
 | Datenbank | SQLite via Prisma 7 ORM (Adapter: `better-sqlite3`)                       |
 | State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
 | PWA       | Web App Manifest, Service Worker Caching                                  |
-| Testing   | Vitest (125 automatisierte Unit- & API-Integrationstests, s. `vitest.global-setup.ts`) |
+| Testing   | Vitest (131 automatisierte Unit- & API-Integrationstests, s. `vitest.global-setup.ts`) |
 | CI/CD     | GitHub Actions (`.github/workflows/ci.yml`) für automatisierte Test- & Build-Pipelines |
+
+---
+
+## 📁 Projektstruktur & Architektur
+
+```text
+├── prisma/                     # Prisma 7 SQLite Schema, Migrationen & Test-Fixtures
+│   ├── schema.prisma           # Datenmodelle (Company, JobPosting, Application, Preferences etc.)
+│   ├── seed.ts                 # Realistische Test- & Beispieldaten
+│   └── test-schema.sql         # SQL-Fixture für isolierte Vitest In-Memory Testläufe
+├── public/                     # Statische Web-Assets, PWA-Manifest & Service Worker
+├── scripts/                    # CLI-Import-Tools für Excel-Bewerbungslisten & Profil-Templates
+├── src/
+│   ├── app/                    # Next.js 16 App Router (Pages, Layouts, API Endpoints)
+│   │   ├── (routes)/           # Analytics, Applications, Companies, CV-Designer, Jobs, Settings ...
+│   │   └── api/                # REST API Endpoints mit Zod-Validierung
+│   ├── components/             # Modulare React 19 Komponenten nach Feature gruppiert
+│   │   ├── analytics/          # Visualisierungen, Funnel-Charts, Gehalts- & Skill-Analysen
+│   │   ├── applications/       # Kanban-Board, Detailformulare, Anschreiben & Dokumenten-Panel
+│   │   ├── calendar/           # Kalender-Feed & Termin-Sync
+│   │   ├── companies/          # Unternehmens-Dialoge & Detail-Karten
+│   │   ├── dashboard/          # KPI-Kacheln & Wochenziel-Tracker
+│   │   ├── documents/          # In-App Dokumenten-Vorschau (PDF/Bilder)
+│   │   ├── excel/              # Excel-Grid & Import-Assistent
+│   │   ├── interview/          # Mock-Interview Simulator (Web Speech API) & Dossier-Druck
+│   │   ├── jobs/               # Job-Suche, Dismiss-Modal, Portal-Sync & Vergleich
+│   │   ├── notifications/      # Benachrichtigungs-Zentrale
+│   │   ├── settings/           # Präferenzen, Blacklist-Manager & Backup-Rotation
+│   │   └── ui/                 # Wiederverwendbare Basiskomponenten (Button, Card, Dialog, Form, Toast)
+│   ├── lib/                    # Domänenlogik, Matching-Engine, AI-Services & Utility-Helfer
+│   ├── test/                   # Test-Helfer (DB-Reset, SQLite Test-Setup)
+│   └── types/                  # TypeScript Typdefinitionen & Prisma Model-Re-Exporte
+```
 
 ---
 

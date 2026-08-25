@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import {
   Sparkles,
   Trophy,
@@ -9,7 +9,6 @@ import {
   RotateCcw,
   MessageSquare,
   Mic,
-  MicOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/form";
@@ -50,19 +49,14 @@ export function MockInterviewModal({
 
   // Web Speech API
   const [isListening, setIsListening] = useState(false);
-  const [speechSupported, setSpeechSupported] = useState(false);
+  const [speechSupported] = useState(() => {
+    if (typeof window === "undefined") return false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const win = window as any;
+    return Boolean("SpeechRecognition" in win || "webkitSpeechRecognition" in win);
+  });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const win = window as any;
-      if ("SpeechRecognition" in win || "webkitSpeechRecognition" in win) {
-        setSpeechSupported(true);
-      }
-    }
-  }, []);
 
   function toggleSpeech() {
     if (!speechSupported) return;

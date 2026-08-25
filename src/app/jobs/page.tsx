@@ -19,7 +19,6 @@ import {
   EyeOff,
   RotateCcw,
   Ban,
-  Filter,
 } from "lucide-react";
 import { fetcher, apiPost } from "@/lib/api";
 import type { JobPostingWithCompany } from "@/types";
