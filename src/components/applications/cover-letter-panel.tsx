@@ -135,6 +135,15 @@ export function CoverLetterPanel({
     toast.success("Keyword-Satz ins Anschreiben eingefügt!");
   }
 
+  function handleOpenMailClient() {
+    if (!content) return;
+    const recipient = application.company?.contactEmail || "";
+    const subject = `Bewerbung als ${application.position} - ${preferences?.fullName ?? "Bewerber"}`;
+    const mailtoUrl = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(content)}`;
+    window.location.href = mailtoUrl;
+    toast.success("E-Mail-Programm geöffnet! Tipp: Vergiss nicht deine PDF-Unterlagen anzuhängen.");
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* Steuerungsleiste */}
@@ -230,14 +239,27 @@ export function CoverLetterPanel({
               </Button>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setPrintModalOpen(true)}
-            >
-              <Printer className="h-3.5 w-3.5" /> DIN 5008 Druck / PDF
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleOpenMailClient}
+                title="In deinem Standard-E-Mail-Programm (Outlook, Thunderbird, Mail-App) öffnen"
+                className="text-xs card-hover-effect"
+              >
+                <Mail className="h-3.5 w-3.5 text-sky-500" /> Als E-Mail öffnen
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPrintModalOpen(true)}
+              >
+                <Printer className="h-3.5 w-3.5" /> DIN 5008 Druck / PDF
+              </Button>
+            </div>
           </div>
 
           <Textarea

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Sparkles,
   Trophy,
@@ -8,6 +8,8 @@ import {
   AlertCircle,
   RotateCcw,
   MessageSquare,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/form";
@@ -45,6 +47,58 @@ export function MockInterviewModal({
   const [history, setHistory] = useState<{ question: InterviewQuestion; evaluation: EnhancedEvaluation }[]>([]);
   const [isFinished, setIsFinished] = useState(false);
   const [evaluating, setEvaluating] = useState(false);
+
+  // Web Speech API
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const win = window as any;
+      if ("SpeechRecognition" in win || "webkitSpeechRecognition" in win) {
+        setSpeechSupported(true);
+      }
+    }
+  }, []);
+
+  function toggleSpeech() {
+    if (!speechSupported) return;
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const win = window as any;
+      const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = "de-DE";
+      recognition.continuous = true;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => setIsListening(true);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recognition.onresult = (event: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const text = Array.from(event.results).map((r: any) => r[0].transcript).join(" ");
+        setUserAnswer((prev) => (prev.trim() ? `${prev.trim()} ${text.trim()}` : text.trim()));
+      };
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch {
+      setIsListening(false);
+    }
+  }
 
   if (!open) return null;
 
@@ -100,6 +154,10 @@ export function MockInterviewModal({
   }
 
   function handleNext() {
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
     if (currentIndex + 1 < selectedQuestions.length) {
       setCurrentIndex((i) => i + 1);
       setUserAnswer("");
@@ -110,6 +168,10 @@ export function MockInterviewModal({
   }
 
   function handleRestart() {
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
     setCurrentIndex(0);
     setUserAnswer("");
     setEvaluation(null);
@@ -192,14 +254,40 @@ export function MockInterviewModal({
 
               {!evaluation ? (
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground">
-                    Deine Antwort (tippe deine Erklärung wie im echten Gespräch):
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Deine Antwort (tippe deine Erklärung oder sprich sie frei ein):
+                    </label>
+
+                    {speechSupported && (
+                      <button
+                        type="button"
+                        onClick={toggleSpeech}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition-all ${
+                          isListening
+                            ? "bg-rose-500 text-white animate-pulse shadow-md"
+                            : "bg-surface border border-border text-foreground hover:bg-surface-hover"
+                        }`}
+                      >
+                        {isListening ? (
+                          <>
+                            <Mic className="h-3.5 w-3.5" />
+                            <span>Höre zu … (Klick zum Stoppen)</span>
+                          </>
+                        ) : (
+                          <>
+                            <Mic className="h-3.5 w-3.5 text-primary" />
+                            <span>Antwort einsprechen 🎙️</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
                   <Textarea
                     rows={6}
                     value={userAnswer}
                     onChange={(e) => setUserAnswer(e.target.value)}
-                    placeholder="Erkläre die Kernkonzepte, nenne konkrete Praxisbeispiele oder Methoden …"
+                    placeholder="Erkläre die Kernkonzepte, nenne konkrete Praxisbeispiele oder Methoden (oder klicke oben auf 'Antwort einsprechen' 🎙️) …"
                     className="mt-1 text-sm leading-relaxed"
                   />
                 </div>

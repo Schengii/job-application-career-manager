@@ -41,8 +41,9 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers und Lebensläufe
   - *Architektur & Testing* (Vitest, REST API Design mit Zod, CI/CD)
   - *Werdegang & Praxisprojekte* (Elektroniker $\rightarrow$ Fachinformatiker, *electroCheck-ai*)
   - *Gegenfragen an den Arbeitgeber* (Onboarding, Code Reviews, Release-Zyklen)
-- **Mock-Interview Simulator mit STAR-Methode**:
+- **Mock-Interview Simulator mit STAR-Methode & Web Speech API**:
   - 5-Fragen-Durchlauf mit automatischer Antwort-Auswertung.
+  - **Sprache-zu-Text Transkription (Web Speech API 🎙️)**: Antworten frei einsprechen statt tippen.
   - STAR-Methoden-Analyse (Situation/Aufgabe, Aktion, Ergebnis).
   - KI-gestützte Auswertung mit Stärken- und Verbesserungsvorschlägen (oder Offline-Heuristik).
 
@@ -57,6 +58,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers und Lebensläufe
   - **Klassisch** (formell für Behörden, Banken & Großkonzerne)
   - **Startup / Agil** (dynamisch, teamorientiert, direkte Ansprache)
   - **Detailliert** (starker Fokus auf Umschulung, Handwerk & technischen Tiefgang)
+- **1-Klick E-Mail-Programm Vorbereitung (`mailto:`)**: Öffnet dein lokales Mail-Programm (Outlook, Thunderbird, Apple Mail) mit vorbefülltem Empfänger, Betreff und generiertem Anschreiben.
 - **„Mit KI verfeinern ✨“ Button**: Poliert das Anschreiben live nach stilistischen Kriterien und passt die Argumentation an die Stellenbeschreibung an.
 - **Keyword-Booster & ATS-Match Optimizer**: Gleicht das Anschreiben live mit den geforderten Tech-Keywords der Stellenanzeige ab und vergibt einen ATS-Score (0-100%).
 - **DIN 5008 Druck- & PDF-Ansicht**: Druckoptimiertes Brieflayout mit Absenderzeile, Empfängerfeld, Betreff, digitaler Signaturzeile und One-Click-PDF-Export.
