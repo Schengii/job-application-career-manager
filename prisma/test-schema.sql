@@ -50,6 +50,8 @@ CREATE TABLE "Application" (
     "nextStepDate" DATETIME,
     "meetingUrl" TEXT,
     "rejectionReason" TEXT,
+    "interviewStage" TEXT,
+    "timeSpentMinutes" INTEGER DEFAULT 0,
     "tags" TEXT,
     "notes" TEXT,
     "source" TEXT,
@@ -142,6 +144,15 @@ CREATE TABLE "Preferences" (
     "aiProvider" TEXT,
     "aiApiKey" TEXT,
     "aiModel" TEXT,
+    "portfolioShareToken" TEXT,
+    "portfolioTokenExpiresAt" DATETIME,
+    "portfolioViewCount" INTEGER NOT NULL DEFAULT 0,
+    "portfolioActive" BOOLEAN NOT NULL DEFAULT true,
+    "imapHost" TEXT,
+    "imapPort" INTEGER,
+    "imapUser" TEXT,
+    "imapFolder" TEXT DEFAULT 'INBOX',
+    "imapEnabled" BOOLEAN NOT NULL DEFAULT false,
     "updatedAt" DATETIME NOT NULL
 );
 
@@ -219,6 +230,9 @@ CREATE INDEX "ApplicationDocument_documentId_idx" ON "ApplicationDocument"("docu
 
 -- CreateIndex
 CREATE UNIQUE INDEX "CoverLetter_applicationId_key" ON "CoverLetter"("applicationId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Preferences_portfolioShareToken_key" ON "Preferences"("portfolioShareToken");
 
 -- CreateIndex
 CREATE INDEX "EducationEntry_preferencesId_idx" ON "EducationEntry"("preferencesId");

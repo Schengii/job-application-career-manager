@@ -87,6 +87,8 @@ model Application {
   nextStepDate    DateTime?
   meetingUrl      String? // z.B. Teams, Zoom, Google Meet Link oder Tel
   rejectionReason String? // z.B. "Zu wenig Berufserfahrung", "Gehaltserwartung", "Stelle gestrichen"
+  interviewStage  String? // SCREENING | CODING_CHALLENGE | TECH_INTERVIEW | FINAL_ROUND | OFFER_STAGE
+  timeSpentMinutes Int?   @default(0) // Aufwand in Minuten (Recherche, Anschreiben, Vorbereitung)
   tags            String? // kommasepariert, z.B. "Prio1,Frontend,Empfehlung"
   notes           String?
   source          String? // z.B. "Stepstone", "Initiativbewerbung"
@@ -219,6 +221,17 @@ model Preferences {
   aiProvider         String?  // openai | anthropic | openrouter | ollama
   aiApiKey           String?
   aiModel            String?
+  // Digitales Recruiter-Portfolio / One-Pager
+  portfolioShareToken      String?  @unique
+  portfolioTokenExpiresAt DateTime?
+  portfolioViewCount      Int      @default(0)
+  portfolioActive         Boolean  @default(true)
+  // E-Mail IMAP Auto-Sync
+  imapHost           String?
+  imapPort           Int?
+  imapUser           String?
+  imapFolder         String?  @default("INBOX")
+  imapEnabled        Boolean  @default(false)
   updatedAt          DateTime @updatedAt
 
   educationEntries EducationEntry[]

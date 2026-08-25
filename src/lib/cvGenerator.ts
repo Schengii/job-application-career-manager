@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------
 import type { PreferencesWithProfile } from "@/types";
 
-export type CvLayout = "MODERN" | "CLASSIC" | "COMPACT";
+export type CvLayout = "MODERN" | "CLASSIC" | "COMPACT" | "ATS_MINIMAL";
 
 export type CvOptions = {
   layout: CvLayout;
@@ -50,13 +50,14 @@ export function generateCvHtml(preferences: PreferencesWithProfile, options: CvO
   <meta charset="UTF-8">
   <title>Lebenslauf - ${escapeHtml(preferences.fullName || "Bewerber")}</title>
   <style>
+    @page { size: A4 portrait; margin: 12mm 15mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.5; font-size: 13px; background: #fff; padding: 30px; }
-    .header { border-bottom: 2px solid #4f46e5; padding-bottom: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.5; font-size: 13px; background: #fff; padding: 24px; }
+    .header { border-bottom: 2px solid #4f46e5; padding-bottom: 15px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end; }
     .name { font-size: 24px; font-weight: bold; color: #0f172a; }
-    .role { font-size: 15px; color: #4f46e5; font-weight: 600; margin-top: 2px; }
-    .contact { font-size: 11px; color: #64748b; text-align: right; }
-    .section { margin-bottom: 18px; }
+    .role { font-size: 14px; color: #4f46e5; font-weight: 600; margin-top: 2px; }
+    .contact { font-size: 11px; color: #64748b; text-align: right; line-height: 1.4; }
+    .section { margin-bottom: 16px; page-break-inside: avoid; }
     .section-title { font-size: 13px; font-weight: bold; text-transform: uppercase; color: #4f46e5; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; margin-bottom: 8px; letter-spacing: 0.5px; }
     .entry { margin-bottom: 10px; }
     .entry-header { display: flex; justify-content: space-between; font-weight: 600; color: #1e293b; }
@@ -66,8 +67,19 @@ export function generateCvHtml(preferences: PreferencesWithProfile, options: CvO
     .skill-tag { background: #eef2ff; color: #4338ca; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 500; }
     .profile-summary { font-size: 12px; color: #334155; margin-bottom: 15px; font-style: italic; background: #f8fafc; padding: 8px 12px; border-left: 3px solid #4f46e5; border-radius: 2px; }
     
-    ${layout === "COMPACT" ? `body { padding: 15px; font-size: 12px; } .section { margin-bottom: 12px; } .name { font-size: 20px; }` : ""}
+    ${layout === "COMPACT" ? `body { padding: 10px; font-size: 12px; } .section { margin-bottom: 10px; } .name { font-size: 20px; }` : ""}
     ${layout === "CLASSIC" ? `.header { border-bottom: 2px solid #334155; } .role { color: #334155; } .section-title { color: #0f172a; border-bottom: 1px solid #0f172a; } .skill-tag { background: #f1f5f9; color: #0f172a; }` : ""}
+    ${layout === "ATS_MINIMAL" ? `
+      body { font-family: "Times New Roman", Times, serif; color: #000; padding: 10px; font-size: 13px; line-height: 1.4; }
+      .header { border-bottom: 1px solid #000; display: block; text-align: center; margin-bottom: 12px; padding-bottom: 8px; }
+      .name { font-size: 22px; color: #000; text-transform: uppercase; }
+      .role { font-size: 13px; color: #333; font-style: italic; }
+      .contact { text-align: center; font-size: 11px; color: #000; margin-top: 4px; }
+      .contact div { display: inline-block; margin: 0 5px; }
+      .section-title { color: #000; border-bottom: 1px solid #000; font-size: 12px; font-weight: bold; margin-bottom: 6px; }
+      .skill-tag { background: none; color: #000; border: 1px solid #ccc; border-radius: 0; padding: 1px 4px; }
+      .profile-summary { background: none; border-left: none; padding: 0; font-style: normal; margin-bottom: 10px; }
+    ` : ""}
   </style>
 </head>
 <body>
@@ -114,7 +126,7 @@ export function generateCvHtml(preferences: PreferencesWithProfile, options: CvO
           ${p.role ? `<span style="font-size: 11px; font-weight: normal; color: #64748b;">${escapeHtml(p.role)}</span>` : ""}
         </div>
         ${p.description ? `<div class="entry-desc">${escapeHtml(p.description)}</div>` : ""}
-        ${p.techStack ? `<div class="entry-desc" style="color: #4f46e5; font-size: 11px;">Tech-Stack: ${escapeHtml(p.techStack)}</div>` : ""}
+        ${p.techStack ? `<div style="font-size: 11px; color: #4f46e5; margin-top: 2px;">Tech-Stack: ${escapeHtml(p.techStack)}</div>` : ""}
       </div>
     `
       )

@@ -2,12 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
-import { Calendar, Video, Tag } from "lucide-react";
+import { Calendar, Video, Tag, Clock, Plus, Hourglass } from "lucide-react";
 import { apiPatch } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { APPLICATION_STATUSES, REJECTION_REASONS } from "@/lib/constants";
+import { APPLICATION_STATUSES, REJECTION_REASONS, INTERVIEW_STAGES } from "@/lib/constants";
 import { toDateInputValue } from "@/lib/utils";
 import { generateIcsContent, downloadIcsFile } from "@/lib/ical";
 import type { ApplicationDetail } from "@/types";
@@ -18,7 +18,7 @@ export function ApplicationDetailsForm({
 }: {
   application: ApplicationDetail;
   onSaved: () => void;
-}) {
+  }) {
   const { mutate } = useSWRConfig();
   const toast = useToast();
   const [saving, setSaving] = useState(false);
@@ -29,6 +29,8 @@ export function ApplicationDetailsForm({
   const [nextStep, setNextStep] = useState(application.nextStep ?? "");
   const [nextStepDate, setNextStepDate] = useState(toDateInputValue(application.nextStepDate));
   const [meetingUrl, setMeetingUrl] = useState(application.meetingUrl ?? "");
+  const [interviewStage, setInterviewStage] = useState(application.interviewStage ?? "");
+  const [timeSpentMinutes, setTimeSpentMinutes] = useState<number>(application.timeSpentMinutes ?? 30);
   const [tags, setTags] = useState(application.tags ?? "");
   const [rejectionReason, setRejectionReason] = useState(application.rejectionReason ?? "");
   const [notes, setNotes] = useState(application.notes ?? "");
@@ -44,6 +46,8 @@ export function ApplicationDetailsForm({
         nextStep: nextStep || null,
         nextStepDate: nextStepDate ? new Date(nextStepDate).toISOString() : "",
         meetingUrl: meetingUrl || null,
+        interviewStage: interviewStage || null,
+        timeSpentMinutes: Number(timeSpentMinutes) || 0,
         tags: tags || null,
         rejectionReason: status === "REJECTED" ? rejectionReason || null : null,
         notes: notes || null,
@@ -60,6 +64,10 @@ export function ApplicationDetailsForm({
     } finally {
       setSaving(false);
     }
+  }
+
+  function addMinutes(min: number) {
+    setTimeSpentMinutes((prev) => Math.max(0, (prev || 0) + min));
   }
 
   return (
@@ -85,6 +93,24 @@ export function ApplicationDetailsForm({
         </Field>
       </div>
 
+      {status === "INTERVIEW" && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3.5 space-y-2">
+          <label className="text-xs font-bold text-primary">Interview-Phase / Stufe:</label>
+          <Select
+            value={interviewStage}
+            onChange={(e) => setInterviewStage(e.target.value)}
+            className="text-xs"
+          >
+            <option value="">Phase auswählen …</option>
+            {INTERVIEW_STAGES.map((st) => (
+              <option key={st.value} value={st.value}>
+                {st.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+      )}
+
       {status === "REJECTED" && (
         <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-3.5 space-y-2">
           <label className="text-xs font-bold text-rose-600 dark:text-rose-400">
@@ -105,82 +131,100 @@ export function ApplicationDetailsForm({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="Nächster Schritt" htmlFor="detail-next-step">
+      {/* Zeitaufwand & ROI Logger */}
+      <div className="rounded-lg border border-border bg-surface-hover/30 p-3.5 space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <Hourglass className="h-3.5 w-3.5 text-primary" /> Investierter Zeitaufwand (Minuten):
+          </label>
+          <span className="text-xs font-bold text-primary">{Math.round((timeSpentMinutes / 60) * 10) / 10} Std.</span>
+        </div>
+        <div className="flex items-center gap-2">
           <Input
-            id="detail-next-step"
-            value={nextStep}
-            onChange={(e) => setNextStep(e.target.value)}
-            placeholder="z. B. Vorstellungsgespräch am ..."
+            type="number"
+            min={0}
+            step={5}
+            value={timeSpentMinutes}
+            onChange={(e) => setTimeSpentMinutes(Number(e.target.value))}
+            className="h-8 text-xs w-28"
           />
-        </Field>
-
-        <Field label="Meeting-Link (Teams / Zoom / Meet)" htmlFor="detail-meeting">
-          <div className="flex gap-2">
-            <Input
-              id="detail-meeting"
-              value={meetingUrl}
-              onChange={(e) => setMeetingUrl(e.target.value)}
-              placeholder="https://teams.microsoft.com/..."
-            />
-            {meetingUrl && (
-              <a
-                href={meetingUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1 rounded-lg border border-primary/30 bg-primary-soft px-3 text-xs font-semibold text-primary hover:bg-primary hover:text-white transition-colors shrink-0"
-                title="Meeting testen"
-              >
-                <Video className="h-4 w-4" />
-                <span>Join</span>
-              </a>
-            )}
+          <div className="flex items-center gap-1">
+            <Button type="button" variant="outline" size="sm" onClick={() => addMinutes(15)} className="h-8 px-2 text-[11px]">
+              +15m
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => addMinutes(30)} className="h-8 px-2 text-[11px]">
+              +30m
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => addMinutes(60)} className="h-8 px-2 text-[11px]">
+              +1h
+            </Button>
           </div>
-        </Field>
+        </div>
       </div>
 
-      <Field label="Tags & Labels (kommasepariert)" htmlFor="detail-tags">
-        <div className="flex items-center gap-2">
-          <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
+      <Field label="Nächster Schritt (Beschreibung)" htmlFor="detail-next-step">
+        <Input
+          id="detail-next-step"
+          placeholder="z.B. Technisches Fachgespräch mit Teamleiter, Probearbeitstag..."
+          value={nextStep}
+          onChange={(e) => setNextStep(e.target.value)}
+        />
+      </Field>
+
+      <Field label="Meeting-Link / Telefon" htmlFor="detail-meeting-url" hint="Teams, Zoom, Google Meet oder Telefonnummer">
+        <div className="relative">
+          <Video className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            id="detail-tags"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            placeholder="z. B. Prio1, Remote, React19, Empfehlung"
+            id="detail-meeting-url"
+            className="pl-8"
+            placeholder="https://teams.microsoft.com/... oder https://zoom.us/..."
+            value={meetingUrl}
+            onChange={(e) => setMeetingUrl(e.target.value)}
           />
         </div>
       </Field>
 
-      <Field label="Notizen" htmlFor="detail-notes">
-        <Textarea id="detail-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
-      </Field>
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {application.nextStepDate ? (
+      {meetingUrl && nextStepDate && (
+        <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-primary" />
+            <span>Interview-Termin im Kalender eintragen</span>
+          </div>
           <Button
             type="button"
-            variant="outline"
             size="sm"
+            variant="outline"
             onClick={() => {
               const ics = generateIcsContent({
-                title: `${application.nextStep || "Termin"}: ${application.position} (${application.company.name})`,
-                description: `Bewerbung als ${application.position} bei ${application.company.name}\n\nMeeting-Link: ${application.meetingUrl || "Kein Link hinterlegt"}\n\nNotizen:\n${application.notes || "Keine weiteren Notizen"}`,
-                location: application.meetingUrl || (application.company.street ? `${application.company.street}, ${application.company.postalCode || ""} ${application.company.city || ""}` : (application.company.city || "Online")),
-                url: application.meetingUrl || undefined,
-                startDate: new Date(application.nextStepDate!),
+                title: `Vorstellungsgespräch: ${application.company.name} – ${application.position}`,
+                description: `Interview via ${meetingUrl}\nNotizen: ${notes || "Keine"}`,
+                startDate: new Date(nextStepDate),
+                location: meetingUrl,
+                url: meetingUrl,
               });
-              downloadIcsFile(`Termin-${application.company.name}-${application.position}.ics`, ics);
-              toast.success("Kalendereintrag (.ics) heruntergeladen.");
+              downloadIcsFile(ics, `interview-${application.company.name.toLowerCase().replace(/\s+/g, "-")}.ics`);
+              toast.success("Kalendereintrag (.ics) heruntergeladen!");
             }}
           >
-            <Calendar className="h-4 w-4 text-sky-500" /> Termin in Kalender (.ics) exportieren
+            .ics Kalenderdatei
           </Button>
-        ) : (
-          <div />
-        )}
+        </div>
+      )}
 
-        <Button type="submit" disabled={saving} className="card-hover-effect">
-          {saving ? "Speichere …" : "Änderungen speichern"}
+      <Field label="Tags (kommasepariert)" htmlFor="detail-tags" hint="z.B. Prio1, Remote, React19">
+        <div className="relative">
+          <Tag className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input id="detail-tags" className="pl-8" placeholder="Prio1, Frontend, Empfehlung" value={tags} onChange={(e) => setTags(e.target.value)} />
+        </div>
+      </Field>
+
+      <Field label="Notizen & Feedback" htmlFor="detail-notes">
+        <Textarea id="detail-notes" rows={3} placeholder="Gesprächsnotizen, Gehaltsangaben, Feedback..." value={notes} onChange={(e) => setNotes(e.target.value)} />
+      </Field>
+
+      <div className="flex justify-end gap-2 pt-2 border-t border-border">
+        <Button type="submit" disabled={saving}>
+          {saving ? "Speichern …" : "Änderungen speichern"}
         </Button>
       </div>
     </form>

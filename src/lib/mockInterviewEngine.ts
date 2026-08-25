@@ -99,6 +99,24 @@ export function evaluateInterviewAnswer(
   else if (rawScore >= 50) rating = "GUT";
   else if (rawScore >= 30) rating = "VERBESSERUNGSWÜRDIG";
 
+  // Speech / Rhetorik-Analyse (Füllwörter & Sprechtempo)
+  const fillerWords = ["äh", "ähm", "halt", "sozusagen", "quasi", "eigentlich", "irgendwie", "praktisch"];
+  const words = cleanAnswer.split(/\s+/).filter(Boolean);
+  const foundFillers: Record<string, number> = {};
+  let totalFillers = 0;
+
+  for (const w of words) {
+    const cleanWord = w.replace(/[.,!?;:]/g, "");
+    if (fillerWords.includes(cleanWord)) {
+      foundFillers[cleanWord] = (foundFillers[cleanWord] || 0) + 1;
+      totalFillers++;
+    }
+  }
+
+  if (totalFillers > 3) {
+    feedback.push(`Rhetorik-Tipp: ${totalFillers} Füllwörter erkannt (${Object.keys(foundFillers).join(", ")}). Kurze Denkpausen wirken souveräner als Fülllaute.`);
+  }
+
   return {
     score: rawScore,
     rating,
@@ -107,4 +125,21 @@ export function evaluateInterviewAnswer(
     feedback,
     tips: question.tips || `Leitfaden: ${question.answerSummary}`,
   };
+}
+
+/**
+ * Generiert eine intelligente, situative Folgefrage basierend auf der Antwort
+ */
+export function generateFollowUpQuestion(question: InterviewQuestion, userAnswer: string): string {
+  const lower = userAnswer.toLowerCase();
+  if (lower.includes("react") || lower.includes("state")) {
+    return "Sehr interessant. Wie hast du in diesem Szenario sichergestellt, dass keine unnötigen Re-Renders entstehen?";
+  }
+  if (lower.includes("api") || lower.includes("backend") || lower.includes("prisma")) {
+    return "Wie bist du mit Fehlerbehandlung und Ladezuständen (Loading & Error States) umgegangen?";
+  }
+  if (lower.includes("team") || lower.includes("git")) {
+    return "Wie liefen die Code Reviews im Team ab und welche Absprachen hattet ihr bezüglich Testing?";
+  }
+  return `Kannst du kurz beschreiben, was die größte Herausforderung bei diesem Thema war und wie du sie gelöst hast?`;
 }

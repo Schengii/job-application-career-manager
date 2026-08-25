@@ -34,6 +34,9 @@ import { JobComparisonModal } from "@/components/jobs/job-comparison-modal";
 import { JobAlertModal } from "@/components/jobs/job-alert-modal";
 import { CommuteRadarCard } from "@/components/jobs/commute-radar-card";
 import { JobDismissModal } from "@/components/jobs/job-dismiss-modal";
+import { LiveJobSearchModal } from "@/components/jobs/live-job-search-modal";
+import { UrlJobScraperCard } from "@/components/jobs/url-job-scraper-card";
+import { Globe2 } from "lucide-react";
 
 function matchColor(score: number) {
   if (score >= 75) return "text-success border-success/30 bg-success-soft/40";
@@ -69,6 +72,7 @@ export default function JobsPage() {
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [showCommuteRadar, setShowCommuteRadar] = useState(false);
+  const [liveSearchOpen, setLiveSearchOpen] = useState(false);
 
   const filtered = useMemo(() => {
     if (!jobs) return [];
@@ -179,6 +183,15 @@ export default function JobsPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setLiveSearchOpen(true)}
+            className="shadow-sm"
+          >
+            <Globe2 className="h-4 w-4 mr-1.5" /> Live-Jobsuche (APIs)
+          </Button>
+
+          <Button
             variant="outline"
             size="sm"
             onClick={() => setComparisonOpen(true)}
@@ -211,6 +224,13 @@ export default function JobsPage() {
           </Button>
         </div>
       </header>
+
+      {/* URL Job Scraper Card */}
+      <UrlJobScraperCard
+        onJobImported={async () => {
+          await Promise.all([mutateJobs(), mutateActive()]);
+        }}
+      />
 
       {/* Multi-Portal Sync Banner */}
       <MultiPortalSyncBanner
@@ -524,6 +544,14 @@ export default function JobsPage() {
         onClose={() => setAlertOpen(false)}
         allJobs={jobs ?? []}
         onApply={handleApply}
+      />
+      <LiveJobSearchModal
+        open={liveSearchOpen}
+        onClose={() => setLiveSearchOpen(false)}
+        onJobAdded={() => {
+          mutateJobs();
+          mutateActive();
+        }}
       />
     </div>
   );

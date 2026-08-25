@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Job Application & Career Manager Clipper",
+  "version": "1.0.0",
+  "description": "Stellenanzeigen von StepStone, Indeed, LinkedIn und beliebigen Karriereseiten mit 1 Klick direkt im lokalen Job Application & Career Manager Dashboard speichern.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "http://127.0.0.1:3000/*",
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Job in Career Manager speichern"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}

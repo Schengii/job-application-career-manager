@@ -1,25 +1,26 @@
 "use client";
 
-// -----------------------------------------------------------------------------
-// Lebenslauf-Generator / CV-Designer
-// -----------------------------------------------------------------------------
 import { useState, useMemo } from "react";
-import useSWR from "swr";
+import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
-import { Printer, FileText, CheckSquare, Settings } from "lucide-react";
+import { Printer, FileText, CheckSquare, Settings, FileCode, ShieldCheck } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { PreferencesWithProfile } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CvLayout, generateCvHtml } from "@/lib/cvGenerator";
+import { AtsScoreCard } from "@/components/cv/ats-score-card";
+import { JsonResumeModal } from "@/components/cv/json-resume-modal";
 
 export default function CvDesignerPage() {
   const { data: preferences, isLoading } = useSWR<PreferencesWithProfile>("/api/preferences", fetcher);
+  const { mutate } = useSWRConfig();
 
   const [layout, setLayout] = useState<CvLayout>("MODERN");
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [selectedEducation, setSelectedEducation] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
+  const [jsonResumeOpen, setJsonResumeOpen] = useState(false);
 
   // Initial alle Projekte & Ausbildungselemente aktivieren
   if (preferences && !initialized) {
@@ -87,16 +88,22 @@ export default function CvDesignerPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setJsonResumeOpen(true)}>
+            <FileCode className="h-4 w-4 mr-1 text-primary" /> JSON-Resume (Im-/Export)
+          </Button>
           <Link href="/settings">
             <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4" /> Daten in Einstellungen bearbeiten
+              <Settings className="h-4 w-4 mr-1" /> Profil bearbeiten
             </Button>
           </Link>
           <Button size="sm" onClick={handlePrint}>
-            <Printer className="h-4 w-4" /> Als PDF drucken / speichern
+            <Printer className="h-4 w-4 mr-1" /> PDF drucken / speichern
           </Button>
         </div>
       </header>
+
+      {/* ATS Compatibility Score */}
+      <AtsScoreCard preferences={preferences} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Konfiguration */}
@@ -111,7 +118,8 @@ export default function CvDesignerPage() {
               <div className="flex flex-col gap-2">
                 {[
                   { id: "MODERN", label: "Modern (Akzentfarbe Indigo)", desc: "Frisch, modern, ideal für Web & Frontend" },
-                  { id: "CLASSIC", label: "Klassisch (Dezente Schiefer-Töne)", desc: "Zeitlos, formell für Behörden & Konzerne" },
+                  { id: "ATS_MINIMAL", label: "ATS Minimalist (100% Parser-sicher)", desc: "Textfokussiert, optimal für US & Großkonzern ATS-Scanner" },
+                  { id: "CLASSIC", label: "Klassisch (Dezente Schiefer-Töne)", desc: "Zeitlos, formell für Behörden & Banken" },
                   { id: "COMPACT", label: "Kompakt (Platzsparend)", desc: "Optimiert für eine Seite" },
                 ].map((item) => (
                   <label
@@ -198,6 +206,14 @@ export default function CvDesignerPage() {
           </Card>
         </div>
       </div>
+
+      <JsonResumeModal
+        open={jsonResumeOpen}
+        onClose={() => setJsonResumeOpen(false)}
+        onImported={async () => {
+          await mutate("/api/preferences");
+        }}
+      />
     </div>
   );
 }

@@ -14,6 +14,8 @@ describe("notifications", () => {
     nextStepDate: null,
     meetingUrl: null,
     rejectionReason: null,
+    interviewStage: null,
+    timeSpentMinutes: 0,
     tags: null,
     notes: null,
     source: "Stepstone",

@@ -11,9 +11,15 @@ import { EducationProjectsManager } from "@/components/settings/education-projec
 import { DocumentsManager } from "@/components/settings/documents-manager";
 import { BackupManager } from "@/components/settings/backup-manager";
 import { MatchingWeightsCard } from "@/components/settings/matching-weights-card";
+import { PortfolioShareCard } from "@/components/settings/portfolio-share-card";
+import { EmailSyncCard } from "@/components/settings/email-sync-card";
+import { BrowserExtensionCard } from "@/components/settings/browser-extension-card";
 
 const TABS = [
   { id: "preferences", label: "Profil & Präferenzen" },
+  { id: "extension", label: "Browser-Erweiterung" },
+  { id: "portfolio", label: "Recruiter-Portfolio" },
+  { id: "emailsync", label: "E-Mail Auto-Sync" },
   { id: "education", label: "Ausbildung & Projekte" },
   { id: "documents", label: "Dokumente" },
   { id: "backup", label: "Backup & Daten" },
@@ -30,7 +36,7 @@ export default function SettingsPage() {
       <header>
         <h1 className="text-2xl font-semibold text-foreground">Einstellungen</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Job-Suchpräferenzen, Ausbildungsdaten, Projekte, Unterlagen und Datensicherung zentral verwalten.
+          Job-Suchpräferenzen, Recruiter-Portfolio, E-Mail Auto-Sync, Ausbildungsdaten, Unterlagen und Datensicherung zentral verwalten.
         </p>
       </header>
 
@@ -68,6 +74,9 @@ export default function SettingsPage() {
               <MatchingWeightsCard />
             </div>
           )}
+          {tab === "extension" && <BrowserExtensionCard />}
+          {tab === "portfolio" && <PortfolioShareCard />}
+          {tab === "emailsync" && <EmailSyncCard />}
           {tab === "education" && <EducationProjectsManager preferences={preferences} />}
           {tab === "documents" && <DocumentsManager />}
           {tab === "backup" && <BackupManager />}

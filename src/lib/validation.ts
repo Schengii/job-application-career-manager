@@ -62,6 +62,8 @@ export const applicationSchema = z.object({
   nextStepDate: z.string().datetime().optional().nullable().or(z.literal("")),
   meetingUrl: z.string().optional().nullable(),
   rejectionReason: z.string().optional().nullable(),
+  interviewStage: z.string().optional().nullable(),
+  timeSpentMinutes: z.number().int().nonnegative().optional().nullable(),
   tags: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
   source: z.string().optional().nullable(),
@@ -116,6 +118,33 @@ export const preferencesSchema = z.object({
   aiProvider: z.string().optional().nullable(),
   aiApiKey: z.string().optional().nullable(),
   aiModel: z.string().optional().nullable(),
+  portfolioActive: z.boolean().optional(),
+  imapHost: z.string().optional().nullable(),
+  imapPort: z.number().int().optional().nullable(),
+  imapUser: z.string().optional().nullable(),
+  imapFolder: z.string().optional().nullable(),
+  imapEnabled: z.boolean().optional(),
+});
+
+export const jobLiveSearchSchema = z.object({
+  query: z.string().default("Fachinformatiker Anwendungsentwicklung"),
+  location: z.string().default("Bonn"),
+  radius: z.number().int().default(50),
+  source: z.enum(["ALL", "ARBEITSAGENTUR", "ARBEITNOW"]).default("ALL"),
+  limit: z.number().int().min(1).max(50).default(20),
+});
+
+export const jobScrapeUrlSchema = z.object({
+  url: z.string().url("Gültige URL erforderlich"),
+});
+
+export const emailSyncRunSchema = z.object({
+  host: z.string().optional().nullable(),
+  port: z.number().int().optional().nullable(),
+  user: z.string().optional().nullable(),
+  password: z.string().optional().nullable(),
+  folder: z.string().optional().nullable(),
+  simulate: z.boolean().optional().default(false),
 });
 
 export const educationEntrySchema = z.object({

@@ -16,6 +16,9 @@ import { OfferComparisonMatrix } from "@/components/analytics/offer-comparison-m
 import { SalaryBenchmarkCard } from "@/components/analytics/salary-benchmark-card";
 import { RejectionReasonsChart } from "@/components/analytics/rejection-reasons-chart";
 import { SkillSuccessRatesCard, type SkillSuccessRate } from "@/components/analytics/skill-success-rates-card";
+import { SkillGapCard } from "@/components/analytics/skill-gap-card";
+import { TotalCompensationCard } from "@/components/analytics/total-compensation-card";
+import { RoiTrackerCard } from "@/components/analytics/roi-tracker-card";
 
 type Analytics = {
   statusDistribution: { status: string; label: string; color: string; count: number }[];
@@ -196,15 +199,30 @@ export default function AnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
+            {/* Markt-Nachfrage & Skill-Gap Matrix */}
+            <div className="lg:col-span-2">
+              <SkillGapCard />
+            </div>
+
             {/* Erfolgsquote nach Tag & Tech-Stack */}
             <SkillSuccessRatesCard
               tagData={data.tagSuccessRates ?? []}
-              techStackData={data.techStackSuccessRates ?? []}
+              techStackData={data.tagSuccessRates ?? []}
             />
 
             {/* Gehalts-Benchmarking & Marktvergleich */}
             <div className="lg:col-span-2">
               <SalaryBenchmarkCard />
+            </div>
+
+            {/* Total Compensation & Benefit-Rechner */}
+            <div className="lg:col-span-2">
+              <TotalCompensationCard />
+            </div>
+
+            {/* Bewerbungs-Aufwand & ROI-Tracker */}
+            <div className="lg:col-span-2">
+              <RoiTrackerCard />
             </div>
 
             {/* Gehalts- & Benefit-Vergleichsmatrix */}

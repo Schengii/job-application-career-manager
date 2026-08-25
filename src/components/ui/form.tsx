@@ -1,7 +1,5 @@
 // -----------------------------------------------------------------------------
-// Einfache, zugängliche Formular-Primitiven: Label, Input, Textarea, Select.
-// Jedes Feld verknüpft Label <-> Control über eine id (htmlFor), damit
-// Screenreader die Beziehung erkennen (WCAG 1.3.1 / 4.1.2).
+// Formular-Primitiven: Label, Input, Textarea, Select, Field
 // -----------------------------------------------------------------------------
 import { cn } from "@/lib/utils";
 import type { InputHTMLAttributes, LabelHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
@@ -13,20 +11,58 @@ export function Label({ className, ...props }: LabelHTMLAttributes<HTMLLabelElem
   return <label className={cn("mb-1.5 block text-sm font-medium text-foreground", className)} {...props} />;
 }
 
-export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cn(fieldClasses, className)} {...props} />;
+export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+}
+
+export function Input({ className, label, id, ...props }: InputProps) {
+  if (label) {
+    return (
+      <div>
+        <label htmlFor={id} className="mb-1.5 block text-xs font-semibold text-foreground">
+          {label}
+        </label>
+        <input id={id} className={cn(fieldClasses, className)} {...props} />
+      </div>
+    );
+  }
+  return <input id={id} className={cn(fieldClasses, className)} {...props} />;
 }
 
 export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea className={cn(fieldClasses, "min-h-24 resize-y", className)} {...props} />;
 }
 
-export function Select({ className, children, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <select className={cn(fieldClasses, "cursor-pointer", className)} {...props}>
-      {children}
+export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  label?: string;
+  options?: readonly { value: string; label: string }[] | { value: string; label: string }[];
+}
+
+export function Select({ className, label, options, children, id, ...props }: SelectProps) {
+  const selectElement = (
+    <select id={id} className={cn(fieldClasses, "cursor-pointer", className)} {...props}>
+      {options
+        ? options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))
+        : children}
     </select>
   );
+
+  if (label) {
+    return (
+      <div>
+        <label htmlFor={id} className="mb-1.5 block text-xs font-semibold text-foreground">
+          {label}
+        </label>
+        {selectElement}
+      </div>
+    );
+  }
+
+  return selectElement;
 }
 
 export function Field({

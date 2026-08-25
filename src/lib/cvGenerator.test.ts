@@ -25,6 +25,15 @@ describe("cvGenerator", () => {
     aiProvider: "openai",
     aiApiKey: null,
     aiModel: null,
+    portfolioShareToken: null,
+    portfolioTokenExpiresAt: null,
+    portfolioViewCount: 0,
+    portfolioActive: true,
+    imapHost: null,
+    imapPort: null,
+    imapUser: null,
+    imapFolder: "INBOX",
+    imapEnabled: false,
     updatedAt: new Date(),
     educationEntries: [
       {

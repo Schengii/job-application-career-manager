@@ -153,6 +153,20 @@ export const JOB_DISMISS_REASON_VALUES = JOB_DISMISS_REASONS.map((r) => r.value)
   ...JobDismissReason[],
 ];
 
+export const INTERVIEW_STAGES = [
+  { value: "SCREENING", label: "Telefon-Screening / HR", color: "blue" },
+  { value: "CODING_CHALLENGE", label: "Coding Challenge / Aufgabe", color: "amber" },
+  { value: "TECH_INTERVIEW", label: "Technisches Fachgespräch", color: "purple" },
+  { value: "FINAL_ROUND", label: "Finales Gespräch / Management", color: "indigo" },
+  { value: "OFFER_STAGE", label: "Vertragsverhandlung / Angebot", color: "green" },
+] as const;
+
+export type InterviewStage = (typeof INTERVIEW_STAGES)[number]["value"];
+export const INTERVIEW_STAGE_VALUES = INTERVIEW_STAGES.map((s) => s.value) as [
+  InterviewStage,
+  ...InterviewStage[],
+];
+
 /** Hilfsfunktion, um zu einem Status-Value das passende Label/Color-Objekt zu holen. */
 export function findStatusMeta<T extends { value: string; label: string }>(
   list: readonly T[],
