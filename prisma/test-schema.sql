@@ -30,6 +30,9 @@ CREATE TABLE "JobPosting" (
     "techStack" TEXT,
     "salaryInfo" TEXT,
     "matchScore" INTEGER,
+    "isDismissed" BOOLEAN NOT NULL DEFAULT false,
+    "dismissReason" TEXT,
+    "dismissedAt" DATETIME,
     "postedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
@@ -133,6 +136,9 @@ CREATE TABLE "Preferences" (
     "minSalary" INTEGER,
     "profileSummary" TEXT,
     "weeklyGoal" INTEGER NOT NULL DEFAULT 5,
+    "excludedCompanies" TEXT,
+    "excludedKeywords" TEXT,
+    "excludedTechStack" TEXT,
     "aiProvider" TEXT,
     "aiApiKey" TEXT,
     "aiModel" TEXT,
@@ -177,6 +183,9 @@ CREATE INDEX "JobPosting_portalSource_idx" ON "JobPosting"("portalSource");
 
 -- CreateIndex
 CREATE INDEX "JobPosting_companyId_idx" ON "JobPosting"("companyId");
+
+-- CreateIndex
+CREATE INDEX "JobPosting_isDismissed_idx" ON "JobPosting"("isDismissed");
 
 -- CreateIndex
 CREATE INDEX "Application_companyId_idx" ON "Application"("companyId");

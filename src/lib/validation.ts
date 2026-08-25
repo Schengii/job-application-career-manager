@@ -41,8 +41,18 @@ export const jobPostingSchema = z.object({
   salaryInfo: z.string().optional().nullable(),
   companyId: z.string().optional().nullable(),
   companyName: z.string().optional(), // Für "Bewerben"-Flow: legt Company an, falls nötig
+  isDismissed: z.boolean().optional(),
+  dismissReason: z.string().optional().nullable(),
+  dismissedAt: z.string().datetime().optional().nullable().or(z.literal("")),
 });
 export const jobPostingUpdateSchema = jobPostingSchema.omit({ companyName: true }).partial();
+
+export const jobDismissSchema = z.object({
+  reason: z.string().optional().nullable(),
+  blacklistCompany: z.boolean().optional(),
+  excludeKeywords: z.array(z.string()).optional(),
+  excludeTech: z.array(z.string()).optional(),
+});
 
 export const applicationSchema = z.object({
   position: z.string().min(1),
@@ -100,6 +110,9 @@ export const preferencesSchema = z.object({
   minSalary: z.number().int().optional().nullable(),
   profileSummary: z.string().optional().nullable(),
   weeklyGoal: z.number().int().min(1).max(50).optional(),
+  excludedCompanies: z.string().optional().nullable(),
+  excludedKeywords: z.string().optional().nullable(),
+  excludedTechStack: z.string().optional().nullable(),
   aiProvider: z.string().optional().nullable(),
   aiApiKey: z.string().optional().nullable(),
   aiModel: z.string().optional().nullable(),
@@ -170,6 +183,9 @@ export const backupPreferencesSchema = z
     minSalary: z.number().nullable().optional(),
     profileSummary: z.string().nullable().optional(),
     weeklyGoal: z.number().optional(),
+    excludedCompanies: z.string().nullable().optional(),
+    excludedKeywords: z.string().nullable().optional(),
+    excludedTechStack: z.string().nullable().optional(),
     aiProvider: z.string().nullable().optional(),
     aiModel: z.string().nullable().optional(),
     // aiApiKey wird von createFullBackup() absichtlich nicht exportiert (siehe
@@ -240,6 +256,9 @@ const backupJobPostingSchema = z.object({
   salaryInfo: z.string().nullable().optional(),
   matchScore: z.number().nullable().optional(),
   companyId: z.string().nullable().optional(),
+  isDismissed: z.boolean().nullable().optional(),
+  dismissReason: z.string().nullable().optional(),
+  dismissedAt: isoDateOrString,
 });
 
 const backupStatusEventSchema = z.object({

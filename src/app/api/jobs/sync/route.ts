@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiUtils";
 import { generateMultiPortalBatch, SUPPORTED_PORTALS } from "@/lib/mockJobPortals";
-import { computeMatchScore } from "@/lib/matching";
+import { computeMatchScore, isCompanyExcluded } from "@/lib/matching";
 import { getOrCreatePreferences } from "@/lib/preferences";
 
 export const dynamic = "force-dynamic";
@@ -76,10 +76,19 @@ export async function POST() {
     let createdCount = 0;
     const createdJobs = [];
     for (const { jobData, companyId } of toCreate) {
+      const company = existingCompanies.find((c) => c.id === companyId);
+      const isBlacklisted = isCompanyExcluded(company?.name, preferences.excludedCompanies);
       const matchScore = computeMatchScore({ job: jobData, preferences });
 
       const job = await prisma.jobPosting.create({
-        data: { ...jobData, companyId, matchScore },
+        data: {
+          ...jobData,
+          companyId,
+          matchScore,
+          isDismissed: isBlacklisted,
+          dismissReason: isBlacklisted ? "UNWANTED_COMPANY" : null,
+          dismissedAt: isBlacklisted ? new Date() : null,
+        },
         include: { company: true },
       });
       createdJobs.push(job);

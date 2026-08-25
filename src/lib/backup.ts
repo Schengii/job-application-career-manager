@@ -218,6 +218,9 @@ export async function restoreFromBackup(rawData: unknown): Promise<{ success: bo
             salaryInfo: item.salaryInfo ?? null,
             matchScore: item.matchScore ?? null,
             companyId: item.companyId ?? null,
+            isDismissed: Boolean(item.isDismissed),
+            dismissReason: item.dismissReason ?? null,
+            dismissedAt: toDate(item.dismissedAt),
           },
           create: {
             id: item.id,
@@ -232,6 +235,9 @@ export async function restoreFromBackup(rawData: unknown): Promise<{ success: bo
             salaryInfo: item.salaryInfo ?? null,
             matchScore: item.matchScore ?? null,
             companyId: item.companyId ?? null,
+            isDismissed: Boolean(item.isDismissed),
+            dismissReason: item.dismissReason ?? null,
+            dismissedAt: toDate(item.dismissedAt),
           },
         });
         stats.jobPostings++;

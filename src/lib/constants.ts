@@ -138,6 +138,21 @@ export const AI_PROVIDERS = [
   { value: "ollama", label: "Ollama (Lokales Modell auf localhost:11434)" },
 ] as const;
 
+export const JOB_DISMISS_REASONS = [
+  { value: "TECH_MISMATCH", label: "Tech-Stack unpassend" },
+  { value: "UNWANTED_COMPANY", label: "Unternehmen unpassend (Blacklist)" },
+  { value: "LOCATION_MISMATCH", label: "Standort / Kein Remote" },
+  { value: "SENIORITY_MISMATCH", label: "Seniorität / Rolle unpassend" },
+  { value: "SALARY_TOO_LOW", label: "Gehalt / Konditionen unpassend" },
+  { value: "OTHER", label: "Sonstiges" },
+] as const;
+
+export type JobDismissReason = (typeof JOB_DISMISS_REASONS)[number]["value"];
+export const JOB_DISMISS_REASON_VALUES = JOB_DISMISS_REASONS.map((r) => r.value) as [
+  JobDismissReason,
+  ...JobDismissReason[],
+];
+
 /** Hilfsfunktion, um zu einem Status-Value das passende Label/Color-Objekt zu holen. */
 export function findStatusMeta<T extends { value: string; label: string }>(
   list: readonly T[],
@@ -145,3 +160,4 @@ export function findStatusMeta<T extends { value: string; label: string }>(
 ): T | undefined {
   return list.find((item) => item.value === value);
 }
+

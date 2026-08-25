@@ -10,8 +10,19 @@ import { computeMatchScore } from "@/lib/matching";
 import { getOrCreatePreferences } from "@/lib/preferences";
 
 export async function GET(request: NextRequest) {
+  const includeDismissed = request.nextUrl.searchParams.get("includeDismissed") === "true";
+  const dismissedOnly = request.nextUrl.searchParams.get("dismissedOnly") === "true";
+
+  let whereClause: { isDismissed?: boolean } = { isDismissed: false };
+  if (dismissedOnly) {
+    whereClause = { isDismissed: true };
+  } else if (includeDismissed) {
+    whereClause = {};
+  }
+
   const [jobs, preferences] = await Promise.all([
     prisma.jobPosting.findMany({
+      where: whereClause,
       orderBy: { postedAt: "desc" },
       include: { company: true, _count: { select: { applications: true } } },
     }),

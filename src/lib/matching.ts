@@ -24,12 +24,17 @@ export type MatchInput = {
     remote: boolean;
     requirementsProfile?: string | null;
     techStack?: string | null;
+    company?: { name: string } | null;
+    companyName?: string | null;
   };
   preferences: {
     techStack: string;
     preferredLocations: string;
     remotePreference: string; // ONSITE | HYBRID | REMOTE | ANY
     desiredRole: string;
+    excludedCompanies?: string | null;
+    excludedKeywords?: string | null;
+    excludedTechStack?: string | null;
   };
   weights?: MatchWeights;
 };
@@ -57,7 +62,7 @@ const STOPWORDS = new Set([
   "zum",
 ]);
 
-function toKeywordList(value: string | null | undefined): string[] {
+export function toKeywordList(value: string | null | undefined): string[] {
   return (value ?? "")
     .split(",")
     .map((v) => v.trim().toLowerCase())
@@ -68,7 +73,7 @@ function toKeywordList(value: string | null | undefined): string[] {
  *  einzelne, aussagekräftige Wörter statt ihn als einen einzigen langen
  *  Suchstring zu behandeln – sonst scheitert der Treffer schon an einem
  *  einzigen fehlenden Füllwort im Stellentitel. */
-function toRoleKeywords(value: string): string[] {
+export function toRoleKeywords(value: string): string[] {
   return value
     .toLowerCase()
     .replace(/[()/]/g, " ")
@@ -77,7 +82,90 @@ function toRoleKeywords(value: string): string[] {
     .filter((w) => w.length > 2 && !STOPWORDS.has(w));
 }
 
+/** Prüft, ob ein Unternehmensname in der Ausschluss-Liste (Blacklist) vorkommt. */
+export function isCompanyExcluded(
+  companyName: string | null | undefined,
+  excludedCompanies: string | null | undefined
+): boolean {
+  if (!companyName?.trim() || !excludedCompanies?.trim()) return false;
+  const name = companyName.trim().toLowerCase();
+  const list = toKeywordList(excludedCompanies);
+  return list.some((excluded) => name.includes(excluded) || excluded.includes(name));
+}
+
+/** Extrahiert häufige Senioritäts-, Rollen- und Tech-Kandidaten aus Jobtitel & Text für den Dismiss-Dialog. */
+export function extractDismissalCandidates(job: {
+  title: string;
+  description: string;
+  techStack?: string | null;
+}): { keywords: string[]; tech: string[] } {
+  const haystack = `${job.title} ${job.description}`.toLowerCase();
+  const techList = toKeywordList(job.techStack);
+
+  const candidateKeywords = [
+    "senior",
+    "lead",
+    "principal",
+    "architect",
+    "architekt",
+    "leitung",
+    "manager",
+    "junior",
+    "trainee",
+    "werkstudent",
+    "praktikum",
+    "zeitarbeit",
+    "schichtarbeit",
+    "vollzeit vor ort",
+    "reisetätigkeit",
+  ];
+
+  const candidateTech = [
+    "php",
+    "wordpress",
+    "typo3",
+    "drupal",
+    "java",
+    "spring boot",
+    "c#",
+    ".net",
+    "c++",
+    "python",
+    "django",
+    "angular",
+    "vue",
+    "flutter",
+    "swift",
+    "kotlin",
+    "rust",
+    "go",
+    "ruby",
+    "cobol",
+    "sap",
+    "abap",
+    "salesforce",
+  ];
+
+  const matchedKeywords = candidateKeywords.filter((kw) => haystack.includes(kw));
+  const matchedTech = [
+    ...new Set([
+      ...techList,
+      ...candidateTech.filter((t) => haystack.includes(t)),
+    ]),
+  ];
+
+  return {
+    keywords: matchedKeywords,
+    tech: matchedTech,
+  };
+}
+
 export function computeMatchScore({ job, preferences, weights }: MatchInput): number {
+  const companyName = job.company?.name ?? job.companyName;
+  if (isCompanyExcluded(companyName, preferences.excludedCompanies)) {
+    return 0; // Blacklist-Ausschluss führt zu sofortigem 0%-Score
+  }
+
   const wTech = weights?.techWeight ?? 0.5;
   const wLoc = weights?.locationWeight ?? 0.25;
   const wRole = weights?.roleWeight ?? 0.15;
@@ -113,7 +201,29 @@ export function computeMatchScore({ job, preferences, weights }: MatchInput): nu
   const roleHits = roleKeywords.filter((kw) => haystack.includes(kw)).length;
   const roleScore = roleKeywords.length > 0 ? roleHits / roleKeywords.length : 0;
 
-  const total = techScore * wTech + locationScore * wLoc + roleScore * wRole + (techHits > 0 ? wBonus : 0);
+  let total = techScore * wTech + locationScore * wLoc + roleScore * wRole + (techHits > 0 ? wBonus : 0);
+
+  // 4) Negative Abzüge für ausgeschlossene Keywords & ausgeschlossene Technologien
+  const excludedKeywords = toKeywordList(preferences.excludedKeywords);
+  let negativeKeywordHits = 0;
+  for (const negKw of excludedKeywords) {
+    if (haystack.includes(negKw)) {
+      negativeKeywordHits++;
+    }
+  }
+
+  const excludedTech = toKeywordList(preferences.excludedTechStack);
+  let negativeTechHits = 0;
+  for (const negTech of excludedTech) {
+    if (jobTech.includes(negTech) || haystack.includes(negTech)) {
+      negativeTechHits++;
+    }
+  }
+
+  // Jeder Treffer auf ein negatives Keyword oder unerwünschtes Tech-Element zieht 20% ab
+  const penalty = (negativeKeywordHits * 0.25) + (negativeTechHits * 0.20);
+  total = Math.max(0, total - penalty);
 
   return Math.round(Math.min(1, total) * 100);
 }
+

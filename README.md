@@ -85,8 +85,13 @@ Drücke jederzeit <kbd>?</kbd> in der App, um die interaktive Tastatur-Hilfe zu 
 
 ---
 
-### 5. Multi-Portal Jobsuche & Live-Synchronisations-Engine (`/jobs`)
-- **Multi-Portal Live-Sync (`/api/jobs/sync`)**: Aggregiert und synchronisiert Stellenanzeigen über alle relevanten Jobportale (*StepStone*, *Indeed*, *Get in IT*, *LinkedIn Jobs*, *XING*, *Arbeitsagentur*, *Monster*, *Honeypot.io*).
+### 5. Multi-Portal Jobsuche & Intelligente Filter-Engine (`/jobs`)
+- **Stellenangebote ausblenden & Filter lernen (`JobDismissModal`)**:
+  - Unpassende Stellenangebote mit 1 Klick ausblenden und begründen (*Tech-Stack unpassend*, *Falscher Standort / Kein Remote*, *Gehalt*, *Seniorität/Rolle*).
+  - **Firmen-Blacklist**: Ganze Unternehmen auf die Blacklist setzen – bestehende und zukünftige Angebote werden automatisch verborgen und erhalten einen Match-Score von 0%.
+  - **Negative Keywords & Tech-Ausschluss**: Extrahierte oder manuell eingetragene Ausschluss-Begriffe (z. B. *"Senior", "Lead", "Zeitarbeit", "PHP", "WordPress"*) werden in den Präferenzen gespeichert und führen zu automatischen Match-Abzügen.
+- **Ansicht aktiver vs. ausgeblendeter Angebote**: Beliebig zwischen aktiven Angeboten und der Historie ausgeblendeter Stellen wechseln inklusive 1-Klick-**Wiederherstellung**.
+- **Multi-Portal Live-Sync (`/api/jobs/sync`)**: Aggregiert und synchronisiert Stellenanzeigen über alle relevanten Jobportale (*StepStone*, *Indeed*, *Get in IT*, *LinkedIn Jobs*, *XING*, *Arbeitsagentur*, *Monster*, *Honeypot.io*) unter automatischer Beachtung deiner Ausschlusskriterien.
 - **Match-Score Feineinstellung (`MatchingWeightsCard`)**: Gewichtungs-Schieberegler zur individuellen Justierung der Matching-Säulen (*Tech-Stack* 10–80%, *Standort/Remote* 10–60%, *Rollen-Keywords* 10–50%).
 - **Side-by-Side Stellenvergleich (`JobComparisonModal`)**: Zwei beliebige Stellenangebote gegenüberstellen – vergleicht Match-Score, Gehalt, Remote-Quote und Skills mit 1-Klick-Bewerbung.
 - **Job-Alerts & Match-Radar (`JobAlertModal`)**: Konfigurierbarer Benachrichtigungs-Digest für Top-Matches.

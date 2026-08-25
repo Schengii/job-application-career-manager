@@ -135,4 +135,50 @@ describe("computeMatchScore", () => {
 
     expect(highTech).toBeGreaterThan(lowTech);
   });
+
+  it("gibt 0% Match-Score wenn das Unternehmen auf der Blacklist steht", () => {
+    const score = computeMatchScore({
+      job: {
+        title: "Frontend Developer (m/w/d)",
+        description: "TypeScript, React, Next.js",
+        location: "Bonn",
+        remote: true,
+        techStack: "TypeScript,React,Next.js",
+        company: { name: "Nervige Zeitarbeit GmbH" },
+      },
+      preferences: {
+        ...preferences,
+        excludedCompanies: "Nervige Zeitarbeit GmbH,Andere Bad Company",
+      },
+    });
+
+    expect(score).toBe(0);
+  });
+
+  it("reduziert den Score bei Vorhandensein von negativen Keywords oder unerwünschter Tech", () => {
+    const baseJob = {
+      title: "Senior Fullstack Developer (m/w/d)",
+      description: "WordPress, PHP und Schichtarbeit mit etwas TypeScript",
+      location: "Bonn",
+      remote: true,
+      techStack: "TypeScript,PHP,WordPress",
+    };
+
+    const normalScore = computeMatchScore({
+      job: baseJob,
+      preferences,
+    });
+
+    const penalizedScore = computeMatchScore({
+      job: baseJob,
+      preferences: {
+        ...preferences,
+        excludedKeywords: "senior,schichtarbeit",
+        excludedTechStack: "php,wordpress",
+      },
+    });
+
+    expect(penalizedScore).toBeLessThan(normalScore);
+  });
 });
+

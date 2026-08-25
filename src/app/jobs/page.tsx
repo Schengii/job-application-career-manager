@@ -16,6 +16,10 @@ import {
   Scale,
   BellRing,
   Compass,
+  EyeOff,
+  RotateCcw,
+  Ban,
+  Filter,
 } from "lucide-react";
 import { fetcher, apiPost } from "@/lib/api";
 import type { JobPostingWithCompany } from "@/types";
@@ -23,13 +27,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
-import { JOB_PORTALS, findStatusMeta } from "@/lib/constants";
+import { JOB_PORTALS, JOB_DISMISS_REASONS, findStatusMeta } from "@/lib/constants";
 import { useToast } from "@/components/ui/toast";
 import { JobTextParserModal } from "@/components/jobs/job-text-parser-modal";
 import { MultiPortalSyncBanner } from "@/components/jobs/multi-portal-sync-banner";
 import { JobComparisonModal } from "@/components/jobs/job-comparison-modal";
 import { JobAlertModal } from "@/components/jobs/job-alert-modal";
 import { CommuteRadarCard } from "@/components/jobs/commute-radar-card";
+import { JobDismissModal } from "@/components/jobs/job-dismiss-modal";
 
 function matchColor(score: number) {
   if (score >= 75) return "text-success border-success/30 bg-success-soft/40";
@@ -40,7 +45,13 @@ function matchColor(score: number) {
 type SortOption = "SCORE_DESC" | "DATE_DESC" | "COMPANY_ASC";
 
 export default function JobsPage() {
-  const { data: jobs, isLoading, mutate: mutateJobs } = useSWR<JobPostingWithCompany[]>("/api/jobs", fetcher);
+  const [viewMode, setViewMode] = useState<"ACTIVE" | "DISMISSED">("ACTIVE");
+
+  const apiUrl = viewMode === "DISMISSED" ? "/api/jobs?dismissedOnly=true" : "/api/jobs";
+  const { data: jobs, isLoading, mutate: mutateJobs } = useSWR<JobPostingWithCompany[]>(apiUrl, fetcher);
+  const { data: allActive, mutate: mutateActive } = useSWR<JobPostingWithCompany[]>("/api/jobs", fetcher);
+  const { data: allDismissed, mutate: mutateDismissed } = useSWR<JobPostingWithCompany[]>("/api/jobs?dismissedOnly=true", fetcher);
+
   const { mutate } = useSWRConfig();
   const toast = useToast();
   const router = useRouter();
@@ -52,10 +63,13 @@ export default function JobsPage() {
   const [sortBy, setSortBy] = useState<SortOption>("SCORE_DESC");
 
   const [applyingId, setApplyingId] = useState<string | null>(null);
+  const [restoringId, setRestoringId] = useState<string | null>(null);
+  const [jobToDismiss, setJobToDismiss] = useState<JobPostingWithCompany | null>(null);
+  const [dismissModalOpen, setDismissModalOpen] = useState(false);
   const [parserOpen, setParserOpen] = useState(false);
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
-  const [showCommuteRadar, setShowCommuteRadar] = useState(true);
+  const [showCommuteRadar, setShowCommuteRadar] = useState(false);
 
   const filtered = useMemo(() => {
     if (!jobs) return [];
@@ -133,13 +147,35 @@ export default function JobsPage() {
     }
   }
 
+  async function handleRestore(jobId: string) {
+    setRestoringId(jobId);
+    try {
+      await apiPost(`/api/jobs/${jobId}/restore`, undefined);
+      await Promise.all([
+        mutateJobs(),
+        mutateActive(),
+        mutateDismissed(),
+      ]);
+      toast.success("Stellenangebot wiederhergestellt.");
+    } catch {
+      toast.error("Wiederherstellen fehlgeschlagen.");
+    } finally {
+      setRestoringId(null);
+    }
+  }
+
+  function openDismissModal(job: JobPostingWithCompany) {
+    setJobToDismiss(job);
+    setDismissModalOpen(true);
+  }
+
   return (
     <div className="flex flex-col gap-6 animate-fade-in">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Jobsuche & Live-Stellenportal</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Automatisch aggregierte Stellenangebote von allen großen Portalen, abgeglichen mit deinem Entwicklerprofil.
+            Automatisch aggregierte Stellenangebote von allen großen Portalen, abgeglichen mit deinem Entwicklerprofil und deinen Ausschluss-Kriterien.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -178,10 +214,79 @@ export default function JobsPage() {
       </header>
 
       {/* Multi-Portal Sync Banner */}
-      <MultiPortalSyncBanner jobs={jobs ?? []} onSyncComplete={() => mutateJobs()} />
+      <MultiPortalSyncBanner
+        jobs={jobs ?? []}
+        onSyncComplete={async () => {
+          await Promise.all([
+            mutateJobs(),
+            mutateActive(),
+            mutateDismissed(),
+          ]);
+        }}
+      />
 
       {/* NRW & Remote Pendel-Radar Card */}
       {showCommuteRadar && <CommuteRadarCard />}
+
+      {/* Ansicht-Umschalter: Aktive vs. Ausgeblendete Angebote */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 pb-2">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-surface-hover/60 border border-border/60">
+          <button
+            type="button"
+            onClick={() => setViewMode("ACTIVE")}
+            className={cn(
+              "flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all",
+              viewMode === "ACTIVE"
+                ? "bg-surface text-foreground shadow-sm ring-1 ring-border"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <span>Aktive Angebote</span>
+            <span
+              className={cn(
+                "rounded-full px-1.5 py-0.2 text-[10px]",
+                viewMode === "ACTIVE" ? "bg-primary text-white" : "bg-surface-hover text-muted-foreground"
+              )}
+            >
+              {allActive?.length ?? 0}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setViewMode("DISMISSED")}
+            className={cn(
+              "flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all",
+              viewMode === "DISMISSED"
+                ? "bg-surface text-rose-500 shadow-sm ring-1 ring-rose-500/30"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <EyeOff className="h-3.5 w-3.5" />
+            <span>Ausgeblendete Angebote</span>
+            <span
+              className={cn(
+                "rounded-full px-1.5 py-0.2 text-[10px]",
+                viewMode === "DISMISSED" ? "bg-rose-500 text-white" : "bg-surface-hover text-muted-foreground"
+              )}
+            >
+              {allDismissed?.length ?? 0}
+            </span>
+          </button>
+        </div>
+
+        {viewMode === "ACTIVE" && (allDismissed?.length ?? 0) > 0 && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2.5 py-1 font-medium border border-emerald-500/20">
+              <Sparkles className="h-3 w-3" />
+              {allDismissed?.length} unpassende Angebote gefiltert
+            </span>
+            <Link href="/settings" className="text-primary hover:underline font-medium">
+              Blacklist verwalten →
+            </Link>
+          </div>
+        )}
+      </div>
 
       {/* Filter- & Suchleiste */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface p-3.5 glass-card">
@@ -261,7 +366,7 @@ export default function JobsPage() {
         </div>
 
         <span className="text-xs font-semibold text-muted-foreground">
-          {filtered.length} von {jobs?.length ?? 0} Angeboten
+          {filtered.length} von {jobs?.length ?? 0} Angeboten {viewMode === "DISMISSED" ? "(ausgeblendet)" : ""}
         </span>
       </div>
 
@@ -269,9 +374,15 @@ export default function JobsPage() {
       {!isLoading && filtered.length === 0 && (
         <div className="rounded-xl border border-border bg-surface p-12 text-center text-sm text-muted-foreground">
           <Briefcase className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
-          <p className="font-semibold text-foreground">Keine Stellenangebote für diese Filterauswahl gefunden.</p>
+          <p className="font-semibold text-foreground">
+            {viewMode === "DISMISSED"
+              ? "Keine ausgeblendeten Stellenangebote vorhanden."
+              : "Keine Stellenangebote für diese Filterauswahl gefunden."}
+          </p>
           <p className="mt-1 text-xs">
-            Klicke oben auf „Jetzt alle Portale abgleichen“ oder setze die Filter zurück.
+            {viewMode === "DISMISSED"
+              ? "Hier erscheinen Angebote, die du als unpassend markiert hast."
+              : "Klicke oben auf „Jetzt alle Portale abgleichen“ oder setze die Filter zurück."}
           </p>
         </div>
       )}
@@ -279,7 +390,13 @@ export default function JobsPage() {
       {/* Grid der Stellenanzeigen */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {filtered.map((job) => (
-          <Card key={job.id} className="flex flex-col justify-between gap-3 p-5 card-hover-effect border-border/80">
+          <Card
+            key={job.id}
+            className={cn(
+              "flex flex-col justify-between gap-3 p-5 card-hover-effect border-border/80",
+              job.isDismissed && "opacity-80 bg-surface/60 border-dashed"
+            )}
+          >
             <div className="space-y-2.5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -294,6 +411,7 @@ export default function JobsPage() {
                 </div>
               </div>
 
+              {/* Status & Metadaten */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5 text-muted-foreground" /> {job.location ?? "—"} {job.remote && "(Remote)"}
@@ -302,6 +420,13 @@ export default function JobsPage() {
                   {findStatusMeta(JOB_PORTALS, job.portalSource)?.label ?? job.portalSource}
                 </span>
                 {job.salaryInfo && <span className="font-medium text-foreground">{job.salaryInfo}</span>}
+
+                {job.isDismissed && (
+                  <span className="inline-flex items-center gap-1 rounded bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 text-[11px] font-semibold text-rose-600 dark:text-rose-400">
+                    <Ban className="h-3 w-3" />
+                    Ausgeblendet: {findStatusMeta(JOB_DISMISS_REASONS, job.dismissReason ?? "")?.label ?? job.dismissReason ?? "Manuell"}
+                  </span>
+                )}
               </div>
 
               <p className="line-clamp-2 text-xs text-muted-foreground leading-relaxed">{job.description}</p>
@@ -317,30 +442,57 @@ export default function JobsPage() {
               )}
             </div>
 
+            {/* Aktionen Footer */}
             <div className="mt-2 flex items-center justify-between gap-2 pt-3 border-t border-border/50">
-              {job.sourceUrl ? (
-                <a
-                  href={job.sourceUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+              <div className="flex items-center gap-3">
+                {job.sourceUrl && (
+                  <a
+                    href={job.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                  >
+                    Original-Anzeige <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+                {!job.isDismissed && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => openDismissModal(job)}
+                    className="h-8 text-xs text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
+                    title="Unpassendes Angebot ausblenden & Ausschlusskriterien lernen"
+                  >
+                    <EyeOff className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Ausblenden</span>
+                  </Button>
+                )}
+              </div>
+
+              {job.isDismissed ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleRestore(job.id)}
+                  disabled={restoringId === job.id}
+                  className="h-8 text-xs card-hover-effect"
                 >
-                  Original-Anzeige öffnen <ExternalLink className="h-3 w-3" />
-                </a>
+                  <RotateCcw className="h-3.5 w-3.5 text-primary" />
+                  <span>{restoringId === job.id ? "Wird aktiviert …" : "Wiederherstellen"}</span>
+                </Button>
               ) : (
-                <span />
+                <Button size="sm" onClick={() => handleApply(job.id)} disabled={applyingId === job.id} className="card-hover-effect">
+                  <Send className="h-3.5 w-3.5 text-white" />
+                  <span>{applyingId === job.id ? "Wird angelegt …" : "Direkt bewerben"}</span>
+                </Button>
               )}
-              <Button size="sm" onClick={() => handleApply(job.id)} disabled={applyingId === job.id} className="card-hover-effect">
-                <Send className="h-3.5 w-3.5 text-white" />
-                <span>{applyingId === job.id ? "Wird angelegt …" : "Direkt bewerben"}</span>
-              </Button>
             </div>
           </Card>
         ))}
       </div>
 
       <p className="text-xs text-muted-foreground text-center pt-2">
-        Matching-Präferenzen (Standort, Wunschgehalt, Tech-Stack) können jederzeit unter{" "}
+        Matching-Präferenzen, Wunschgehalt und Blacklist-Kriterien können jederzeit unter{" "}
         <Link href="/settings" className="text-primary font-semibold hover:underline">
           Einstellungen
         </Link>{" "}
@@ -348,6 +500,19 @@ export default function JobsPage() {
       </p>
 
       {/* Modale */}
+      <JobDismissModal
+        job={jobToDismiss}
+        open={dismissModalOpen}
+        onClose={() => {
+          setDismissModalOpen(false);
+          setJobToDismiss(null);
+        }}
+        onDismissed={() => {
+          mutateJobs();
+          mutateActive();
+          mutateDismissed();
+        }}
+      />
       <JobTextParserModal open={parserOpen} onClose={() => setParserOpen(false)} />
       <JobComparisonModal
         open={comparisonOpen}

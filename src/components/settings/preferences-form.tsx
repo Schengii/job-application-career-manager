@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
-import { Sparkles, Key, ShieldCheck, X } from "lucide-react";
+import { Sparkles, Key, ShieldCheck, X, Ban, Tag, Code2, Plus, Building2 } from "lucide-react";
 import { apiPatch } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
@@ -37,9 +37,16 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
     minSalary: preferences.minSalary ?? 0,
     profileSummary: preferences.profileSummary ?? "",
     weeklyGoal: preferences.weeklyGoal ?? 5,
+    excludedCompanies: preferences.excludedCompanies ?? "",
+    excludedKeywords: preferences.excludedKeywords ?? "",
+    excludedTechStack: preferences.excludedTechStack ?? "",
     aiProvider: preferences.aiProvider ?? "openai",
     aiModel: preferences.aiModel ?? "",
   });
+
+  const [newCompanyInput, setNewCompanyInput] = useState("");
+  const [newKeywordInput, setNewKeywordInput] = useState("");
+  const [newTechInput, setNewTechInput] = useState("");
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -92,6 +99,58 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
       setSaving(false);
     }
   }
+
+  function removeCompany(item: string) {
+    const list = form.excludedCompanies.split(",").map((s) => s.trim()).filter((s) => s && s.toLowerCase() !== item.toLowerCase());
+    setForm({ ...form, excludedCompanies: list.join(",") });
+  }
+
+  function addCompany() {
+    const trimmed = newCompanyInput.trim();
+    if (!trimmed) return;
+    const list = form.excludedCompanies.split(",").map((s) => s.trim()).filter(Boolean);
+    if (!list.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
+      list.push(trimmed);
+      setForm({ ...form, excludedCompanies: list.join(",") });
+    }
+    setNewCompanyInput("");
+  }
+
+  function removeKeyword(item: string) {
+    const list = form.excludedKeywords.split(",").map((s) => s.trim()).filter((s) => s && s.toLowerCase() !== item.toLowerCase());
+    setForm({ ...form, excludedKeywords: list.join(",") });
+  }
+
+  function addKeyword() {
+    const trimmed = newKeywordInput.trim();
+    if (!trimmed) return;
+    const list = form.excludedKeywords.split(",").map((s) => s.trim()).filter(Boolean);
+    if (!list.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
+      list.push(trimmed);
+      setForm({ ...form, excludedKeywords: list.join(",") });
+    }
+    setNewKeywordInput("");
+  }
+
+  function removeTech(item: string) {
+    const list = form.excludedTechStack.split(",").map((s) => s.trim()).filter((s) => s && s.toLowerCase() !== item.toLowerCase());
+    setForm({ ...form, excludedTechStack: list.join(",") });
+  }
+
+  function addTech() {
+    const trimmed = newTechInput.trim();
+    if (!trimmed) return;
+    const list = form.excludedTechStack.split(",").map((s) => s.trim()).filter(Boolean);
+    if (!list.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
+      list.push(trimmed);
+      setForm({ ...form, excludedTechStack: list.join(",") });
+    }
+    setNewTechInput("");
+  }
+
+  const companyList = form.excludedCompanies.split(",").map((s) => s.trim()).filter(Boolean);
+  const keywordList = form.excludedKeywords.split(",").map((s) => s.trim()).filter(Boolean);
+  const techList = form.excludedTechStack.split(",").map((s) => s.trim()).filter(Boolean);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -173,6 +232,160 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
             <Field label="Tech-Stack-Präferenzen" htmlFor="p-tech" hint="kommagetrennt, z. B. TypeScript, React, CSS">
               <Input id="p-tech" value={form.techStack} onChange={(e) => setForm({ ...form, techStack: e.target.value })} />
             </Field>
+          </div>
+        </div>
+      </section>
+
+      {/* Ausschluss-Kriterien & Blacklist */}
+      <section className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-4 space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Ban className="h-4 w-4 text-rose-500" />
+            <span>Ausschluss-Kriterien & Blacklist-Filter</span>
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            Diese Kriterien werden beim Ausblenden von Jobs gelernt oder können hier manuell gepflegt werden. Sie filtern unpassende Stellenangebote automatisch heraus und werten Match-Scores ab.
+          </p>
+        </div>
+
+        {/* Blacklist Firmen */}
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <Building2 className="h-3.5 w-3.5 text-rose-500" />
+            Gesperrte Unternehmen (Blacklist):
+          </label>
+          <div className="flex flex-wrap gap-1.5 min-h-[32px] p-2 rounded-lg border border-border/80 bg-surface">
+            {companyList.length === 0 ? (
+              <span className="text-xs text-muted-foreground italic">Keine Unternehmen auf der Blacklist.</span>
+            ) : (
+              companyList.map((c) => (
+                <span
+                  key={c}
+                  className="inline-flex items-center gap-1 rounded-md bg-rose-500/15 border border-rose-500/30 px-2 py-1 text-xs font-medium text-rose-600 dark:text-rose-400"
+                >
+                  {c}
+                  <button
+                    type="button"
+                    onClick={() => removeCompany(c)}
+                    className="hover:text-rose-800 dark:hover:text-rose-200"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Unternehmen sperren (z. B. 'Firma GmbH') …"
+              value={newCompanyInput}
+              onChange={(e) => setNewCompanyInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addCompany();
+                }
+              }}
+              className="h-8 flex-1 rounded-lg border border-border bg-surface px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            <Button type="button" size="sm" variant="outline" onClick={addCompany} disabled={!newCompanyInput.trim()} className="h-8 text-xs">
+              <Plus className="h-3.5 w-3.5" /> Sperren
+            </Button>
+          </div>
+        </div>
+
+        {/* Negative Keywords */}
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <Tag className="h-3.5 w-3.5 text-amber-500" />
+            Ausgeschlossene Keywords / Begriffe:
+          </label>
+          <div className="flex flex-wrap gap-1.5 min-h-[32px] p-2 rounded-lg border border-border/80 bg-surface">
+            {keywordList.length === 0 ? (
+              <span className="text-xs text-muted-foreground italic">Keine negativen Keywords definiert.</span>
+            ) : (
+              keywordList.map((kw) => (
+                <span
+                  key={kw}
+                  className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 border border-amber-500/30 px-2 py-1 text-xs font-medium text-amber-600 dark:text-amber-400"
+                >
+                  {kw}
+                  <button
+                    type="button"
+                    onClick={() => removeKeyword(kw)}
+                    className="hover:text-amber-800 dark:hover:text-amber-200"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Keyword ausschließen (z. B. 'Senior', 'Zeitarbeit', 'Schicht') …"
+              value={newKeywordInput}
+              onChange={(e) => setNewKeywordInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addKeyword();
+                }
+              }}
+              className="h-8 flex-1 rounded-lg border border-border bg-surface px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            <Button type="button" size="sm" variant="outline" onClick={addKeyword} disabled={!newKeywordInput.trim()} className="h-8 text-xs">
+              <Plus className="h-3.5 w-3.5" /> Hinzufügen
+            </Button>
+          </div>
+        </div>
+
+        {/* Ausgeschlossener Tech-Stack */}
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+            <Code2 className="h-3.5 w-3.5 text-indigo-500" />
+            Ausgeschlossene Technologien & Frameworks:
+          </label>
+          <div className="flex flex-wrap gap-1.5 min-h-[32px] p-2 rounded-lg border border-border/80 bg-surface">
+            {techList.length === 0 ? (
+              <span className="text-xs text-muted-foreground italic">Keine Technologien ausgeschlossen.</span>
+            ) : (
+              techList.map((t) => (
+                <span
+                  key={t}
+                  className="inline-flex items-center gap-1 rounded-md bg-indigo-500/15 border border-indigo-500/30 px-2 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-400"
+                >
+                  {t}
+                  <button
+                    type="button"
+                    onClick={() => removeTech(t)}
+                    className="hover:text-indigo-800 dark:hover:text-indigo-200"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Technologie ausschließen (z. B. 'Wordpress', 'PHP', 'Cobol') …"
+              value={newTechInput}
+              onChange={(e) => setNewTechInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addTech();
+                }
+              }}
+              className="h-8 flex-1 rounded-lg border border-border bg-surface px-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            <Button type="button" size="sm" variant="outline" onClick={addTech} disabled={!newTechInput.trim()} className="h-8 text-xs">
+              <Plus className="h-3.5 w-3.5" /> Hinzufügen
+            </Button>
           </div>
         </div>
       </section>

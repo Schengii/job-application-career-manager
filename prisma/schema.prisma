@@ -58,6 +58,9 @@ model JobPosting {
   techStack           String? // kommasepariert, z.B. "TypeScript,React,CSS"
   salaryInfo          String?
   matchScore          Int? // zuletzt berechneter Match-Score in % (0-100)
+  isDismissed         Boolean  @default(false)
+  dismissReason       String?  // z.B. "UNWANTED_COMPANY" | "TECH_MISMATCH" | "LOCATION_MISMATCH" | "SENIORITY_MISMATCH" | "SALARY_TOO_LOW" | "OTHER"
+  dismissedAt         DateTime?
   postedAt            DateTime @default(now())
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -69,6 +72,7 @@ model JobPosting {
 
   @@index([portalSource])
   @@index([companyId])
+  @@index([isDismissed])
 }
 
 // ---------------------------------------------------------------------------
@@ -209,6 +213,9 @@ model Preferences {
   minSalary          Int?
   profileSummary     String? // Kurzprofil für den Anschreiben-Generator
   weeklyGoal         Int      @default(5) // Wochenziel für Bewerbungen
+  excludedCompanies  String?  // kommasepariert, z.B. "Firma X,Firma Y" (Blacklist)
+  excludedKeywords   String?  // kommasepariert, z.B. "Senior,Lead,Cobol,PHP"
+  excludedTechStack  String?  // kommasepariert, z.B. "WordPress,Typo3,PHP"
   aiProvider         String?  // openai | anthropic | openrouter | ollama
   aiApiKey           String?
   aiModel            String?
