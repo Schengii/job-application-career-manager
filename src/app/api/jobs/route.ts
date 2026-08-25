@@ -10,45 +10,49 @@ import { computeMatchScore } from "@/lib/matching";
 import { getOrCreatePreferences } from "@/lib/preferences";
 
 export async function GET(request: NextRequest) {
-  const includeDismissed = request.nextUrl.searchParams.get("includeDismissed") === "true";
-  const dismissedOnly = request.nextUrl.searchParams.get("dismissedOnly") === "true";
+  try {
+    const includeDismissed = request.nextUrl.searchParams.get("includeDismissed") === "true";
+    const dismissedOnly = request.nextUrl.searchParams.get("dismissedOnly") === "true";
 
-  let whereClause: { isDismissed?: boolean } = { isDismissed: false };
-  if (dismissedOnly) {
-    whereClause = { isDismissed: true };
-  } else if (includeDismissed) {
-    whereClause = {};
+    let whereClause: { isDismissed?: boolean } = { isDismissed: false };
+    if (dismissedOnly) {
+      whereClause = { isDismissed: true };
+    } else if (includeDismissed) {
+      whereClause = {};
+    }
+
+    const [jobs, preferences] = await Promise.all([
+      prisma.jobPosting.findMany({
+        where: whereClause,
+        orderBy: { postedAt: "desc" },
+        include: { company: true, _count: { select: { applications: true } } },
+      }),
+      getOrCreatePreferences(),
+    ]);
+
+    // Match-Score live neu berechnen (falls sich Präferenzen geändert haben)
+    const withScores = jobs.map((job) => ({
+      ...job,
+      matchScore: computeMatchScore({ job, preferences }),
+    }));
+
+    withScores.sort((a, b) => b.matchScore - a.matchScore);
+
+    // Ohne ?page=/?pageSize= bleibt die Antwort ein einfaches Array (siehe
+    // Kommentar zu `parsePagination` in apiUtils.ts). Die Sortierung nach
+    // Match-Score wird clientseitig berechnet und muss daher vor der
+    // Pagination auf der VOLLEN Liste erfolgen — Prisma-seitiges skip/take
+    // wäre hier nicht korrekt.
+    const pagination = parsePagination(request.nextUrl.searchParams);
+    if (!pagination) {
+      return NextResponse.json(withScores);
+    }
+
+    const page = withScores.slice(pagination.skip, pagination.skip + pagination.take);
+    return NextResponse.json(toPaginatedResult(page, withScores.length, pagination));
+  } catch (error) {
+    return handleApiError(error);
   }
-
-  const [jobs, preferences] = await Promise.all([
-    prisma.jobPosting.findMany({
-      where: whereClause,
-      orderBy: { postedAt: "desc" },
-      include: { company: true, _count: { select: { applications: true } } },
-    }),
-    getOrCreatePreferences(),
-  ]);
-
-  // Match-Score live neu berechnen (falls sich Präferenzen geändert haben)
-  const withScores = jobs.map((job) => ({
-    ...job,
-    matchScore: computeMatchScore({ job, preferences }),
-  }));
-
-  withScores.sort((a, b) => b.matchScore - a.matchScore);
-
-  // Ohne ?page=/?pageSize= bleibt die Antwort ein einfaches Array (siehe
-  // Kommentar zu `parsePagination` in apiUtils.ts). Die Sortierung nach
-  // Match-Score wird clientseitig berechnet und muss daher vor der
-  // Pagination auf der VOLLEN Liste erfolgen — Prisma-seitiges skip/take
-  // wäre hier nicht korrekt.
-  const pagination = parsePagination(request.nextUrl.searchParams);
-  if (!pagination) {
-    return NextResponse.json(withScores);
-  }
-
-  const page = withScores.slice(pagination.skip, pagination.skip + pagination.take);
-  return NextResponse.json(toPaginatedResult(page, withScores.length, pagination));
 }
 
 export async function POST(request: NextRequest) {
