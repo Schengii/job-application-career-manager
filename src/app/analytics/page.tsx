@@ -15,6 +15,7 @@ import { FunnelChart } from "@/components/analytics/funnel-chart";
 import { OfferComparisonMatrix } from "@/components/analytics/offer-comparison-matrix";
 import { SalaryBenchmarkCard } from "@/components/analytics/salary-benchmark-card";
 import { RejectionReasonsChart } from "@/components/analytics/rejection-reasons-chart";
+import { SkillSuccessRatesCard, type SkillSuccessRate } from "@/components/analytics/skill-success-rates-card";
 
 type Analytics = {
   statusDistribution: { status: string; label: string; color: string; count: number }[];
@@ -22,6 +23,8 @@ type Analytics = {
   monthlySeries: { label: string; count: number }[];
   rejectionDistribution?: { reason: string; count: number; pct: number }[];
   funnel?: { stage: string; count: number; rate: number }[];
+  tagSuccessRates?: SkillSuccessRate[];
+  techStackSuccessRates?: SkillSuccessRate[];
   successRate: number | null;
   avgResponseDays: number | null;
   totalApplications: number;
@@ -193,6 +196,12 @@ export default function AnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
+            {/* Erfolgsquote nach Tag & Tech-Stack */}
+            <SkillSuccessRatesCard
+              tagData={data.tagSuccessRates ?? []}
+              techStackData={data.techStackSuccessRates ?? []}
+            />
+
             {/* Gehalts-Benchmarking & Marktvergleich */}
             <div className="lg:col-span-2">
               <SalaryBenchmarkCard />

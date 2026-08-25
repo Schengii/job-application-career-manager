@@ -49,6 +49,10 @@ next-env.d.ts
 /dev.db
 /dev.db-journal
 
+# SQLite-Testdatenbank (wird von vitest.global-setup.ts bei jedem Testlauf neu erzeugt)
+/prisma/test.db
+/prisma/test.db-journal
+
 # Hochgeladene Bewerbungsunterlagen (persönliche Dokumente, nicht versionieren)
 /public/uploads/*
 !/public/uploads/.gitkeep

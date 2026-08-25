@@ -61,6 +61,18 @@ export type PreferencesWithProfile = Preferences & {
   projectEntries: ProjectEntry[];
 };
 
+/**
+ * Form, in der `/api/preferences` die Präferenzen an den Client zurückgibt:
+ * `aiApiKey` ist immer `null` (der echte Wert verlässt den Server nie), dafür
+ * gibt es `hasAiApiKey`/`aiApiKeyPreview` um dem Nutzer zu zeigen, dass (und
+ * mit welchem Suffix) bereits ein Key hinterlegt ist.
+ */
+export type PreferencesPublic = Omit<PreferencesWithProfile, "aiApiKey"> & {
+  aiApiKey: null;
+  hasAiApiKey: boolean;
+  aiApiKeyPreview: string | null;
+};
+
 export type Metrics = {
   total: number;
   open: number;

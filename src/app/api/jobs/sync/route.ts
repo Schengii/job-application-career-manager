@@ -19,42 +19,71 @@ export async function POST() {
     const preferences = await getOrCreatePreferences();
     const batch = generateMultiPortalBatch(2); // 2 pro Portal = 16 Angebote
 
+    // Performance: Statt pro Job-Item sequenziell einzeln nach dem
+    // Unternehmen zu suchen (N Roundtrips), werden zunächst alle
+    // beteiligten Firmennamen in einer einzigen Abfrage geladen. Fehlende
+    // Firmen werden danach gebündelt per `createMany` angelegt (1 weiterer
+    // Roundtrip statt bis zu N).
+    const companyNames = [...new Set(batch.map((item) => item.companyName))];
+    const existingCompanies = await prisma.company.findMany({
+      where: { name: { in: companyNames } },
+    });
+    const companyIdByName = new Map(existingCompanies.map((c) => [c.name, c.id] as const));
+
+    const missingCompanyNames = companyNames.filter((name) => !companyIdByName.has(name));
+    if (missingCompanyNames.length > 0) {
+      const firstLocationByName = new Map(batch.map((item) => [item.companyName, item.location] as const));
+      await prisma.company.createMany({
+        data: missingCompanyNames.map((name) => ({
+          name,
+          city: firstLocationByName.get(name),
+          status: "LEAD",
+        })),
+      });
+      const newlyCreated = await prisma.company.findMany({
+        where: { name: { in: missingCompanyNames } },
+      });
+      for (const company of newlyCreated) {
+        companyIdByName.set(company.name, company.id);
+      }
+    }
+
+    // Duplikate (gleicher Titel + gleiche Firma) ebenfalls in einer einzigen
+    // Abfrage ausschließen, statt pro Item einzeln nachzufragen.
+    const candidateCompanyIds = [...companyIdByName.values()];
+    const existingJobs = await prisma.jobPosting.findMany({
+      where: { companyId: { in: candidateCompanyIds } },
+      select: { title: true, companyId: true },
+    });
+    const existingJobKeys = new Set(existingJobs.map((j) => `${j.companyId}::${j.title}`));
+
+    // Dedupliziert sowohl gegen bereits in der DB vorhandene Jobs als auch
+    // gegen Duplikate INNERHALB desselben Batches (der Key-Set wird beim
+    // Durchlaufen live erweitert).
+    type JobData = Omit<(typeof batch)[number], "companyName">;
+    const toCreate: { jobData: JobData; companyId: string }[] = [];
+    for (const { companyName, ...jobData } of batch) {
+      const companyId = companyIdByName.get(companyName);
+      if (!companyId) continue;
+
+      const key = `${companyId}::${jobData.title}`;
+      if (existingJobKeys.has(key)) continue;
+
+      existingJobKeys.add(key);
+      toCreate.push({ jobData, companyId });
+    }
+
     let createdCount = 0;
     const createdJobs = [];
+    for (const { jobData, companyId } of toCreate) {
+      const matchScore = computeMatchScore({ job: jobData, preferences });
 
-    for (const item of batch) {
-      const { companyName, ...jobData } = item;
-
-      // Finde oder erstelle das Unternehmen
-      let company = await prisma.company.findFirst({ where: { name: companyName } });
-      if (!company) {
-        company = await prisma.company.create({
-          data: { name: companyName, city: jobData.location, status: "LEAD" },
-        });
-      }
-
-      // Prüfe auf Duplikate anhand von Titel und Unternehmen
-      const existing = await prisma.jobPosting.findFirst({
-        where: {
-          title: jobData.title,
-          companyId: company.id,
-        },
+      const job = await prisma.jobPosting.create({
+        data: { ...jobData, companyId, matchScore },
+        include: { company: true },
       });
-
-      if (!existing) {
-        const matchScore = computeMatchScore({ job: jobData, preferences });
-
-        const job = await prisma.jobPosting.create({
-          data: {
-            ...jobData,
-            companyId: company.id,
-            matchScore,
-          },
-          include: { company: true },
-        });
-        createdJobs.push(job);
-        createdCount++;
-      }
+      createdJobs.push(job);
+      createdCount++;
     }
 
     const totalJobsCount = await prisma.jobPosting.count();

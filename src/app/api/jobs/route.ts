@@ -5,11 +5,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jobPostingSchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
+import { handleApiError, parsePagination, toPaginatedResult } from "@/lib/apiUtils";
 import { computeMatchScore } from "@/lib/matching";
 import { getOrCreatePreferences } from "@/lib/preferences";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const [jobs, preferences] = await Promise.all([
     prisma.jobPosting.findMany({
       orderBy: { postedAt: "desc" },
@@ -25,7 +25,19 @@ export async function GET() {
   }));
 
   withScores.sort((a, b) => b.matchScore - a.matchScore);
-  return NextResponse.json(withScores);
+
+  // Ohne ?page=/?pageSize= bleibt die Antwort ein einfaches Array (siehe
+  // Kommentar zu `parsePagination` in apiUtils.ts). Die Sortierung nach
+  // Match-Score wird clientseitig berechnet und muss daher vor der
+  // Pagination auf der VOLLEN Liste erfolgen — Prisma-seitiges skip/take
+  // wäre hier nicht korrekt.
+  const pagination = parsePagination(request.nextUrl.searchParams);
+  if (!pagination) {
+    return NextResponse.json(withScores);
+  }
+
+  const page = withScores.slice(pagination.skip, pagination.skip + pagination.take);
+  return NextResponse.json(toPaginatedResult(page, withScores.length, pagination));
 }
 
 export async function POST(request: NextRequest) {

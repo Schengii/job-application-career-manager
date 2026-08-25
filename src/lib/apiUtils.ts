@@ -13,13 +13,31 @@ export function handleApiError(error: unknown): NextResponse {
     );
   }
 
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code?: string }).code === "P2025"
-  ) {
-    return NextResponse.json({ error: "Datensatz wurde nicht gefunden" }, { status: 404 });
+  if (typeof error === "object" && error !== null && "code" in error) {
+    const code = (error as { code?: string }).code;
+
+    if (code === "P2025") {
+      return NextResponse.json({ error: "Datensatz wurde nicht gefunden" }, { status: 404 });
+    }
+
+    // P2003: Fremdschlüsselverletzung (z. B. eine companyId/jobPostingId, die
+    // nicht existiert). Ohne diese Behandlung landete das als roher 500er
+    // inkl. Prisma-Fehlerdetails beim Client statt einer sauberen 400-Antwort.
+    if (code === "P2003") {
+      return NextResponse.json(
+        { error: "Ungültige Referenz: Ein verknüpfter Datensatz (z. B. Unternehmen oder Stellenangebot) existiert nicht." },
+        { status: 400 },
+      );
+    }
+
+    // P2002: Unique-Constraint-Verletzung (z. B. doppelte Anlage eines
+    // Singleton-Datensatzes wie CoverLetter zu einer Application).
+    if (code === "P2002") {
+      return NextResponse.json(
+        { error: "Ein Datensatz mit diesem eindeutigen Wert existiert bereits." },
+        { status: 409 },
+      );
+    }
   }
 
   console.error(error);
@@ -32,4 +50,51 @@ export function toDateOrNull(value: string | null | undefined): Date | null | un
   if (value === undefined) return undefined;
   if (value === null || value === "") return null;
   return new Date(value);
+}
+
+// -----------------------------------------------------------------------------
+// Pagination — opt-in über `?page=`/`?pageSize=`
+// -----------------------------------------------------------------------------
+// Die Listen-Endpunkte (/api/applications, /api/companies, /api/jobs) geben
+// standardmäßig weiterhin ein einfaches Array zurück, damit die zahlreichen
+// bestehenden Frontend-Konsumenten (Dashboard, Kanban, Excel-Grid, Command
+// Palette, Notification-Bell, ...) unverändert funktionieren. Erst wenn ein
+// Client explizit `page` oder `pageSize` mitschickt, wechselt die Route auf
+// eine paginierte Antwort im Format `PaginatedResult<T>`. Das hält die
+// Datenmenge pro Request beherrschbar, sobald die Anzahl an Bewerbungen/
+// Unternehmen/Jobs deutlich wächst, ohne einen Breaking Change zu erzwingen.
+// -----------------------------------------------------------------------------
+export type PaginationParams = { page: number; pageSize: number; skip: number; take: number };
+
+export type PaginatedResult<T> = {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+const DEFAULT_PAGE_SIZE = 25;
+const MAX_PAGE_SIZE = 200;
+
+/** Liest `page`/`pageSize` aus den Query-Parametern; `null`, wenn keines von beiden gesetzt ist (= "kein Pagination-Modus"). */
+export function parsePagination(searchParams: URLSearchParams): PaginationParams | null {
+  const pageParam = searchParams.get("page");
+  const pageSizeParam = searchParams.get("pageSize");
+  if (pageParam === null && pageSizeParam === null) return null;
+
+  const page = Math.max(1, Math.trunc(Number(pageParam)) || 1);
+  const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Math.trunc(Number(pageSizeParam)) || DEFAULT_PAGE_SIZE));
+
+  return { page, pageSize, skip: (page - 1) * pageSize, take: pageSize };
+}
+
+export function toPaginatedResult<T>(data: T[], total: number, pagination: PaginationParams): PaginatedResult<T> {
+  return {
+    data,
+    total,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pagination.pageSize)),
+  };
 }

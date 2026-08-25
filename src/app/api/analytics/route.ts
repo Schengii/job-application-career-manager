@@ -4,12 +4,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/constants";
+import { computeTagSuccessRates, computeTechStackSuccessRates } from "@/lib/skillSuccessRates";
 
 const RESPONSE_STATUSES = new Set(["INTERVIEW", "OFFER", "REJECTED"]);
 
 export async function GET() {
   const applications = await prisma.application.findMany({
-    include: { statusEvents: { orderBy: { changedAt: "asc" } } },
+    include: {
+      statusEvents: { orderBy: { changedAt: "asc" } },
+      jobPosting: { select: { techStack: true } },
+    },
   });
 
   // 1) Status-Verteilung (feste Reihenfolge wie überall sonst in der App)
@@ -104,12 +108,22 @@ export async function GET() {
     }))
     .sort((a, b) => b.count - a.count);
 
+  // 8) Erfolgsquote nach Tag & nach Tech-Stack der verknüpften Stellenanzeige
+  // (siehe src/lib/skillSuccessRates.ts) — hilft z. B. zu erkennen, dass
+  // "#Remote"-Bewerbungen häufiger zu einem Gespräch führen als der
+  // Durchschnitt, oder dass ein bestimmter Tech-Stack-Skill überdurchschnittlich
+  // gut ankommt.
+  const tagSuccessRates = computeTagSuccessRates(applications);
+  const techStackSuccessRates = computeTechStackSuccessRates(applications);
+
   return NextResponse.json({
     statusDistribution,
     portalDistribution,
     monthlySeries,
     funnel,
     rejectionDistribution,
+    tagSuccessRates,
+    techStackSuccessRates,
     successRate,
     avgResponseDays,
     totalApplications: applications.length,

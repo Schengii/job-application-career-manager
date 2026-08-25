@@ -3,7 +3,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
-import type { PreferencesWithProfile } from "@/types";
+import type { PreferencesPublic } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { PreferencesForm } from "@/components/settings/preferences-form";
@@ -22,7 +22,7 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 export default function SettingsPage() {
-  const { data: preferences, isLoading } = useSWR<PreferencesWithProfile>("/api/preferences", fetcher);
+  const { data: preferences, isLoading } = useSWR<PreferencesPublic>("/api/preferences", fetcher);
   const [tab, setTab] = useState<TabId>("preferences");
 
   return (

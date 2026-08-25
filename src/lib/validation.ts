@@ -145,6 +145,144 @@ export const batchActionSchema = z.object({
   tag: z.string().optional(),
 });
 
+// -----------------------------------------------------------------------------
+// Backup / Restore — validiert importierte JSON-Dateien (`POST /api/backup`),
+// bevor sie in die Datenbank geschrieben werden. Ohne diese Prüfung würde
+// eine manipulierte oder aus einer inkompatiblen Version stammende Datei nur
+// über verstreute `as`-Type-Casts in `src/lib/backup.ts` verarbeitet, was zu
+// stillen Dateninkonsistenzen oder kryptischen Prisma-Fehlern führen kann.
+// -----------------------------------------------------------------------------
+const isoDateOrString = z.union([z.string(), z.date()]).nullable().optional();
+
+export const backupPreferencesSchema = z
+  .object({
+    fullName: z.string().nullable().optional(),
+    email: z.string().nullable().optional(),
+    phone: z.string().nullable().optional(),
+    street: z.string().nullable().optional(),
+    postalCode: z.string().nullable().optional(),
+    city: z.string().nullable().optional(),
+    desiredRole: z.string().optional(),
+    techStack: z.string().optional(),
+    preferredLocations: z.string().optional(),
+    searchRadiusKm: z.number().optional(),
+    remotePreference: z.string().optional(),
+    minSalary: z.number().nullable().optional(),
+    profileSummary: z.string().nullable().optional(),
+    weeklyGoal: z.number().optional(),
+    aiProvider: z.string().nullable().optional(),
+    aiModel: z.string().nullable().optional(),
+    // aiApiKey wird von createFullBackup() absichtlich nicht exportiert (siehe
+    // src/lib/backup.ts) und daher hier auch nicht übernommen — selbst wenn
+    // eine ältere Backup-Datei das Feld noch enthält, wird es beim Restore
+    // stillschweigend ignoriert (kein Schema-Feld dafür).
+  })
+  .partial();
+
+const backupEducationEntrySchema = z.object({
+  id: z.string().optional(),
+  type: z.string().optional(),
+  title: z.string().optional(),
+  institution: z.string().nullable().optional(),
+  startDate: isoDateOrString,
+  endDate: isoDateOrString,
+  description: z.string().nullable().optional(),
+  sortOrder: z.number().optional(),
+});
+
+const backupProjectEntrySchema = z.object({
+  id: z.string().optional(),
+  title: z.string().optional(),
+  description: z.string().nullable().optional(),
+  techStack: z.string().nullable().optional(),
+  url: z.string().nullable().optional(),
+  role: z.string().nullable().optional(),
+  sortOrder: z.number().optional(),
+});
+
+const backupDocumentSchema = z.object({
+  id: z.string(),
+  name: z.string().optional(),
+  category: z.string().optional(),
+  description: z.string().nullable().optional(),
+  fileName: z.string().nullable().optional(),
+  fileUrl: z.string().nullable().optional(),
+  mimeType: z.string().nullable().optional(),
+  fileSize: z.number().nullable().optional(),
+});
+
+const backupCompanySchema = z.object({
+  id: z.string(),
+  name: z.string().optional(),
+  street: z.string().nullable().optional(),
+  postalCode: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+  website: z.string().nullable().optional(),
+  contactName: z.string().nullable().optional(),
+  contactEmail: z.string().nullable().optional(),
+  contactPhone: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  tags: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+});
+
+const backupJobPostingSchema = z.object({
+  id: z.string(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  portalSource: z.string().nullable().optional(),
+  sourceUrl: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  remote: z.boolean().nullable().optional(),
+  requirementsProfile: z.string().nullable().optional(),
+  techStack: z.string().nullable().optional(),
+  salaryInfo: z.string().nullable().optional(),
+  matchScore: z.number().nullable().optional(),
+  companyId: z.string().nullable().optional(),
+});
+
+const backupStatusEventSchema = z.object({
+  status: z.string().optional(),
+  note: z.string().nullable().optional(),
+  changedAt: isoDateOrString,
+});
+
+const backupCoverLetterSchema = z.object({
+  content: z.string().nullable().optional(),
+  status: z.string().nullable().optional(),
+});
+
+const backupApplicationSchema = z.object({
+  id: z.string(),
+  position: z.string().optional(),
+  status: z.string().nullable().optional(),
+  applicationDate: isoDateOrString,
+  nextStep: z.string().nullable().optional(),
+  nextStepDate: isoDateOrString,
+  meetingUrl: z.string().nullable().optional(),
+  rejectionReason: z.string().nullable().optional(),
+  tags: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  source: z.string().nullable().optional(),
+  companyId: z.string(),
+  jobPostingId: z.string().nullable().optional(),
+  statusEvents: z.array(backupStatusEventSchema).optional(),
+  coverLetter: backupCoverLetterSchema.nullable().optional(),
+});
+
+export const backupSchema = z.object({
+  version: z.literal(1),
+  exportedAt: z.string().optional(),
+  preferences: backupPreferencesSchema.nullable().optional(),
+  educationEntries: z.array(backupEducationEntrySchema).optional(),
+  projectEntries: z.array(backupProjectEntrySchema).optional(),
+  companies: z.array(backupCompanySchema).optional(),
+  jobPostings: z.array(backupJobPostingSchema).optional(),
+  applications: z.array(backupApplicationSchema).optional(),
+  documents: z.array(backupDocumentSchema).optional(),
+});
+
 export const aiRequestSchema = z.object({
   action: z.enum(["POLISH_COVER_LETTER", "EVALUATE_INTERVIEW_ANSWER"]),
   coverLetter: z.string().optional(),

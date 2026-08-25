@@ -1,17 +1,26 @@
 import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
-import { Sparkles, Key } from "lucide-react";
+import { Sparkles, Key, ShieldCheck, X } from "lucide-react";
 import { apiPatch } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { REMOTE_PREFERENCES, AI_PROVIDERS } from "@/lib/constants";
-import type { PreferencesWithProfile } from "@/types";
+import type { PreferencesPublic } from "@/types";
 
-export function PreferencesForm({ preferences }: { preferences: PreferencesWithProfile }) {
+export function PreferencesForm({ preferences }: { preferences: PreferencesPublic }) {
   const { mutate } = useSWRConfig();
   const toast = useToast();
   const [saving, setSaving] = useState(false);
+
+  // Sicherheit: `preferences.aiApiKey` ist vom Server immer `null` (siehe
+  // `toPublicPreferences`). Ein bereits gespeicherter Key wird dem Nutzer nur
+  // über `hasAiApiKey`/`aiApiKeyPreview` angezeigt, nie im Klartext. Das
+  // Eingabefeld unten ist daher immer leer und wird nur beim Absenden
+  // mitgeschickt, wenn der Nutzer tatsächlich einen neuen Key eintippt.
+  const [hasAiApiKey, setHasAiApiKey] = useState(preferences.hasAiApiKey);
+  const [aiApiKeyPreview, setAiApiKeyPreview] = useState(preferences.aiApiKeyPreview);
+  const [newAiApiKey, setNewAiApiKey] = useState("");
 
   const [form, setForm] = useState({
     fullName: preferences.fullName ?? "",
@@ -29,7 +38,6 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesWithP
     profileSummary: preferences.profileSummary ?? "",
     weeklyGoal: preferences.weeklyGoal ?? 5,
     aiProvider: preferences.aiProvider ?? "openai",
-    aiApiKey: preferences.aiApiKey ?? "",
     aiModel: preferences.aiModel ?? "",
   });
 
@@ -37,14 +45,25 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesWithP
     e.preventDefault();
     setSaving(true);
     try {
-      await apiPatch("/api/preferences", {
+      const payload: Record<string, unknown> = {
         ...form,
         searchRadiusKm: Number(form.searchRadiusKm),
         minSalary: form.minSalary ? Number(form.minSalary) : null,
         weeklyGoal: Number(form.weeklyGoal) || 5,
-        aiApiKey: form.aiApiKey || null,
         aiModel: form.aiModel || null,
-      });
+      };
+      // `aiApiKey` nur mitschicken, wenn der Nutzer tatsächlich einen neuen
+      // Wert eingetippt hat — sonst bleibt der bisherige Key unangetastet
+      // (siehe PATCH-Handler in `/api/preferences`).
+      if (newAiApiKey.trim()) {
+        payload.aiApiKey = newAiApiKey.trim();
+      }
+
+      const updated = await apiPatch<PreferencesPublic>("/api/preferences", payload);
+      setHasAiApiKey(updated.hasAiApiKey);
+      setAiApiKeyPreview(updated.aiApiKeyPreview);
+      setNewAiApiKey("");
+
       await Promise.all([
         mutate("/api/preferences"),
         mutate("/api/jobs"), // Match-Scores hängen von den Präferenzen ab
@@ -53,6 +72,22 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesWithP
       toast.success("Präferenzen wurden gespeichert.");
     } catch {
       toast.error("Speichern fehlgeschlagen.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleRemoveApiKey() {
+    if (!confirm("API-Key wirklich entfernen? Die App arbeitet danach wieder 100% offline mit Heuristiken.")) return;
+    setSaving(true);
+    try {
+      const updated = await apiPatch<PreferencesPublic>("/api/preferences", { aiApiKey: "" });
+      setHasAiApiKey(updated.hasAiApiKey);
+      setAiApiKeyPreview(updated.aiApiKeyPreview);
+      setNewAiApiKey("");
+      toast.success("API-Key wurde entfernt.");
+    } catch {
+      toast.error("Entfernen fehlgeschlagen.");
     } finally {
       setSaving(false);
     }
@@ -189,17 +224,38 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesWithP
           </Field>
 
           <div className="sm:col-span-2">
-            <Field label="API-Key" htmlFor="p-ai-key" hint="Wird nur lokal in deiner Datenbank gespeichert">
+            <Field
+              label="API-Key"
+              htmlFor="p-ai-key"
+              hint="Wird nur lokal in deiner Datenbank gespeichert und nie an den Browser zurückgeschickt"
+            >
               <div className="flex items-center gap-2">
                 <Key className="h-4 w-4 text-muted-foreground shrink-0" />
                 <Input
                   id="p-ai-key"
                   type="password"
-                  value={form.aiApiKey}
-                  onChange={(e) => setForm({ ...form, aiApiKey: e.target.value })}
-                  placeholder="sk-..."
+                  value={newAiApiKey}
+                  onChange={(e) => setNewAiApiKey(e.target.value)}
+                  placeholder={hasAiApiKey ? `Hinterlegt (${aiApiKeyPreview}) — zum Ändern neuen Key eingeben` : "sk-..."}
+                  autoComplete="off"
                 />
+                {hasAiApiKey && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveApiKey}
+                    disabled={saving}
+                    title="Key entfernen"
+                    className="shrink-0 rounded-md p-2 text-muted-foreground hover:bg-danger-soft hover:text-danger"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
+              {hasAiApiKey && (
+                <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-success">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Ein Key ist hinterlegt ({aiApiKeyPreview}). Aus Sicherheitsgründen wird er nie im Klartext angezeigt.
+                </p>
+              )}
             </Field>
           </div>
         </div>

@@ -96,6 +96,7 @@ Drücke jederzeit <kbd>?</kbd> in der App, um die interaktive Tastatur-Hilfe zu 
 ---
 
 ### 6. Analytics & Absagegründe-Analyse (`/analytics`)
+- **Skill-Erfolgsquoten-Analyse (`SkillSuccessRatesCard`)**: Korreliert geforderte Technologien (React, TypeScript, Next.js, Tailwind, REST etc.) direkt mit Einladungs- und Zusagequoten, um die wirksamsten Tech-Skills im Profil hervorzuheben.
 - **Absagegründe & Feedback-Analyse (`RejectionReasonsChart`)**: Strukturierte Aufschlüsselung von Absagegründen mit strategischen Handlungsempfehlungen.
 - **Gehalts-Benchmarking & Marktvergleich**: Berechnet marktübliche Gehälter nach Erfahrungsstufe und Region mit Verhandlungs-Hebeln.
 - **Gehalts- & Benefit-Vergleichsrechner**: Vergleicht vorliegende Angebote (`OFFER`) anhand von Netto-Gehalt, Home-Office, Urlaub und Fahrtkosten.
@@ -121,7 +122,8 @@ Drücke jederzeit <kbd>?</kbd> in der App, um die interaktive Tastatur-Hilfe zu 
 | Datenbank | SQLite via Prisma 7 ORM (Adapter: `better-sqlite3`)                       |
 | State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
 | PWA       | Web App Manifest, Service Worker Caching                                  |
-| Testing   | Vitest (67 automatisierte Unit- & Integrationstests)                      |
+| Testing   | Vitest (125 automatisierte Unit- & API-Integrationstests, s. `vitest.global-setup.ts`) |
+| CI/CD     | GitHub Actions (`.github/workflows/ci.yml`) für automatisierte Test- & Build-Pipelines |
 
 ---
 
@@ -150,6 +152,20 @@ Die Anwendung läuft anschließend unter **http://localhost:3000**.
 
 ---
 
+## 🔒 Sicherheit & Deployment
+
+Die App ist für den **rein lokalen Einzelnutzer-Betrieb** (`localhost`) konzipiert und hat daher bewusst
+keine Benutzerverwaltung. Ein paar Dinge sind trotzdem wichtig:
+
+- **KI-API-Key**: Wird nach dem Speichern nie wieder im Klartext an den Browser zurückgegeben
+  (`src/lib/preferences.ts`, `toPublicPreferences()`) und ist auch **nicht** Teil des Backup-Exports
+  (`src/lib/backup.ts`) — ein exportiertes `.json`-Backup lässt sich also gefahrlos teilen/sichern.
+- **Backup-Restore**: Importierte `.json`-Dateien werden vollständig gegen ein Zod-Schema
+  (`backupSchema` in `src/lib/validation.ts`) validiert, bevor irgendetwas in die Datenbank geschrieben wird.
+- **Hosting außerhalb von `localhost`**: Setze die Umgebungsvariable `APP_PASSWORD` (siehe `.env.example`),
+  um die komplette App inkl. hochgeladener Dokumente per HTTP-Basic-Auth zu schützen (`middleware.ts`).
+  Ohne gesetztes Passwort bleibt das bisherige, ungeschützte Verhalten für den lokalen Betrieb erhalten.
+
 ## 🧪 Nützliche Befehle
 
 | Befehl                    | Zweck                                                          |
@@ -157,8 +173,9 @@ Die Anwendung läuft anschließend unter **http://localhost:3000**.
 | `npm run dev`               | Entwicklungsserver (Turbopack) starten                            |
 | `npm run build`             | Produktions-Build erstellen (inkl. TypeScript-Check)               |
 | `npm run lint`               | ESLint ausführen                                                    |
-| `npm run test`                | Testsuite (Vitest, 67 Tests) einmalig ausführen                     |
+| `npm run test`                | Testsuite (Vitest, inkl. API-Integrationstests) einmalig ausführen  |
 | `npm run test:watch`           | Testsuite im Watch-Modus ausführen                                    |
+| `npm run test:db:regenerate`   | SQL-Fixture für die Test-DB neu generieren (nach Schema-Änderungen) |
 | `npx prisma studio`          | Datenbank-Inhalte im Browser ansehen/bearbeiten                     |
 | `npx prisma db push`         | Schema-Änderungen direkt auf SQLite anwenden                        |
 | `npx prisma generate`         | Prisma-Client nach Schema-Änderung neu generieren                    |

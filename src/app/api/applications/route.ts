@@ -5,22 +5,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { applicationSchema } from "@/lib/validation";
-import { handleApiError, toDateOrNull } from "@/lib/apiUtils";
+import { handleApiError, parsePagination, toDateOrNull, toPaginatedResult } from "@/lib/apiUtils";
 
 export async function GET(request: NextRequest) {
   const status = request.nextUrl.searchParams.get("status");
+  const where = status ? { status } : undefined;
+  const pagination = parsePagination(request.nextUrl.searchParams);
 
-  const applications = await prisma.application.findMany({
-    where: status ? { status } : undefined,
-    orderBy: { updatedAt: "desc" },
-    include: {
-      company: true,
-      jobPosting: true,
-      coverLetter: true,
-      _count: { select: { statusEvents: true, documents: true } },
-    },
-  });
-  return NextResponse.json(applications);
+  const include = {
+    company: true,
+    jobPosting: true,
+    coverLetter: true,
+    _count: { select: { statusEvents: true, documents: true } },
+  } as const;
+
+  // Ohne ?page=/?pageSize= bleibt die Antwort ein einfaches Array (siehe
+  // Kommentar zu `parsePagination` in apiUtils.ts) — das ist der Pfad, den
+  // alle bestehenden Frontend-Views (Dashboard, Kanban, Excel-Grid, ...)
+  // weiterhin nutzen.
+  if (!pagination) {
+    const applications = await prisma.application.findMany({
+      where,
+      orderBy: { updatedAt: "desc" },
+      include,
+    });
+    return NextResponse.json(applications);
+  }
+
+  const [applications, total] = await Promise.all([
+    prisma.application.findMany({
+      where,
+      orderBy: { updatedAt: "desc" },
+      include,
+      skip: pagination.skip,
+      take: pagination.take,
+    }),
+    prisma.application.count({ where }),
+  ]);
+
+  return NextResponse.json(toPaginatedResult(applications, total, pagination));
 }
 
 export async function POST(request: NextRequest) {

@@ -4,20 +4,19 @@
 // Ermöglicht den vollständigen Export und Import aller Anwendungsdaten
 // (Profil, Unternehmen, Bewerbungen, Historie, Dokumenten-Metadaten) als
 // portable JSON-Datei.
+//
+// Sicherheit: `preferences.aiApiKey` (der KI-API-Key des Nutzers, z. B. für
+// OpenAI/Anthropic) wird bewusst NICHT exportiert. Ein Backup landet leicht
+// in Cloud-Speichern, E-Mail-Anhängen oder Support-Anfragen — ein
+// mitexportierter Klartext-Key wäre ein Datenleck. Nach einem Restore muss
+// der KI-Key daher ggf. erneut in den Einstellungen hinterlegt werden.
 // -----------------------------------------------------------------------------
 import { prisma } from "@/lib/prisma";
+import { backupSchema } from "@/lib/validation";
+import type { z } from "zod";
 
-export type BackupData = {
-  version: number;
-  exportedAt: string;
-  preferences: unknown;
-  educationEntries: unknown[];
-  projectEntries: unknown[];
-  companies: unknown[];
-  jobPostings: unknown[];
-  applications: unknown[];
-  documents: unknown[];
-};
+export type BackupData = z.input<typeof backupSchema>;
+type ParsedBackupData = z.infer<typeof backupSchema>;
 
 export async function createFullBackup(): Promise<BackupData> {
   const [preferences, educationEntries, projectEntries, companies, jobPostings, applications, documents] =
@@ -37,10 +36,14 @@ export async function createFullBackup(): Promise<BackupData> {
       prisma.document.findMany(),
     ]);
 
+  // aiApiKey bewusst herausfiltern (siehe Kommentar oben).
+  const { aiApiKey: _aiApiKey, ...preferencesWithoutSecret } = preferences ?? {};
+  void _aiApiKey;
+
   return {
     version: 1,
     exportedAt: new Date().toISOString(),
-    preferences,
+    preferences: preferences ? preferencesWithoutSecret : null,
     educationEntries,
     projectEntries,
     companies,
@@ -50,10 +53,25 @@ export async function createFullBackup(): Promise<BackupData> {
   };
 }
 
-export async function restoreFromBackup(data: BackupData): Promise<{ success: boolean; stats: Record<string, number> }> {
-  if (!data || typeof data !== "object" || data.version !== 1) {
-    throw new Error("Ungültiges Backup-Format oder inkompatible Version.");
-  }
+/**
+ * Wandelt Restore-Eingaben, die als `string`, `Date` oder `null`/`undefined`
+ * ankommen können (je nachdem, ob das Backup gerade frisch aus der DB kam
+ * oder einen JSON.stringify/parse-Zyklus durchlaufen hat), in ein `Date`
+ * bzw. `null` um.
+ */
+function toDate(value: string | Date | null | undefined, fallback: Date | null = null): Date | null {
+  if (!value) return fallback;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? fallback : date;
+}
+
+export async function restoreFromBackup(rawData: unknown): Promise<{ success: boolean; stats: Record<string, number> }> {
+  // Validiert Struktur & Typen der importierten Datei, bevor irgendetwas in
+  // die Datenbank geschrieben wird. Wirft bei ungültigem Format einen
+  // ZodError, den `handleApiError()` bereits als HTTP 400 mit Details
+  // beantwortet (statt eines kryptischen 500ers durch einen fehlgeschlagenen
+  // `as`-Cast irgendwo in der Transaktion).
+  const data: ParsedBackupData = backupSchema.parse(rawData);
 
   const stats = {
     companies: 0,
@@ -65,33 +83,30 @@ export async function restoreFromBackup(data: BackupData): Promise<{ success: bo
   };
 
   await prisma.$transaction(async (tx) => {
-    // 1. Preferences wiederherstellen
-    if (data.preferences && typeof data.preferences === "object") {
-      const pref = data.preferences as Record<string, unknown>;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id, updatedAt, educationEntries: _edu, projectEntries: _proj, ...prefData } = pref;
+    // 1. Preferences wiederherstellen (aiApiKey bleibt unangetastet, siehe oben)
+    if (data.preferences) {
+      const pref = data.preferences;
       await tx.preferences.upsert({
         where: { id: "default" },
-        update: prefData as never,
-        create: { id: "default", ...prefData } as never,
+        update: pref,
+        create: { id: "default", ...pref },
       });
     }
 
     // 2. Education & Projects
-    if (Array.isArray(data.educationEntries)) {
+    if (data.educationEntries) {
       await tx.educationEntry.deleteMany({ where: { preferencesId: "default" } });
-      for (const edu of data.educationEntries) {
-        const item = edu as Record<string, unknown>;
+      for (const item of data.educationEntries) {
         await tx.educationEntry.create({
           data: {
-            id: item.id as string | undefined,
-            type: (item.type as string) || "WEITERBILDUNG",
-            title: (item.title as string) || "Ausbildung",
-            institution: item.institution as string | null,
-            startDate: item.startDate ? new Date(item.startDate as string) : null,
-            endDate: item.endDate ? new Date(item.endDate as string) : null,
-            description: item.description as string | null,
-            sortOrder: (item.sortOrder as number) || 0,
+            id: item.id,
+            type: item.type || "WEITERBILDUNG",
+            title: item.title || "Ausbildung",
+            institution: item.institution ?? null,
+            startDate: toDate(item.startDate),
+            endDate: toDate(item.endDate),
+            description: item.description ?? null,
+            sortOrder: item.sortOrder || 0,
             preferencesId: "default",
           },
         });
@@ -99,19 +114,18 @@ export async function restoreFromBackup(data: BackupData): Promise<{ success: bo
       }
     }
 
-    if (Array.isArray(data.projectEntries)) {
+    if (data.projectEntries) {
       await tx.projectEntry.deleteMany({ where: { preferencesId: "default" } });
-      for (const proj of data.projectEntries) {
-        const item = proj as Record<string, unknown>;
+      for (const item of data.projectEntries) {
         await tx.projectEntry.create({
           data: {
-            id: item.id as string | undefined,
-            title: (item.title as string) || "Projekt",
-            description: item.description as string | null,
-            techStack: item.techStack as string | null,
-            url: item.url as string | null,
-            role: item.role as string | null,
-            sortOrder: (item.sortOrder as number) || 0,
+            id: item.id,
+            title: item.title || "Projekt",
+            description: item.description ?? null,
+            techStack: item.techStack ?? null,
+            url: item.url ?? null,
+            role: item.role ?? null,
+            sortOrder: item.sortOrder || 0,
             preferencesId: "default",
           },
         });
@@ -120,187 +134,180 @@ export async function restoreFromBackup(data: BackupData): Promise<{ success: bo
     }
 
     // 3. Documents
-    if (Array.isArray(data.documents)) {
-      for (const doc of data.documents) {
-        const item = doc as Record<string, unknown>;
-        if (item.id) {
-          await tx.document.upsert({
-            where: { id: item.id as string },
-            update: {
-              name: item.name as string,
-              category: item.category as string,
-              description: item.description as string | null,
-              fileName: item.fileName as string | null,
-              fileUrl: item.fileUrl as string | null,
-              mimeType: item.mimeType as string | null,
-              fileSize: item.fileSize as number | null,
-            },
-            create: {
-              id: item.id as string,
-              name: (item.name as string) || "Dokument",
-              category: (item.category as string) || "SONSTIGES",
-              description: item.description as string | null,
-              fileName: item.fileName as string | null,
-              fileUrl: item.fileUrl as string | null,
-              mimeType: item.mimeType as string | null,
-              fileSize: item.fileSize as number | null,
-            },
-          });
-          stats.documents++;
-        }
+    if (data.documents) {
+      for (const item of data.documents) {
+        await tx.document.upsert({
+          where: { id: item.id },
+          update: {
+            name: item.name,
+            category: item.category,
+            description: item.description ?? null,
+            fileName: item.fileName ?? null,
+            fileUrl: item.fileUrl ?? null,
+            mimeType: item.mimeType ?? null,
+            fileSize: item.fileSize ?? null,
+          },
+          create: {
+            id: item.id,
+            name: item.name || "Dokument",
+            category: item.category || "SONSTIGES",
+            description: item.description ?? null,
+            fileName: item.fileName ?? null,
+            fileUrl: item.fileUrl ?? null,
+            mimeType: item.mimeType ?? null,
+            fileSize: item.fileSize ?? null,
+          },
+        });
+        stats.documents++;
       }
     }
 
     // 4. Companies
-    if (Array.isArray(data.companies)) {
-      for (const comp of data.companies) {
-        const item = comp as Record<string, unknown>;
-        if (item.id) {
-          await tx.company.upsert({
-            where: { id: item.id as string },
-            update: {
-              name: item.name as string,
-              street: item.street as string | null,
-              postalCode: item.postalCode as string | null,
-              city: item.city as string | null,
-              country: (item.country as string) || "Deutschland",
-              website: item.website as string | null,
-              contactName: item.contactName as string | null,
-              contactEmail: item.contactEmail as string | null,
-              contactPhone: item.contactPhone as string | null,
-              notes: item.notes as string | null,
-              status: (item.status as string) || "LEAD",
-            },
-            create: {
-              id: item.id as string,
-              name: (item.name as string) || "Unternehmen",
-              street: item.street as string | null,
-              postalCode: item.postalCode as string | null,
-              city: item.city as string | null,
-              country: (item.country as string) || "Deutschland",
-              website: item.website as string | null,
-              contactName: item.contactName as string | null,
-              contactEmail: item.contactEmail as string | null,
-              contactPhone: item.contactPhone as string | null,
-              notes: item.notes as string | null,
-              status: (item.status as string) || "LEAD",
-            },
-          });
-          stats.companies++;
-        }
+    if (data.companies) {
+      for (const item of data.companies) {
+        await tx.company.upsert({
+          where: { id: item.id },
+          update: {
+            name: item.name,
+            street: item.street ?? null,
+            postalCode: item.postalCode ?? null,
+            city: item.city ?? null,
+            country: item.country || "Deutschland",
+            website: item.website ?? null,
+            contactName: item.contactName ?? null,
+            contactEmail: item.contactEmail ?? null,
+            contactPhone: item.contactPhone ?? null,
+            notes: item.notes ?? null,
+            tags: item.tags ?? null,
+            status: item.status || "LEAD",
+          },
+          create: {
+            id: item.id,
+            name: item.name || "Unternehmen",
+            street: item.street ?? null,
+            postalCode: item.postalCode ?? null,
+            city: item.city ?? null,
+            country: item.country || "Deutschland",
+            website: item.website ?? null,
+            contactName: item.contactName ?? null,
+            contactEmail: item.contactEmail ?? null,
+            contactPhone: item.contactPhone ?? null,
+            notes: item.notes ?? null,
+            tags: item.tags ?? null,
+            status: item.status || "LEAD",
+          },
+        });
+        stats.companies++;
       }
     }
 
     // 5. JobPostings
-    if (Array.isArray(data.jobPostings)) {
-      for (const job of data.jobPostings) {
-        const item = job as Record<string, unknown>;
-        if (item.id) {
-          await tx.jobPosting.upsert({
-            where: { id: item.id as string },
-            update: {
-              title: item.title as string,
-              description: item.description as string,
-              portalSource: item.portalSource as string,
-              sourceUrl: item.sourceUrl as string | null,
-              location: item.location as string | null,
-              remote: Boolean(item.remote),
-              requirementsProfile: item.requirementsProfile as string | null,
-              techStack: item.techStack as string | null,
-              salaryInfo: item.salaryInfo as string | null,
-              matchScore: item.matchScore as number | null,
-              companyId: item.companyId as string | null,
-            },
-            create: {
-              id: item.id as string,
-              title: item.title as string,
-              description: item.description as string,
-              portalSource: (item.portalSource as string) || "OTHER",
-              sourceUrl: item.sourceUrl as string | null,
-              location: item.location as string | null,
-              remote: Boolean(item.remote),
-              requirementsProfile: item.requirementsProfile as string | null,
-              techStack: item.techStack as string | null,
-              salaryInfo: item.salaryInfo as string | null,
-              matchScore: item.matchScore as number | null,
-              companyId: item.companyId as string | null,
-            },
-          });
-          stats.jobPostings++;
-        }
+    if (data.jobPostings) {
+      for (const item of data.jobPostings) {
+        await tx.jobPosting.upsert({
+          where: { id: item.id },
+          update: {
+            title: item.title,
+            description: item.description,
+            portalSource: item.portalSource || "OTHER",
+            sourceUrl: item.sourceUrl ?? null,
+            location: item.location ?? null,
+            remote: Boolean(item.remote),
+            requirementsProfile: item.requirementsProfile ?? null,
+            techStack: item.techStack ?? null,
+            salaryInfo: item.salaryInfo ?? null,
+            matchScore: item.matchScore ?? null,
+            companyId: item.companyId ?? null,
+          },
+          create: {
+            id: item.id,
+            title: item.title || "Stellenangebot",
+            description: item.description || "",
+            portalSource: item.portalSource || "OTHER",
+            sourceUrl: item.sourceUrl ?? null,
+            location: item.location ?? null,
+            remote: Boolean(item.remote),
+            requirementsProfile: item.requirementsProfile ?? null,
+            techStack: item.techStack ?? null,
+            salaryInfo: item.salaryInfo ?? null,
+            matchScore: item.matchScore ?? null,
+            companyId: item.companyId ?? null,
+          },
+        });
+        stats.jobPostings++;
       }
     }
 
     // 6. Applications
-    if (Array.isArray(data.applications)) {
-      for (const app of data.applications) {
-        const item = app as Record<string, unknown>;
-        if (item.id && item.companyId) {
-          const applicationDate = item.applicationDate ? new Date(item.applicationDate as string) : null;
-          const nextStepDate = item.nextStepDate ? new Date(item.nextStepDate as string) : null;
+    if (data.applications) {
+      for (const item of data.applications) {
+        if (!item.companyId) continue; // Application.companyId ist Pflichtfeld
 
-          await tx.application.upsert({
-            where: { id: item.id as string },
-            update: {
-              position: item.position as string,
-              status: item.status as string,
-              applicationDate,
-              nextStep: item.nextStep as string | null,
-              nextStepDate,
-              notes: item.notes as string | null,
-              source: item.source as string | null,
-              companyId: item.companyId as string,
-              jobPostingId: item.jobPostingId as string | null,
-            },
-            create: {
-              id: item.id as string,
-              position: item.position as string,
-              status: item.status as string,
-              applicationDate,
-              nextStep: item.nextStep as string | null,
-              nextStepDate,
-              notes: item.notes as string | null,
-              source: item.source as string | null,
-              companyId: item.companyId as string,
-              jobPostingId: item.jobPostingId as string | null,
-            },
-          });
+        await tx.application.upsert({
+          where: { id: item.id },
+          update: {
+            position: item.position,
+            status: item.status || "DRAFT",
+            applicationDate: toDate(item.applicationDate),
+            nextStep: item.nextStep ?? null,
+            nextStepDate: toDate(item.nextStepDate),
+            meetingUrl: item.meetingUrl ?? null,
+            rejectionReason: item.rejectionReason ?? null,
+            tags: item.tags ?? null,
+            notes: item.notes ?? null,
+            source: item.source ?? null,
+            companyId: item.companyId,
+            jobPostingId: item.jobPostingId ?? null,
+          },
+          create: {
+            id: item.id,
+            position: item.position || "Position",
+            status: item.status || "DRAFT",
+            applicationDate: toDate(item.applicationDate),
+            nextStep: item.nextStep ?? null,
+            nextStepDate: toDate(item.nextStepDate),
+            meetingUrl: item.meetingUrl ?? null,
+            rejectionReason: item.rejectionReason ?? null,
+            tags: item.tags ?? null,
+            notes: item.notes ?? null,
+            source: item.source ?? null,
+            companyId: item.companyId,
+            jobPostingId: item.jobPostingId ?? null,
+          },
+        });
 
-          // Status Events
-          if (Array.isArray(item.statusEvents)) {
-            await tx.applicationStatusEvent.deleteMany({ where: { applicationId: item.id as string } });
-            for (const ev of item.statusEvents) {
-              const eventItem = ev as Record<string, unknown>;
-              await tx.applicationStatusEvent.create({
-                data: {
-                  applicationId: item.id as string,
-                  status: (eventItem.status as string) || "DRAFT",
-                  note: eventItem.note as string | null,
-                  changedAt: eventItem.changedAt ? new Date(eventItem.changedAt as string) : new Date(),
-                },
-              });
-            }
-          }
-
-          // Cover Letter
-          if (item.coverLetter && typeof item.coverLetter === "object") {
-            const cl = item.coverLetter as Record<string, unknown>;
-            await tx.coverLetter.upsert({
-              where: { applicationId: item.id as string },
-              update: {
-                content: (cl.content as string) || "",
-                status: (cl.status as string) || "DRAFT",
-              },
-              create: {
-                applicationId: item.id as string,
-                content: (cl.content as string) || "",
-                status: (cl.status as string) || "DRAFT",
+        // Status Events
+        if (item.statusEvents) {
+          await tx.applicationStatusEvent.deleteMany({ where: { applicationId: item.id } });
+          for (const ev of item.statusEvents) {
+            await tx.applicationStatusEvent.create({
+              data: {
+                applicationId: item.id,
+                status: ev.status || "DRAFT",
+                note: ev.note ?? null,
+                changedAt: toDate(ev.changedAt, new Date()) ?? new Date(),
               },
             });
           }
-
-          stats.applications++;
         }
+
+        // Cover Letter
+        if (item.coverLetter) {
+          await tx.coverLetter.upsert({
+            where: { applicationId: item.id },
+            update: {
+              content: item.coverLetter.content || "",
+              status: item.coverLetter.status || "DRAFT",
+            },
+            create: {
+              applicationId: item.id,
+              content: item.coverLetter.content || "",
+              status: item.coverLetter.status || "DRAFT",
+            },
+          });
+        }
+
+        stats.applications++;
       }
     }
   });
