@@ -38,6 +38,34 @@ interface VoiceInterviewRunnerProps {
   onFinish?: () => void;
 }
 
+// -----------------------------------------------------------------------------
+// Die Web Speech API (SpeechRecognition) ist kein offizieller W3C-Standard und
+// daher nicht Teil der TypeScript-DOM-Lib. Statt `any` (das jegliche
+// Typprüfung stummschaltet) wird hier der tatsächlich genutzte Ausschnitt der
+// API minimal typisiert.
+// -----------------------------------------------------------------------------
+interface SpeechRecognitionResultLike {
+  transcript: string;
+}
+interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: ArrayLike<ArrayLike<SpeechRecognitionResultLike>>;
+}
+interface SpeechRecognitionLike {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+type WindowWithSpeechRecognition = Window & {
+  SpeechRecognition?: new () => SpeechRecognitionLike;
+  webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+};
+
 export function VoiceInterviewRunner({ targetJobTitle, onFinish }: VoiceInterviewRunnerProps) {
   const toast = useToast();
 
@@ -61,7 +89,7 @@ export function VoiceInterviewRunner({ targetJobTitle, onFinish }: VoiceIntervie
   const [evaluations, setEvaluations] = useState<AnswerEvaluation[]>([]);
   const [isFinished, setIsFinished] = useState(false);
 
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   const currentQuestion = questions[currentIndex];
 
@@ -95,15 +123,15 @@ export function VoiceInterviewRunner({ targetJobTitle, onFinish }: VoiceIntervie
   // STT: Spracheingabe initialisieren
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const reco = new SpeechRecognition();
+      const { SpeechRecognition, webkitSpeechRecognition } = window as WindowWithSpeechRecognition;
+      const SpeechRecognitionCtor = SpeechRecognition || webkitSpeechRecognition;
+      if (SpeechRecognitionCtor) {
+        const reco = new SpeechRecognitionCtor();
         reco.continuous = true;
         reco.interimResults = true;
         reco.lang = "de-DE";
 
-        reco.onresult = (event: any) => {
+        reco.onresult = (event: SpeechRecognitionEventLike) => {
           let transcript = "";
           for (let i = event.resultIndex; i < event.results.length; i++) {
             transcript += event.results[i][0].transcript;

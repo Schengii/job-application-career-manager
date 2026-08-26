@@ -149,7 +149,7 @@ export function LiveJobSearchModal({ open, onClose, onJobAdded }: LiveJobSearchM
               <Select
                 label="Quelle"
                 value={source}
-                onChange={(e) => setSource(e.target.value as any)}
+                onChange={(e) => setSource(e.target.value as "ALL" | "ARBEITSAGENTUR" | "ARBEITNOW")}
                 options={[
                   { value: "ALL", label: "Alle Portale" },
                   { value: "ARBEITSAGENTUR", label: "Arbeitsagentur" },

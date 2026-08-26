@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
 import { fetcher, apiPut, apiPost } from "@/lib/api";
+import type { EmailSyncRunResult } from "@/lib/emailImapSync";
 
 export function EmailSyncCard() {
   const toast = useToast();
@@ -66,7 +67,7 @@ export function EmailSyncCard() {
     try {
       const res = await apiPost<{
         success: boolean;
-        result: { totalEmailsScanned: number; matchedActions: any[] };
+        result: EmailSyncRunResult;
       }>("/api/email-sync", { simulate: true });
 
       toast.success(
