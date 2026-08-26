@@ -3,7 +3,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
-import { FileText, Trash2, Plus, Eye, Download } from "lucide-react";
+import { FileText, Trash2, Plus, Eye, Download, Star } from "lucide-react";
 import { fetcher, apiPost, apiDelete } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Select } from "@/components/ui/form";
@@ -78,7 +78,14 @@ export function DocumentsPanel({
               <div className="flex min-w-0 items-center gap-2">
                 <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">{document.name}</p>
+                  <p className="flex items-center gap-1.5 truncate text-sm font-medium text-foreground">
+                    {document.name}
+                    {document.isDefault && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary" title="Automatisch aus dem Standard-Bewerbungspaket angehängt">
+                        <Star className="h-2.5 w-2.5 fill-current" /> Standard
+                      </span>
+                    )}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {findStatusMeta(DOCUMENT_CATEGORIES, document.category)?.label ?? document.category}
                   </p>

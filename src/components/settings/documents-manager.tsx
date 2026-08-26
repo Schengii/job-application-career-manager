@@ -2,8 +2,8 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import useSWR, { useSWRConfig } from "swr";
-import { FileText, Trash2, Upload, Download, Eye } from "lucide-react";
-import { fetcher, apiUpload, apiDelete } from "@/lib/api";
+import { FileText, Trash2, Upload, Download, Eye, Star } from "lucide-react";
+import { fetcher, apiUpload, apiDelete, apiPatch } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,20 @@ export function DocumentsManager() {
     }
   }
 
+  async function handleToggleDefault(doc: Document) {
+    try {
+      await apiPatch(`/api/documents/${doc.id}`, { isDefault: !doc.isDefault });
+      await mutate("/api/documents");
+      toast.success(
+        doc.isDefault
+          ? `"${doc.name}" wird nicht mehr automatisch angehängt.`
+          : `"${doc.name}" wird ab jetzt automatisch an neue Bewerbungen angehängt.`
+      );
+    } catch {
+      toast.error("Konnte Standard-Dokument-Status nicht ändern.");
+    }
+  }
+
   async function handleDelete(id: string, docName: string) {
     if (!confirm(`"${docName}" wirklich löschen?`)) return;
     try {
@@ -69,20 +83,43 @@ export function DocumentsManager() {
       <CardContent className="flex flex-col gap-4 pt-4">
         <p className="text-sm text-muted-foreground">
           Lebenslauf, Zeugnisse (Mittlere Reife, Ausbildung Elektroniker für Betriebstechnik, Umschulung) und Projektreferenzen
-          zentral verwalten. Diese Dokumente lassen sich anschließend an einzelne Bewerbungen anhängen.
+          zentral verwalten. Diese Dokumente lassen sich anschließend an einzelne Bewerbungen anhängen. Als{" "}
+          <strong>Standard</strong> markierte Dokumente werden beim Klick auf „Direkt bewerben&quot; (Jobsuche) automatisch an die
+          neue Bewerbung angehängt — spart das manuelle Anhängen bei jeder einzelnen Bewerbung.
         </p>
 
         <ul className="flex flex-col gap-2">
           {documents?.map((doc) => (
-            <li key={doc.id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
+            <li
+              key={doc.id}
+              className={`flex items-center justify-between gap-3 rounded-lg border p-3 ${
+                doc.isDefault ? "border-primary/30 bg-primary-soft/10" : "border-border"
+              }`}
+            >
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-foreground">{doc.name}</p>
+                <p className="flex items-center gap-1.5 truncate text-sm font-medium text-foreground">
+                  {doc.name}
+                  {doc.isDefault && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                      <Star className="h-2.5 w-2.5 fill-current" /> Standard
+                    </span>
+                  )}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {findStatusMeta(DOCUMENT_CATEGORIES, doc.category)?.label ?? doc.category}
                   {doc.fileName && ` · ${doc.fileName}`}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleToggleDefault(doc)}
+                  aria-label={doc.isDefault ? `${doc.name} nicht mehr als Standard-Dokument verwenden` : `${doc.name} als Standard-Dokument markieren`}
+                  title={doc.isDefault ? "Nicht mehr automatisch anhängen" : "Automatisch an jede neue Bewerbung anhängen"}
+                >
+                  <Star className={`h-4 w-4 ${doc.isDefault ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                </Button>
                 {doc.fileUrl && (
                   <>
                     <Button

@@ -97,6 +97,7 @@ CREATE TABLE "Document" (
     "fileUrl" TEXT,
     "mimeType" TEXT,
     "fileSize" INTEGER,
+    "isDefault" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );

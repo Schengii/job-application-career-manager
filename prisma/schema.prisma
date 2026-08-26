@@ -164,6 +164,11 @@ model Document {
   fileUrl     String? // Pfad unter /public/uploads
   mimeType    String?
   fileSize    Int?
+  // Teil des Standard-Bewerbungspakets: wird beim "Direkt bewerben" aus einem
+  // Stellenangebot automatisch an die neu angelegte Bewerbung angehängt (siehe
+  // /api/jobs/[id]/apply), statt es bei jeder Bewerbung manuell auswählen zu
+  // müssen.
+  isDefault   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

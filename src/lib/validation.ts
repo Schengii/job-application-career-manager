@@ -97,6 +97,7 @@ export const documentSchema = z.object({
   fileUrl: z.string().optional().nullable(),
   mimeType: z.string().optional().nullable(),
   fileSize: z.number().optional().nullable(),
+  isDefault: z.boolean().optional(),
 });
 export const documentUpdateSchema = documentSchema.partial();
 
