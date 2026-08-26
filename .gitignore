@@ -34,6 +34,11 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Lokal automatisch erzeugter Verschlüsselungsschlüssel für Geheimnisse
+# at-rest (z.B. den KI-API-Key), falls ENCRYPTION_KEY nicht gesetzt ist.
+# Siehe src/lib/secretCrypto.ts. Darf niemals versioniert werden.
+/.encryption-key
+
 # vercel
 .vercel
 
@@ -56,6 +61,11 @@ next-env.d.ts
 # Hochgeladene Bewerbungsunterlagen (persönliche Dokumente, nicht versionieren)
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# Automatische Sicherheitskopien vor destruktiven Aktionen (Bulk-Löschung,
+# Restore) — enthält dieselben persönlichen Daten wie dev.db, siehe
+# src/lib/serverBackupRotation.ts. Nicht versionieren.
+/backups/
 
 # ECHTE persönliche Bewerbungsunterlagen (Name, Adresse, Zeugnisse, verschickte
 # Bewerbungen etc.) – enthält sensible personenbezogene Daten und darf NIEMALS

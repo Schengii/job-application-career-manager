@@ -6,6 +6,7 @@
 // -----------------------------------------------------------------------------
 import { extractTechKeywordsFromText } from "./realJobSearch";
 import { SimulatedJobPosting } from "./mockJobPortals";
+import { safeFetchFollowingRedirects } from "./ssrfGuard";
 
 export interface ScrapedJobResult {
   job: SimulatedJobPosting;
@@ -140,7 +141,11 @@ export async function scrapeJobPostingUrl(targetUrl: string): Promise<ScrapedJob
   const portalSource = detectPortalSourceFromUrl(targetUrl);
 
   try {
-    const res = await fetch(targetUrl, {
+    // SSRF-Schutz: `assertPublicHttpUrl()` (in `safeFetchFollowingRedirects()`)
+    // prüft die URL (und jeden Redirect-Hop) gegen private/interne Netzwerk-
+    // adressen, bevor tatsächlich serverseitig gefetcht wird. Siehe
+    // src/lib/ssrfGuard.ts für die Begründung.
+    const res = await safeFetchFollowingRedirects(targetUrl, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -154,7 +159,21 @@ export async function scrapeJobPostingUrl(targetUrl: string): Promise<ScrapedJob
       throw new Error(`HTTP Fehler ${res.status}: Konnte URL nicht abrufen.`);
     }
 
-    const html = await res.text();
+    // Antworten ohne HTML-artigen Content-Type (z.B. Bilder, Binärdateien,
+    // die ein Angreifer über eine sonst erlaubte externe URL zurückgeben
+    // könnte) werden nicht als Text interpretiert.
+    const contentType = res.headers.get("content-type") || "";
+    if (contentType && !/text\/html|application\/xhtml\+xml|text\/plain/i.test(contentType)) {
+      throw new Error(`Unerwarteter Content-Type "${contentType}" — keine HTML-Seite.`);
+    }
+
+    // Begrenzung der gelesenen Antwortgröße gegen übermäßig große Downloads.
+    const MAX_HTML_BYTES = 5 * 1024 * 1024; // 5 MB
+    const buffer = await res.arrayBuffer();
+    if (buffer.byteLength > MAX_HTML_BYTES) {
+      throw new Error("Antwort der URL war zu groß (> 5 MB).");
+    }
+    const html = new TextDecoder("utf-8").decode(buffer);
 
     // 1. Priorität: JSON-LD Schema
     const jsonLd = parseJsonLdJob(html);

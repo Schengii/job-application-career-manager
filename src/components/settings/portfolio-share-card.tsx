@@ -69,7 +69,7 @@ export function PortfolioShareCard() {
       <CardHeader className="pb-3 flex flex-row items-center justify-between">
         <div>
           <CardTitle className="text-base font-bold flex items-center gap-2">
-            <Globe2 className="h-5 w-5 text-indigo-500" /> Digitales Recruiter-Portfolio ("One-Pager")
+            <Globe2 className="h-5 w-5 text-indigo-500" /> Digitales Recruiter-Portfolio (&quot;One-Pager&quot;)
           </CardTitle>
           <p className="text-xs text-muted-foreground mt-0.5">
             Erzeuge einen geschützten, tokenisierten Link für Bewerbungen & Recruiter-Direktnachrichten.

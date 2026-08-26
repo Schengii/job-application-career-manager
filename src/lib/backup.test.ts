@@ -9,11 +9,19 @@
 //    versionsinkompatible Dateien mit einem ZodError ab, statt sie über
 //    unsichere Type-Casts stillschweigend in die Datenbank zu schreiben.
 // -----------------------------------------------------------------------------
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, afterEach, describe, expect, it } from "vitest";
 import { ZodError } from "zod";
+import { promises as fs } from "fs";
+import path from "path";
 import { createFullBackup, restoreFromBackup } from "./backup";
 import { resetDb, createTestCompany } from "@/test/dbTestUtils";
 import { prisma } from "@/lib/prisma";
+
+// `restoreFromBackup()` legt seit src/lib/serverBackupRotation.ts vor jedem
+// Restore einen Auto-Snapshot unter ./backups/ an — hier nur aufgeräumt,
+// damit Testläufe keine Dateien im Arbeitsverzeichnis hinterlassen (der
+// Ordner ist ohnehin über .gitignore ausgeschlossen).
+const BACKUP_DIR = path.join(process.cwd(), "backups");
 
 describe("createFullBackup", () => {
   beforeEach(async () => {
@@ -43,6 +51,10 @@ describe("createFullBackup", () => {
 describe("restoreFromBackup", () => {
   beforeEach(async () => {
     await resetDb();
+  });
+
+  afterEach(async () => {
+    await fs.rm(BACKUP_DIR, { recursive: true, force: true });
   });
 
   it("lehnt eine inkompatible Backup-Version ab", async () => {

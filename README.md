@@ -105,6 +105,13 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ---
 
+### 12. 🤖 Hybrid-KI-Anbindung (Anschreiben-Polishing & Interview-Feedback)
+- **Vier wählbare Provider** (Einstellungen → KI-Provider, s. `src/lib/aiService.ts`): **OpenAI** (GPT-4o/-mini), **Anthropic** (Claude), **OpenRouter** (Universal-Router für zahlreiche Modelle) sowie **Ollama** für vollständig lokale, kostenlose Modelle auf `localhost:11434` — Ollama benötigt dabei bewusst keinen API-Key.
+- **100% Offline-Fallback**: Ohne konfigurierten Provider (oder bei einem fehlgeschlagenen Request) arbeitet die App transparent mit einer lokalen Heuristik weiter — nie ein Hard-Fail für den Nutzer.
+- **API-Key verschlüsselt at-rest** (`src/lib/secretCrypto.ts`, AES-256-GCM): Der Key wird nie im Klartext an den Client zurückgegeben und auch in der SQLite-Datei nicht im Klartext abgelegt.
+
+---
+
 ## 🛠️ Tech-Stack
 
 | Bereich   | Technologie                                                              |
@@ -115,7 +122,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 | State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
 | Audio     | Web Speech API (SpeechSynthesis für TTS & webkitSpeechRecognition für STT)|
 | Extension | Chrome/Edge Manifest V3 (Content Script, Popup UI, Background Worker)     |
-| Testing   | Vitest (153 automatisierte Unit- & API-Integrationstests, s. `vitest.global-setup.ts`) |
+| Testing   | Vitest (175 automatisierte Unit- & API-Integrationstests, s. `vitest.global-setup.ts`) |
 | CI/CD     | GitHub Actions (`.github/workflows/ci.yml`) für automatisierte Test- & Build-Pipelines |
 
 ---
@@ -180,9 +187,27 @@ Die Anwendung läuft anschließend unter **http://localhost:3000**.
 | `npm run dev`               | Entwicklungsserver (Turbopack) starten                            |
 | `npm run build`             | Produktions-Build erstellen (inkl. TypeScript-Check)               |
 | `npm run lint`               | ESLint ausführen                                                    |
-| `npm run test`                | Testsuite (Vitest, 153 Tests) einmalig ausführen                    |
+| `npm run test`                | Testsuite (Vitest, 175 Tests) einmalig ausführen                    |
 | `npm run test:watch`           | Testsuite im Watch-Modus ausführen                                    |
 | `npm run test:db:regenerate`   | SQL-Fixture für die Test-DB neu generieren (nach Schema-Änderungen) |
 | `npx prisma studio`          | Datenbank-Inhalte im Browser ansehen/bearbeiten                     |
 | `npx prisma db push`         | Schema-Änderungen direkt auf SQLite anwenden                        |
 | `npx prisma generate`         | Prisma-Client nach Schema-Änderung neu generieren                    |
+
+---
+
+## 🔒 Sicherheit
+
+Die App ist primär für den lokalen Einzelnutzer-Betrieb (`localhost`) konzipiert, unterstützt aber
+bewusst auch Hosting darüber hinaus (z. B. Vercel) — siehe `middleware.ts`/`APP_PASSWORD`. Folgende
+Schutzmaßnahmen greifen dabei zusätzlich:
+
+| Bereich | Schutzmaßnahme |
+| --- | --- |
+| URL-Scraper (`/jobs/scrape-url`) | SSRF-Schutz (`src/lib/ssrfGuard.ts`): DNS-Auflösung + IP-Prüfung gegen private/interne Netzwerke (inkl. Cloud-Metadaten-Endpunkte) für die Ziel-URL UND jeden Redirect-Hop, plus Content-Type-/Größen-Limit der Antwort. |
+| Datei-Upload (`/api/documents/upload`) | Allowlist statt Denylist für MIME-Type + Dateiendung (`src/lib/constants.ts`) — verhindert das Hochladen aktiver Inhalte (`.html`, `.svg`, `.js`, …), die unter `/uploads/` sonst als gespeichertes XSS ausführbar wären. |
+| KI-API-Key (Einstellungen) | At-Rest-Verschlüsselung (AES-256-GCM, `src/lib/secretCrypto.ts`) statt Klartext in der SQLite-Datei; wird zusätzlich nie im Klartext an den Client zurückgegeben und nie in Backup-Exporte mit aufgenommen. |
+| Stapel-Löschung & Restore | Automatischer JSON-Snapshot vor jeder unwiderruflichen Aktion (`src/lib/serverBackupRotation.ts`, rotierend unter `./backups/`). |
+| Passwortabgleich (`middleware.ts`) | Konstante-Zeit-Vergleich (`timingSafeEqual`) gegen Timing-Angriffe. |
+
+Details und Begründungen stehen jeweils als Kommentar direkt am Code.

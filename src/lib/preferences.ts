@@ -4,10 +4,24 @@
 // Standardwerten an ("Singleton mit id = 'default'").
 // -----------------------------------------------------------------------------
 import { prisma } from "./prisma";
+import { decryptSecret } from "./secretCrypto";
+
+/**
+ * Entschlüsselt `aiApiKey` (siehe src/lib/secretCrypto.ts), falls gesetzt.
+ * Wird an der einen zentralen Stelle angewendet, an der Preferences aus der
+ * DB gelesen werden, damit der Rest der App (Masking in `toPublicPreferences`,
+ * Weiterreichen an den LLM-Provider in `/api/ai/route.ts`) weiterhin ganz
+ * normal mit dem Klartext-Key arbeitet — Ver-/Entschlüsselung bleibt reine
+ * Storage-Schicht.
+ */
+export function withDecryptedApiKey<T extends { aiApiKey: string | null }>(preferences: T): T {
+  if (!preferences.aiApiKey) return preferences;
+  return { ...preferences, aiApiKey: decryptSecret(preferences.aiApiKey) };
+}
 
 export async function getOrCreatePreferences() {
   const existing = await prisma.preferences.findUnique({ where: { id: "default" } });
-  if (existing) return existing;
+  if (existing) return withDecryptedApiKey(existing);
 
   return prisma.preferences.create({
     data: { id: "default" },
@@ -16,13 +30,14 @@ export async function getOrCreatePreferences() {
 
 export async function getPreferencesWithProfile() {
   await getOrCreatePreferences();
-  return prisma.preferences.findUniqueOrThrow({
+  const preferences = await prisma.preferences.findUniqueOrThrow({
     where: { id: "default" },
     include: {
       educationEntries: { orderBy: { sortOrder: "asc" } },
       projectEntries: { orderBy: { sortOrder: "asc" } },
     },
   });
+  return withDecryptedApiKey(preferences);
 }
 
 // -----------------------------------------------------------------------------

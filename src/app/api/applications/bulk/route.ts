@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { batchActionSchema } from "@/lib/validation";
 import { addTag, removeTag } from "@/lib/tags";
+import { createAutoSnapshot } from "@/lib/serverBackupRotation";
 
 const bulkRowSchema = z.object({
   id: z.string().optional(),
@@ -38,6 +39,13 @@ export async function POST(request: NextRequest) {
       const { action, applicationIds } = batchData;
 
       if (action === "DELETE") {
+        // Sicherheitsnetz: Eine Stapel-Löschung ist unwiderruflich (kein
+        // "Papierkorb" für Bewerbungen). Vor dem eigentlichen Löschen wird
+        // daher automatisch ein Snapshot des aktuellen Datenbestands
+        // angelegt (siehe src/lib/serverBackupRotation.ts) — best-effort,
+        // blockiert die Löschung nicht, falls das Schreiben fehlschlägt.
+        await createAutoSnapshot(`bulk-delete-${applicationIds.length}-applications`);
+
         await prisma.application.deleteMany({
           where: { id: { in: applicationIds } },
         });

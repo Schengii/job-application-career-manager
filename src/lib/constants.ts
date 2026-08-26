@@ -69,6 +69,36 @@ export const DOCUMENT_CATEGORY_VALUES = DOCUMENT_CATEGORIES.map((c) => c.value) 
   ...DocumentCategory[],
 ];
 
+// -----------------------------------------------------------------------------
+// Erlaubte Datei-Typen für den Dokumenten-Upload (`/api/documents/upload`)
+// -----------------------------------------------------------------------------
+// Bewusst als Allowlist statt Denylist: Hochgeladene Dateien landen unter
+// `/public/uploads/` und sind damit öffentlich per URL abrufbar. Ohne
+// Einschränkung könnte eine hochgeladene `.html`/`.svg`-Datei mit
+// eingebettetem `<script>` beim Öffnen im Browser als gespeicherte
+// Cross-Site-Scripting-Lücke ausgeführt werden. Erlaubt sind daher nur
+// Dateitypen, die für Bewerbungsunterlagen (Lebenslauf, Zeugnisse, Fotos)
+// tatsächlich benötigt werden und die Browser nicht als aktiven Code
+// interpretieren. MIME-Type UND Dateiendung werden geprüft (siehe
+// `route.ts`), da der vom Client gesendete MIME-Type nicht vertrauenswürdig
+// ist.
+export const ALLOWED_DOCUMENT_UPLOADS = [
+  { mimeType: "application/pdf", extensions: [".pdf"] },
+  { mimeType: "application/msword", extensions: [".doc"] },
+  {
+    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    extensions: [".docx"],
+  },
+  { mimeType: "application/vnd.oasis.opendocument.text", extensions: [".odt"] },
+  { mimeType: "image/jpeg", extensions: [".jpg", ".jpeg"] },
+  { mimeType: "image/png", extensions: [".png"] },
+  { mimeType: "image/webp", extensions: [".webp"] },
+  { mimeType: "text/plain", extensions: [".txt"] },
+] as const;
+
+export const ALLOWED_DOCUMENT_MIME_TYPES = ALLOWED_DOCUMENT_UPLOADS.map((t) => t.mimeType);
+export const ALLOWED_DOCUMENT_EXTENSIONS = ALLOWED_DOCUMENT_UPLOADS.flatMap((t) => t.extensions);
+
 export const REMOTE_PREFERENCES = [
   { value: "ONSITE", label: "Vor Ort" },
   { value: "HYBRID", label: "Hybrid" },
