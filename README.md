@@ -213,5 +213,13 @@ Schutzmaßnahmen greifen dabei zusätzlich:
 | Passwortabgleich (`middleware.ts`) | Konstante-Zeit-Vergleich (`timingSafeEqual`) gegen Timing-Angriffe. |
 | Brute-Force auf `APP_PASSWORD` (`middleware.ts`) | Rate-Limiting mit Lockout pro Client (`src/lib/rateLimiter.ts`): Nach 10 Fehlversuchen in 15 Minuten wird die IP für 15 Minuten mit `429 Too Many Requests` gesperrt, statt weitere Versuche zuzulassen. |
 | Missbrauch kostenpflichtiger/externer Routen (`/api/ai`, `/api/jobs/live-search`, `/api/jobs/scrape-url`) | Eigenständiges Rate-Limiting pro Route (`src/lib/apiRateLimit.ts`): begrenzt Aufrufe pro Client-IP (15–20 pro 10 Minuten), damit weder unnötige KI-Provider-Kosten entstehen noch die Route als Proxy zum Fluten externer Server missbraucht werden kann. |
+| `xlsx`-Abhängigkeit (Excel-Import, `/excel-view`) | Bezug direkt vom offiziellen SheetJS-CDN (`https://cdn.sheetjs.com/...`) statt der veralteten npm-Registry-Version — behebt zwei bekannte High-Severity-CVEs (Prototype Pollution, ReDoS) beim Parsen hochgeladener `.xlsx`-Dateien (die npm-Registry-Version wird von SheetJS wegen eines Namensraum-Streits nicht mehr aktuell gehalten). |
 
 Details und Begründungen stehen jeweils als Kommentar direkt am Code.
+
+`npm audit` ist aktuell frei von bekannten Schwachstellen (0 findings). Ein einzelner verbleibender
+Kandidat (`deepmerge-ts` < 8.0.0, transitiv über Prisma's CLI-Konfigurationslader `@prisma/config`)
+ist über einen `overrides`-Eintrag in `package.json` auf eine gepatchte Version angehoben — Prisma
+selbst hat diese Abhängigkeit in keiner stabilen 7.x-Version bisher aktualisiert (nur im experimentellen
+8.0.0-Release-Candidate, der bewusst nicht eingesetzt wird, da diese App auf der Prisma-7-Client-Architektur
+aufbaut, siehe `AGENTS.md`).
