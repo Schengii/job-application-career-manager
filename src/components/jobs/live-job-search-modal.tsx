@@ -37,9 +37,7 @@ export function LiveJobSearchModal({ open, onClose, onJobAdded }: LiveJobSearchM
   const toast = useToast();
   const [query, setQuery] = useState("Fachinformatiker Anwendungsentwicklung");
   const [location, setLocation] = useState("Bonn");
-  // TODO: `radius` ist aktuell fest auf 50km verdrahtet — es gibt noch kein
-  // UI-Steuerelement (z.B. Slider), um ihn zu ändern (daher kein `setRadius`).
-  const [radius] = useState(50);
+  const [radius, setRadius] = useState(50);
   const [source, setSource] = useState<"ALL" | "ARBEITSAGENTUR" | "ARBEITNOW">("ALL");
 
   const [loading, setLoading] = useState(false);
@@ -144,20 +142,40 @@ export function LiveJobSearchModal({ open, onClose, onJobAdded }: LiveJobSearchM
               placeholder="Bonn, Dortmund ..."
             />
           </div>
-          <div className="flex items-end gap-2">
-            <div className="w-full">
-              <Select
-                label="Quelle"
-                value={source}
-                onChange={(e) => setSource(e.target.value as "ALL" | "ARBEITSAGENTUR" | "ARBEITNOW")}
-                options={[
-                  { value: "ALL", label: "Alle Portale" },
-                  { value: "ARBEITSAGENTUR", label: "Arbeitsagentur" },
-                  { value: "ARBEITNOW", label: "Arbeitnow (Remote/Tech)" },
-                ]}
-              />
-            </div>
-            <Button type="submit" disabled={loading} className="shrink-0 h-9">
+          <div>
+            <Select
+              label="Quelle"
+              value={source}
+              onChange={(e) => setSource(e.target.value as "ALL" | "ARBEITSAGENTUR" | "ARBEITNOW")}
+              options={[
+                { value: "ALL", label: "Alle Portale" },
+                { value: "ARBEITSAGENTUR", label: "Arbeitsagentur" },
+                { value: "ARBEITNOW", label: "Arbeitnow (Remote/Tech)" },
+              ]}
+            />
+          </div>
+
+          <div className="sm:col-span-3">
+            <label
+              htmlFor="live-search-radius"
+              className="mb-1.5 flex items-center justify-between text-xs font-semibold text-foreground"
+            >
+              <span>Umkreis</span>
+              <span className="font-mono text-muted-foreground">{radius} km</span>
+            </label>
+            <input
+              id="live-search-radius"
+              type="range"
+              min={5}
+              max={200}
+              step={5}
+              value={radius}
+              onChange={(e) => setRadius(Number(e.target.value))}
+              className="w-full accent-primary"
+            />
+          </div>
+          <div className="flex items-end">
+            <Button type="submit" disabled={loading} className="w-full h-9">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-1.5" />} Suchen
             </Button>
           </div>
