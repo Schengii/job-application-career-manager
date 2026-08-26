@@ -33,11 +33,22 @@ jobs:
       - name: Node.js einrichten
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
 
       - name: Abhängigkeiten installieren
+        # `npm_config_build_from_source=true` zwingt `better-sqlite3` (native
+        # C++-Addon), sein Binding lokal gegen die exakten Node-Header dieses
+        # Runners zu kompilieren, statt ein vorgebautes Binary herunterzuladen.
+        # Ohne das führte ein ABI-Mismatch zwischen dem heruntergeladenen
+        # Prebuilt-Binary und der Runner-Umgebung reproduzierbar zu einem
+        # sofortigen Segfault ("Segmentation fault (core dumped)", exit 139)
+        # beim allerersten `new Database(...)`-Aufruf in
+        # vitest.global-setup.ts. ubuntu-latest bringt die dafür nötigen
+        # Build-Tools (python3/make/g++) bereits vorinstalliert mit.
         run: npm ci
+        env:
+          npm_config_build_from_source: "true"
 
       - name: Prisma Client generieren
         run: npx prisma generate
