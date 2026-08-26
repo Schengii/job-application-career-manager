@@ -185,7 +185,7 @@ export const coverLetterUpdateSchema = z.object({
 });
 
 export const batchActionSchema = z.object({
-  action: z.enum(["SET_STATUS", "DELETE", "ADD_TAG", "REMOVE_TAG"]),
+  action: z.enum(["SET_STATUS", "DELETE", "ADD_TAG", "REMOVE_TAG", "APPLY_STANDARD_PACKAGE"]),
   applicationIds: z.array(z.string()).min(1, "Mindestens eine Bewerbung auswählen"),
   status: z.enum(APPLICATION_STATUS_VALUES).optional(),
   rejectionReason: z.string().optional().nullable(),

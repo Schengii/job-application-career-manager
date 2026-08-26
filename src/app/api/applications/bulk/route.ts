@@ -9,6 +9,8 @@ import { z } from "zod";
 import { batchActionSchema } from "@/lib/validation";
 import { addTag, removeTag } from "@/lib/tags";
 import { createAutoSnapshot } from "@/lib/serverBackupRotation";
+import { generateCoverLetter, type CoverLetterTone } from "@/lib/coverLetterGenerator";
+import { getPreferencesWithProfile } from "@/lib/preferences";
 
 const bulkRowSchema = z.object({
   id: z.string().optional(),
@@ -83,6 +85,60 @@ export async function POST(request: NextRequest) {
           });
         }
         return NextResponse.json({ success: true, count: applicationIds.length, action: "ADD_TAG" });
+      }
+
+      // Wendet das "Standard-Bewerbungspaket" (siehe /api/jobs/[id]/apply)
+      // nachträglich auf bereits bestehende Bewerbungen an — z.B. für
+      // Bewerbungen, die vor Einführung dieser Automatik oder manuell (ohne
+      // den "Direkt bewerben"-Button) angelegt wurden. Bewusst additiv/
+      // idempotent: bereits angehängte Standard-Dokumente werden nicht
+      // doppelt angehängt, ein bereits vorhandenes Anschreiben wird NICHT
+      // überschrieben.
+      if (action === "APPLY_STANDARD_PACKAGE") {
+        const profile = await getPreferencesWithProfile();
+        const defaultDocuments = await prisma.document.findMany({ where: { isDefault: true }, select: { id: true } });
+
+        let documentsAttached = 0;
+        let coverLettersGenerated = 0;
+
+        for (const id of applicationIds) {
+          const application = await prisma.application.findUnique({
+            where: { id },
+            include: { company: true, jobPosting: true, coverLetter: true, documents: true },
+          });
+          if (!application) continue;
+
+          if (defaultDocuments.length > 0) {
+            const alreadyAttached = new Set(application.documents.map((d) => d.documentId));
+            const toAttach = defaultDocuments.filter((doc) => !alreadyAttached.has(doc.id));
+            if (toAttach.length > 0) {
+              await prisma.applicationDocument.createMany({
+                data: toAttach.map((doc) => ({ applicationId: id, documentId: doc.id })),
+              });
+              documentsAttached += toAttach.length;
+            }
+          }
+
+          if (!application.coverLetter) {
+            const content = generateCoverLetter({
+              company: application.company,
+              job: application.jobPosting,
+              profile,
+              position: application.position,
+              tone: (application.company.preferredTone as CoverLetterTone | null) ?? undefined,
+            });
+            await prisma.coverLetter.create({ data: { applicationId: id, content, status: "DRAFT" } });
+            coverLettersGenerated += 1;
+          }
+        }
+
+        return NextResponse.json({
+          success: true,
+          count: applicationIds.length,
+          action: "APPLY_STANDARD_PACKAGE",
+          documentsAttached,
+          coverLettersGenerated,
+        });
       }
 
       if (action === "REMOVE_TAG" && batchData.tag) {

@@ -6,6 +6,7 @@ import {
   X,
   ChevronDown,
   Tag,
+  PackageCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
@@ -100,6 +101,26 @@ export function BatchActionBar({
     }
   }
 
+  async function handleApplyStandardPackage() {
+    setLoading(true);
+    try {
+      const result = await apiPost<{ documentsAttached: number; coverLettersGenerated: number }>(
+        "/api/applications/bulk",
+        { action: "APPLY_STANDARD_PACKAGE", applicationIds: selectedIds }
+      );
+
+      await Promise.all([mutate("/api/applications"), mutate("/api/metrics")]);
+      toast.success(
+        `Standard-Paket angewendet: ${result.documentsAttached} Dokument(e) angehängt, ${result.coverLettersGenerated} Anschreiben generiert.`
+      );
+      onClearSelection();
+    } catch {
+      toast.error("Standard-Paket konnte nicht angewendet werden.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function handleExportSelectedCsv() {
     const selectedApps = applications.filter((a) => selectedIds.includes(a.id));
     if (selectedApps.length === 0) return;
@@ -189,6 +210,19 @@ export function BatchActionBar({
                 </div>
               )}
             </div>
+
+            {/* Standard-Bewerbungspaket nachträglich anwenden */}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleApplyStandardPackage}
+              disabled={loading}
+              className="h-8 text-xs"
+              title="Standard-Dokumente anhängen & fehlendes Anschreiben generieren"
+            >
+              <PackageCheck className="h-3.5 w-3.5 text-primary" />
+              <span>Standard-Paket</span>
+            </Button>
 
             {/* CSV Export */}
             <Button

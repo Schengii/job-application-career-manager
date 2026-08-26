@@ -53,4 +53,49 @@ describe("/api/applications/bulk", () => {
     const snapshot = JSON.parse(await fs.readFile(path.join(BACKUP_DIR, autoSnapshots[0]), "utf-8"));
     expect(snapshot.applications).toHaveLength(2);
   });
+
+  it("APPLY_STANDARD_PACKAGE hängt Standard-Dokumente an und generiert fehlende Anschreiben, ohne Vorhandenes zu überschreiben", async () => {
+    const company = await createTestCompany();
+    const cv = await prisma.document.create({ data: { name: "Lebenslauf", category: "LEBENSLAUF", isDefault: true } });
+    await prisma.document.create({ data: { name: "Sonstiges", category: "SONSTIGES", isDefault: false } });
+
+    const appWithoutLetter = await prisma.application.create({ data: { position: "A", companyId: company.id } });
+    const appWithLetter = await prisma.application.create({ data: { position: "B", companyId: company.id } });
+    await prisma.coverLetter.create({
+      data: { applicationId: appWithLetter.id, content: "Bereits vorhandenes, individuelles Anschreiben", status: "SENT" },
+    });
+
+    const response = await POST(
+      postRequest({ action: "APPLY_STANDARD_PACKAGE", applicationIds: [appWithoutLetter.id, appWithLetter.id] })
+    );
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.documentsAttached).toBe(2); // ein Standard-Dokument je Bewerbung
+    expect(body.coverLettersGenerated).toBe(1); // nur die Bewerbung ohne bestehendes Anschreiben
+
+    const docsForBoth = await prisma.applicationDocument.findMany();
+    expect(docsForBoth.every((d) => d.documentId === cv.id)).toBe(true);
+    expect(docsForBoth).toHaveLength(2);
+
+    const untouchedLetter = await prisma.coverLetter.findUnique({ where: { applicationId: appWithLetter.id } });
+    expect(untouchedLetter?.content).toBe("Bereits vorhandenes, individuelles Anschreiben");
+    expect(untouchedLetter?.status).toBe("SENT");
+
+    const newLetter = await prisma.coverLetter.findUnique({ where: { applicationId: appWithoutLetter.id } });
+    expect(newLetter).not.toBeNull();
+    expect(newLetter?.status).toBe("DRAFT");
+  });
+
+  it("APPLY_STANDARD_PACKAGE hängt ein Standard-Dokument nicht doppelt an, wenn es bereits angehängt ist", async () => {
+    const company = await createTestCompany();
+    const cv = await prisma.document.create({ data: { name: "Lebenslauf", category: "LEBENSLAUF", isDefault: true } });
+    const app = await prisma.application.create({ data: { position: "A", companyId: company.id } });
+    await prisma.applicationDocument.create({ data: { applicationId: app.id, documentId: cv.id } });
+
+    const response = await POST(postRequest({ action: "APPLY_STANDARD_PACKAGE", applicationIds: [app.id] }));
+    const body = await response.json();
+
+    expect(body.documentsAttached).toBe(0);
+    expect(await prisma.applicationDocument.count()).toBe(1);
+  });
 });
