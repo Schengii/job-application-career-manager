@@ -23,7 +23,7 @@
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
 import { isBasicAuthValid } from "@/lib/basicAuth";
-import { checkRateLimit, createRateLimitStore, recordFailure, recordSuccess } from "@/lib/rateLimiter";
+import { checkRateLimit, clientKeyFromHeaders, createRateLimitStore, recordFailure, recordSuccess } from "@/lib/rateLimiter";
 
 export const config = {
   // Schützt auch statische Dateien aus /public (z. B. hochgeladene
@@ -35,20 +35,6 @@ export const config = {
 // Modul-Scope: eine Map pro laufender Server-Instanz, siehe Kommentar in
 // src/lib/rateLimiter.ts (warum in-memory statt in der Datenbank).
 const authAttempts = createRateLimitStore();
-
-/**
- * Ermittelt einen möglichst stabilen Schlüssel pro Client für den
- * Rate-Limiter. Auf Vercel setzt der Edge-Proxy `x-forwarded-for`; der erste
- * Eintrag der Liste ist die tatsächliche Client-IP (weitere Einträge stammen
- * von Vercels eigener Proxy-Kette). Ohne den Header (z. B. lokal ohne
- * vorgeschalteten Proxy) greift ein fester Fallback-Key — dort ist
- * `APP_PASSWORD` und damit dieser gesamte Codepfad ohnehin meist deaktiviert.
- */
-function clientKey(request: NextRequest): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  return request.headers.get("x-real-ip") ?? "unknown";
-}
 
 function tooManyAttemptsResponse(retryAfterSeconds: number): NextResponse {
   return new NextResponse("Zu viele fehlgeschlagene Versuche. Bitte später erneut versuchen.", {
@@ -63,7 +49,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const key = clientKey(request);
+  const key = clientKeyFromHeaders(request.headers);
   const now = Date.now();
 
   // Bereits gesperrt? Dann gar nicht erst wieder den (konstante-Zeit-)

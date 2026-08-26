@@ -7,10 +7,19 @@ import { jobLiveSearchSchema } from "@/lib/validation";
 import { searchRealJobs } from "@/lib/realJobSearch";
 import { getOrCreatePreferences } from "@/lib/preferences";
 import { computeMatchScore, isCompanyExcluded } from "@/lib/matching";
+import { createApiRateLimiter } from "@/lib/apiRateLimit";
 
 export const dynamic = "force-dynamic";
 
+// Jeder Aufruf fragt externe Job-Portal-APIs ab (Bundesagentur für Arbeit,
+// Arbeitnow) — ohne Begrenzung könnte diese Route deren Kontingente/Rate-Limits
+// im Namen dieser App aufbrauchen.
+const rateLimit = createApiRateLimiter();
+
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req);
+  if (limited) return limited;
+
   try {
     const body = await req.json();
     const parsed = jobLiveSearchSchema.parse(body);

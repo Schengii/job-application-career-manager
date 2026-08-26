@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   checkRateLimit,
+  clientKeyFromHeaders,
   createRateLimitStore,
   recordFailure,
+  recordRequest,
   recordSuccess,
   type RateLimitOptions,
   type RateLimitStore,
@@ -100,5 +102,55 @@ describe("rateLimiter", () => {
     expect(store.size).toBe(OPTIONS.maxTrackedKeys);
     expect(store.has("ip-a")).toBe(true);
     expect(store.has("ip-b")).toBe(true);
+  });
+});
+
+// recordRequest teilt sich die gesamte Fenster-/Lockout-Logik mit
+// recordFailure (siehe recordAttempt in rateLimiter.ts) — hier wird nur
+// geprüft, dass der eigenständige Einstiegspunkt für API-Routen (mit eigenem
+// Zweck: "jeder Aufruf zählt", nicht "nur Fehlversuche") ebenfalls korrekt
+// sperrt und wieder freigibt.
+describe("recordRequest", () => {
+  let store: RateLimitStore;
+
+  beforeEach(() => {
+    store = createRateLimitStore();
+  });
+
+  it("sperrt nach maxAttempts Aufrufen im Fenster", () => {
+    for (let i = 0; i < OPTIONS.maxAttempts - 1; i++) {
+      expect(recordRequest(store, "1.2.3.4", i, OPTIONS).blocked).toBe(false);
+    }
+    expect(recordRequest(store, "1.2.3.4", OPTIONS.maxAttempts, OPTIONS).blocked).toBe(true);
+  });
+
+  it("verwendet DEFAULT_API_RATE_LIMIT, wenn keine Optionen übergeben werden", () => {
+    // 20 Aufrufe (Default maxAttempts) dürfen durchgehen, der 20. sperrt bereits.
+    let result;
+    for (let i = 0; i < 20; i++) {
+      result = recordRequest(store, "1.2.3.4", i);
+    }
+    expect(result!.blocked).toBe(true);
+  });
+});
+
+describe("clientKeyFromHeaders", () => {
+  it("verwendet den ersten Eintrag von x-forwarded-for", () => {
+    const headers = new Headers({ "x-forwarded-for": "203.0.113.5, 70.41.3.18, 150.172.238.178" });
+    expect(clientKeyFromHeaders(headers)).toBe("203.0.113.5");
+  });
+
+  it("schneidet Leerzeichen um den ersten Eintrag ab", () => {
+    const headers = new Headers({ "x-forwarded-for": "  203.0.113.5  , 70.41.3.18" });
+    expect(clientKeyFromHeaders(headers)).toBe("203.0.113.5");
+  });
+
+  it("fällt auf x-real-ip zurück, wenn x-forwarded-for fehlt", () => {
+    const headers = new Headers({ "x-real-ip": "198.51.100.7" });
+    expect(clientKeyFromHeaders(headers)).toBe("198.51.100.7");
+  });
+
+  it("liefert einen festen Fallback-Key, wenn beide Header fehlen", () => {
+    expect(clientKeyFromHeaders(new Headers())).toBe("unknown");
   });
 });

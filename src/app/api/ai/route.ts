@@ -5,12 +5,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { aiRequestSchema } from "@/lib/validation";
 import { handleApiError } from "@/lib/apiUtils";
 import { getPreferencesWithProfile } from "@/lib/preferences";
+import { createApiRateLimiter } from "@/lib/apiRateLimit";
 import {
   polishCoverLetterWithAI,
   evaluateInterviewAnswerWithAI,
 } from "@/lib/aiService";
 
+// Strenger als der API-Default: Jeder Aufruf löst einen kostenpflichtigen
+// Request an einen externen KI-Provider aus (OpenAI/Anthropic/OpenRouter).
+const rateLimit = createApiRateLimiter({
+  maxAttempts: 15,
+  windowMs: 10 * 60 * 1000,
+  lockoutMs: 10 * 60 * 1000,
+  maxTrackedKeys: 2000,
+});
+
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(request);
+  if (limited) return limited;
+
   try {
     const body = await request.json();
     const data = aiRequestSchema.parse(body);
