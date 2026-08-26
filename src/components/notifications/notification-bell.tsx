@@ -10,22 +10,13 @@ import { Bell, AlertCircle, Calendar, MailQuestion, Check, X, XCircle, PartyPopp
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem } from "@/types";
 import { getNotificationsFromApplications } from "@/lib/notifications";
+import { useDismissedNotifications } from "@/lib/useDismissedNotifications";
 import { cn } from "@/lib/utils";
-
-const STORAGE_KEY = "career_manager_dismissed_notifs";
 
 export function NotificationBell() {
   const { data: applications } = useSWR<ApplicationListItem[]>("/api/applications", fetcher);
   const [open, setOpen] = useState(false);
-  const [dismissedIds, setDismissedIds] = useState<string[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const { dismissedIds, dismiss, dismissMany } = useDismissedNotifications();
   const popoverRef = useRef<HTMLDivElement>(null);
 
   const notifications = useMemo(() => {
@@ -47,20 +38,11 @@ export function NotificationBell() {
   }, [open]);
 
   function handleDismiss(id: string) {
-    const updated = [...dismissedIds, id];
-    setDismissedIds(updated);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch {}
+    dismiss(id);
   }
 
   function handleDismissAll() {
-    const allIds = notifications.map((n) => n.id);
-    const updated = Array.from(new Set([...dismissedIds, ...allIds]));
-    setDismissedIds(updated);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch {}
+    dismissMany(notifications.map((n) => n.id));
     setOpen(false);
   }
 

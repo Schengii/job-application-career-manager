@@ -27,6 +27,7 @@ import { EmailResponseModal } from "@/components/applications/email-response-mod
 import { CalendarFeedModal } from "@/components/calendar/calendar-feed-modal";
 
 import { GoalTrackerCard } from "@/components/dashboard/goal-tracker-card";
+import { RecentResponsesCard } from "@/components/dashboard/recent-responses-card";
 import { Video } from "lucide-react";
 
 export default function DashboardPage() {
@@ -85,6 +86,9 @@ export default function DashboardPage() {
         <MetricCard label="Absagen" value={metrics?.rejected ?? 0} icon={ThumbsDown} accent="red" loading={metricsLoading} />
         <MetricCard label="Zusagen" value={metrics?.offer ?? 0} icon={PartyPopper} accent="green" loading={metricsLoading} />
       </div>
+
+      {/* Neue Rückmeldungen (Absage/Zusage/Interview-Einladung) */}
+      <RecentResponsesCard applications={applications ?? []} />
 
       {/* Follow-up / Wiedervorlage Banner */}
       {followUpItems.length > 0 && (
