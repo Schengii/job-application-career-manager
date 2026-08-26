@@ -35,11 +35,14 @@ describe("notifications", () => {
       notes: null,
       status: "CONTACTED",
       tags: null,
+      letterTemplate: null,
+      preferredTone: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
     jobPosting: null,
     coverLetter: null,
+    statusEvents: [],
     _count: { statusEvents: 0, documents: 0 },
     ...overrides,
   });
@@ -74,5 +77,49 @@ describe("notifications", () => {
     const notifs = getNotificationsFromApplications([app], ["followup-app-1"]);
 
     expect(notifs.length).toBe(0);
+  });
+
+  it("erzeugt eine Absage-Benachrichtigung, wenn der letzte Status-Event 'REJECTED' ist", () => {
+    const app = dummyApp({
+      status: "REJECTED",
+      statusEvents: [{ id: "evt-1", status: "REJECTED", changedAt: new Date() }],
+    });
+    const notifs = getNotificationsFromApplications([app]);
+
+    expect(notifs.some((n) => n.type === "REJECTED" && n.id === "status-evt-1")).toBe(true);
+  });
+
+  it("erzeugt eine Zusage-Benachrichtigung mit hoher Priorität, wenn der letzte Status-Event 'OFFER' ist", () => {
+    const app = dummyApp({
+      status: "OFFER",
+      statusEvents: [{ id: "evt-2", status: "OFFER", changedAt: new Date() }],
+    });
+    const notifs = getNotificationsFromApplications([app]);
+    const offerNotif = notifs.find((n) => n.type === "OFFER");
+
+    expect(offerNotif).toBeDefined();
+    expect(offerNotif?.priority).toBe("high");
+  });
+
+  it("erzeugt KEINE Status-Benachrichtigung, wenn der letzte Status-Event nicht mehr dem aktuellen Status entspricht", () => {
+    // Bewerbung wurde nach einer (fälschlich erkannten) Absage manuell wieder auf SENT gesetzt.
+    const app = dummyApp({
+      status: "SENT",
+      applicationDate: new Date(),
+      statusEvents: [{ id: "evt-3", status: "REJECTED", changedAt: new Date() }],
+    });
+    const notifs = getNotificationsFromApplications([app]);
+
+    expect(notifs.some((n) => n.type === "REJECTED")).toBe(false);
+  });
+
+  it("blendet eine bereits verworfene Status-Benachrichtigung dauerhaft aus", () => {
+    const app = dummyApp({
+      status: "OFFER",
+      statusEvents: [{ id: "evt-4", status: "OFFER", changedAt: new Date() }],
+    });
+    const notifs = getNotificationsFromApplications([app], ["status-evt-4"]);
+
+    expect(notifs.some((n) => n.type === "OFFER")).toBe(false);
   });
 });

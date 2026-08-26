@@ -37,6 +37,7 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
     minSalary: preferences.minSalary ?? 0,
     profileSummary: preferences.profileSummary ?? "",
     weeklyGoal: preferences.weeklyGoal ?? 5,
+    minMatchScore: preferences.minMatchScore ?? 0,
     excludedCompanies: preferences.excludedCompanies ?? "",
     excludedKeywords: preferences.excludedKeywords ?? "",
     excludedTechStack: preferences.excludedTechStack ?? "",
@@ -57,6 +58,7 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
         searchRadiusKm: Number(form.searchRadiusKm),
         minSalary: form.minSalary ? Number(form.minSalary) : null,
         weeklyGoal: Number(form.weeklyGoal) || 5,
+        minMatchScore: Number(form.minMatchScore) || 0,
         aiModel: form.aiModel || null,
       };
       // `aiApiKey` nur mitschicken, wenn der Nutzer tatsächlich einen neuen
@@ -226,6 +228,20 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
               max={50}
               value={form.weeklyGoal}
               onChange={(e) => setForm({ ...form, weeklyGoal: Number(e.target.value) })}
+            />
+          </Field>
+          <Field
+            label="Mindest-Match-Score für /jobs (%)"
+            htmlFor="p-min-match"
+            hint="Stellenangebote darunter werden auf der Jobsuche standardmäßig ausgeblendet (0 = Filter deaktiviert, alle anzeigen)"
+          >
+            <Input
+              id="p-min-match"
+              type="number"
+              min={0}
+              max={100}
+              value={form.minMatchScore}
+              onChange={(e) => setForm({ ...form, minMatchScore: Number(e.target.value) })}
             />
           </Field>
           <div className="sm:col-span-2">

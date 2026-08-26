@@ -8,7 +8,9 @@
 // Unterstützt 4 Tonalitäten: MODERN, CLASSIC, STARTUP, DETAILED.
 // -----------------------------------------------------------------------------
 
-export type CoverLetterTone = "MODERN" | "CLASSIC" | "STARTUP" | "DETAILED";
+import type { CoverLetterTone } from "./constants";
+
+export type { CoverLetterTone };
 
 export type CoverLetterCompany = {
   name: string;
@@ -16,6 +18,9 @@ export type CoverLetterCompany = {
   postalCode?: string | null;
   city?: string | null;
   contactName?: string | null;
+  // Eigener Standard-Einstiegsabsatz (siehe Company.letterTemplate) — ersetzt,
+  // falls gesetzt, den automatisch generierten Intro-Absatz unten.
+  letterTemplate?: string | null;
 };
 
 export type CoverLetterJob = {
@@ -196,6 +201,15 @@ export function generateCoverLetter(params: {
       projectParagraph = [projectDetails, jobFitSentence].filter(Boolean).join(" ");
       closingParagraph = `Ich bringe eine hohe Lernbereitschaft, Teamfähigkeit und Freude an der Entwicklung moderner, nutzerfreundlicher Web-Anwendungen mit. Gerne überzeuge ich Sie in einem persönlichen Gespräch von meiner Motivation und meinen Fähigkeiten.`;
       break;
+  }
+
+  // Eigene Unternehmens-Vorlage (Company.letterTemplate) hat Vorrang vor dem
+  // automatisch generierten Intro-Absatz — spart Zeit bei Unternehmen, für
+  // die bereits ein maßgeschneiderter Einstieg hinterlegt wurde, während der
+  // Rest des Anschreibens (Werdegang, Projekt, Abschluss) weiterhin
+  // automatisch aus dem Profil erzeugt wird.
+  if (company.letterTemplate?.trim()) {
+    introParagraph = ensureSentence(company.letterTemplate.trim());
   }
 
   const paragraphs = [

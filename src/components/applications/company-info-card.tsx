@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { CompanyStatusBadge } from "@/components/status-badge";
-import { COMPANY_STATUSES } from "@/lib/constants";
+import { COMPANY_STATUSES, COVER_LETTER_TONES } from "@/lib/constants";
 import { parseTags, getTagStyle } from "@/lib/tags";
 import type { Company } from "@/types";
 
@@ -30,13 +30,15 @@ export function CompanyInfoCard({ company, onSaved }: { company: Company; onSave
     status: company.status,
     tags: company.tags ?? "",
     notes: company.notes ?? "",
+    letterTemplate: company.letterTemplate ?? "",
+    preferredTone: company.preferredTone ?? "",
   });
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSaving(true);
     try {
-      await apiPatch(`/api/companies/${company.id}`, form);
+      await apiPatch(`/api/companies/${company.id}`, { ...form, preferredTone: form.preferredTone || null });
       await mutate("/api/companies");
       onSaved();
       toast.success("Unternehmen wurde aktualisiert.");
@@ -103,6 +105,29 @@ export function CompanyInfoCard({ company, onSaved }: { company: Company; onSave
             </Field>
             <Field label="Notizen" htmlFor="c-notes">
               <Textarea id="c-notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} />
+            </Field>
+            <Field label="Bevorzugte Anschreiben-Tonalität" htmlFor="c-tone" hint="Wird beim Generieren eines Anschreibens für dieses Unternehmen als Standard vorausgewählt">
+              <Select id="c-tone" value={form.preferredTone} onChange={(e) => setForm({ ...form, preferredTone: e.target.value })}>
+                <option value="">Automatisch (App-Standard: Modern)</option>
+                {COVER_LETTER_TONES.map((t) => (
+                  <option key={t.value} value={t.value}>
+                    {t.label}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field
+              label="Eigener Einstiegsabsatz fürs Anschreiben"
+              htmlFor="c-letter-template"
+              hint="Ersetzt beim Generieren den automatischen Intro-Absatz (Werdegang, Projekt & Abschluss bleiben automatisch). Leer lassen für den Standard-Text."
+            >
+              <Textarea
+                id="c-letter-template"
+                value={form.letterTemplate}
+                onChange={(e) => setForm({ ...form, letterTemplate: e.target.value })}
+                rows={3}
+                placeholder='z. B. "Ihre Mission, nachhaltige Software für den Mittelstand zu bauen, hat mich sofort überzeugt, mich bei [Unternehmen] als … zu bewerben"'
+              />
             </Field>
             <div className="flex justify-end">
               <Button type="submit" disabled={saving}>
@@ -174,6 +199,15 @@ export function CompanyInfoCard({ company, onSaved }: { company: Company; onSave
           </p>
         )}
         {company.notes && <p className="whitespace-pre-wrap rounded-lg bg-surface-hover p-3 text-muted-foreground">{company.notes}</p>}
+        {(company.letterTemplate || company.preferredTone) && (
+          <p className="flex items-center gap-1.5 text-[11px] font-medium text-primary">
+            <Pencil className="h-3 w-3" />
+            Eigene Anschreiben-Vorlage hinterlegt
+            {company.preferredTone && (
+              <span> ({COVER_LETTER_TONES.find((t) => t.value === company.preferredTone)?.label ?? company.preferredTone})</span>
+            )}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

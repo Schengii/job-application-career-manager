@@ -16,6 +16,14 @@ export async function GET(request: NextRequest) {
     company: true,
     jobPosting: true,
     coverLetter: true,
+    // Nur die letzten 3 Status-Events (neueste zuerst) — für die
+    // Benachrichtigungs-Zentrale (src/lib/notifications.ts), die daraus
+    // Absage-/Zusage-/Interview-Benachrichtigungen ableitet.
+    statusEvents: {
+      orderBy: { changedAt: "desc" as const },
+      take: 3,
+      select: { id: true, status: true, changedAt: true },
+    },
     _count: { select: { statusEvents: true, documents: true } },
   } as const;
 

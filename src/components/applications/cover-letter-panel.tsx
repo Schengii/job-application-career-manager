@@ -13,16 +13,12 @@ import { Button } from "@/components/ui/button";
 import { CoverLetterStatusBadge } from "@/components/status-badge";
 import type { ApplicationDetail, CoverLetter, PreferencesWithProfile } from "@/types";
 import type { CoverLetterTone } from "@/lib/coverLetterGenerator";
+import { COVER_LETTER_TONES } from "@/lib/constants";
 import { CoverLetterPrintModal } from "./cover-letter-print-modal";
 import { FollowUpEmailModal } from "./follow-up-email-modal";
 import { CoverLetterKeywordBooster } from "./cover-letter-keyword-booster";
 
-const TONES: { value: CoverLetterTone; label: string }[] = [
-  { value: "MODERN", label: "Modern (Lösungsorientiert)" },
-  { value: "CLASSIC", label: "Klassisch (Formell/Konzern)" },
-  { value: "STARTUP", label: "Startup / Agil (Dynamisch)" },
-  { value: "DETAILED", label: "Detailliert (Umschulung & Tech-Fokus)" },
-];
+const TONES = COVER_LETTER_TONES;
 
 export function CoverLetterPanel({
   application,
@@ -35,7 +31,11 @@ export function CoverLetterPanel({
   const { data: preferences } = useSWR<PreferencesWithProfile>("/api/preferences", fetcher);
 
   const [content, setContent] = useState(application.coverLetter?.content ?? "");
-  const [tone, setTone] = useState<CoverLetterTone>("MODERN");
+  // Ist für dieses Unternehmen eine bevorzugte Tonalität hinterlegt (siehe
+  // Unternehmens-Karte), wird sie hier als Startwert vorausgewählt.
+  const [tone, setTone] = useState<CoverLetterTone>(
+    (application.company.preferredTone as CoverLetterTone | null) ?? "MODERN"
+  );
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -186,6 +186,12 @@ export function CoverLetterPanel({
                 ))}
               </Select>
             </div>
+          )}
+
+          {application.company.letterTemplate && (
+            <span className="text-[11px] font-medium text-primary" title={application.company.letterTemplate}>
+              Eigene Vorlage für {application.company.name} wird als Einstieg verwendet
+            </span>
           )}
         </div>
 

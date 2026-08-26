@@ -161,6 +161,19 @@ export const REJECTION_REASONS = [
   "Sonstiges",
 ] as const;
 
+export const COVER_LETTER_TONES = [
+  { value: "MODERN", label: "Modern (Lösungsorientiert)" },
+  { value: "CLASSIC", label: "Klassisch (Formell/Konzern)" },
+  { value: "STARTUP", label: "Startup / Agil (Dynamisch)" },
+  { value: "DETAILED", label: "Detailliert (Umschulung & Tech-Fokus)" },
+] as const;
+
+export type CoverLetterTone = (typeof COVER_LETTER_TONES)[number]["value"];
+export const COVER_LETTER_TONE_VALUES = COVER_LETTER_TONES.map((t) => t.value) as [
+  CoverLetterTone,
+  ...CoverLetterTone[],
+];
+
 export const AI_PROVIDERS = [
   { value: "openai", label: "OpenAI (GPT-4o / GPT-4o-mini)" },
   { value: "anthropic", label: "Anthropic Claude (Claude 3.5 Sonnet)" },

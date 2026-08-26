@@ -44,6 +44,10 @@ export type ApplicationListItem = Application & {
   company: Company;
   jobPosting: JobPosting | null;
   coverLetter: CoverLetter | null;
+  // Die letzten Status-Änderungen (neueste zuerst) — genutzt u.a. von
+  // src/lib/notifications.ts, um Absage-/Zusage-/Interview-Benachrichtigungen
+  // aus tatsächlichen Statuswechseln abzuleiten.
+  statusEvents: Pick<ApplicationStatusEvent, "id" | "status" | "changedAt">[];
   _count: { statusEvents: number; documents: number };
 };
 

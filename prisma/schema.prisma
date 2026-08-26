@@ -33,6 +33,12 @@ model Company {
   notes         String? // Freitext-Notizen zum Unternehmen
   tags          String? // kommasepariert, z.B. "Startup,Remote,Prio1"
   status        String   @default("LEAD") // LEAD | CONTACTED | IN_PROGRESS | PARTNER | REJECTED | ARCHIVED
+  // Eigener Standard-Einstiegsabsatz für Anschreiben an dieses Unternehmen —
+  // überschreibt (falls gesetzt) den automatisch generierten Intro-Absatz in
+  // src/lib/coverLetterGenerator.ts, der Rest des Anschreibens (Werdegang,
+  // Projekt, Abschluss) wird weiterhin automatisch erzeugt.
+  letterTemplate String?
+  preferredTone  String? // Bevorzugte Anschreiben-Tonalität für dieses Unternehmen: MODERN | CLASSIC | STARTUP | DETAILED
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -215,6 +221,9 @@ model Preferences {
   minSalary          Int?
   profileSummary     String? // Kurzprofil für den Anschreiben-Generator
   weeklyGoal         Int      @default(5) // Wochenziel für Bewerbungen
+  // Mindest-Match-Score (%), ab dem ein Stellenangebot auf /jobs standardmäßig
+  // als "passend" angezeigt wird (0 = Filter deaktiviert, alle anzeigen).
+  minMatchScore      Int      @default(0)
   excludedCompanies  String?  // kommasepariert, z.B. "Firma X,Firma Y" (Blacklist)
   excludedKeywords   String?  // kommasepariert, z.B. "Senior,Lead,Cobol,PHP"
   excludedTechStack  String?  // kommasepariert, z.B. "WordPress,Typo3,PHP"

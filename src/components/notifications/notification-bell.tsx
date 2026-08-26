@@ -6,7 +6,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import useSWR from "swr";
 import Link from "next/link";
-import { Bell, AlertCircle, Calendar, MailQuestion, Check, X } from "lucide-react";
+import { Bell, AlertCircle, Calendar, MailQuestion, Check, X, XCircle, PartyPopper, Users } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem } from "@/types";
 import { getNotificationsFromApplications } from "@/lib/notifications";
@@ -111,7 +111,7 @@ export function NotificationBell() {
             {notifications.length === 0 && (
               <div className="p-6 text-center text-xs text-muted-foreground">
                 <Check className="h-6 w-6 text-emerald-500 mx-auto mb-2 opacity-80" />
-                Alles erledigt! Aktuell keine überfälligen Fristen oder anstehenden Termine.
+                Alles erledigt! Aktuell keine offenen Fristen, Termine oder neuen Rückmeldungen.
               </div>
             )}
 
@@ -122,13 +122,19 @@ export function NotificationBell() {
                   "p-3.5 flex items-start gap-3 hover:bg-surface-hover/60 transition-colors group relative",
                   notif.type === "OVERDUE" && "border-l-4 border-l-rose-500 bg-rose-500/5",
                   notif.type === "DUE_SOON" && "border-l-4 border-l-sky-500 bg-sky-500/5",
-                  notif.type === "FOLLOW_UP" && "border-l-4 border-l-orange-500 bg-orange-500/5"
+                  notif.type === "FOLLOW_UP" && "border-l-4 border-l-orange-500 bg-orange-500/5",
+                  notif.type === "REJECTED" && "border-l-4 border-l-slate-400 bg-slate-400/5",
+                  notif.type === "OFFER" && "border-l-4 border-l-emerald-500 bg-emerald-500/5",
+                  notif.type === "INTERVIEW" && "border-l-4 border-l-violet-500 bg-violet-500/5"
                 )}
               >
                 <div className="mt-0.5 shrink-0">
                   {notif.type === "OVERDUE" && <AlertCircle className="h-4 w-4 text-rose-500" />}
                   {notif.type === "DUE_SOON" && <Calendar className="h-4 w-4 text-sky-500" />}
                   {notif.type === "FOLLOW_UP" && <MailQuestion className="h-4 w-4 text-orange-500" />}
+                  {notif.type === "REJECTED" && <XCircle className="h-4 w-4 text-slate-400" />}
+                  {notif.type === "OFFER" && <PartyPopper className="h-4 w-4 text-emerald-500" />}
+                  {notif.type === "INTERVIEW" && <Users className="h-4 w-4 text-violet-500" />}
                 </div>
 
                 <div className="flex-1 min-w-0">

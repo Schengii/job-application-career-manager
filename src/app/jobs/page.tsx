@@ -19,9 +19,10 @@ import {
   EyeOff,
   RotateCcw,
   Ban,
+  Filter,
 } from "lucide-react";
 import { fetcher, apiPost } from "@/lib/api";
-import type { JobPostingWithCompany } from "@/types";
+import type { JobPostingWithCompany, PreferencesPublic } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/form";
@@ -53,6 +54,7 @@ export default function JobsPage() {
   const { data: jobs, isLoading, mutate: mutateJobs } = useSWR<JobPostingWithCompany[]>(apiUrl, fetcher);
   const { data: allActive, mutate: mutateActive } = useSWR<JobPostingWithCompany[]>("/api/jobs", fetcher);
   const { data: allDismissed, mutate: mutateDismissed } = useSWR<JobPostingWithCompany[]>("/api/jobs?dismissedOnly=true", fetcher);
+  const { data: preferences } = useSWR<PreferencesPublic>("/api/preferences", fetcher);
 
   const { mutate } = useSWRConfig();
   const toast = useToast();
@@ -63,6 +65,12 @@ export default function JobsPage() {
   const [matchFilter, setMatchFilter] = useState("ALL");
   const [remoteFilter, setRemoteFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState<SortOption>("SCORE_DESC");
+  // Standardmäßig aktiv: blendet Angebote unterhalb des in den Einstellungen
+  // hinterlegten Mindest-Match-Scores aus (Preferences.minMatchScore), damit
+  // nur wirklich zum Profil passende Stellen angezeigt werden. Über den
+  // Toggle unten jederzeit für den aktuellen Besuch deaktivierbar.
+  const [respectThreshold, setRespectThreshold] = useState(true);
+  const minMatchScore = preferences?.minMatchScore ?? 0;
 
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [restoringId, setRestoringId] = useState<string | null>(null);
@@ -77,6 +85,13 @@ export default function JobsPage() {
   const filtered = useMemo(() => {
     if (!jobs) return [];
     let list = [...jobs];
+
+    // Mindest-Match-Score aus den Einstellungen (nur in der Ansicht "Aktive
+    // Angebote" relevant — ausgeblendete Angebote sollen weiterhin vollständig
+    // einsehbar sein, unabhängig vom Score).
+    if (respectThreshold && viewMode === "ACTIVE" && minMatchScore > 0) {
+      list = list.filter((j) => (j.matchScore ?? 0) >= minMatchScore);
+    }
 
     // Portal Filter
     if (portalFilter !== "ALL") {
@@ -125,7 +140,12 @@ export default function JobsPage() {
     });
 
     return list;
-  }, [jobs, portalFilter, matchFilter, remoteFilter, searchQuery, sortBy]);
+  }, [jobs, portalFilter, matchFilter, remoteFilter, searchQuery, sortBy, respectThreshold, viewMode, minMatchScore]);
+
+  const belowThresholdCount = useMemo(() => {
+    if (!jobs || minMatchScore <= 0) return 0;
+    return jobs.filter((j) => (j.matchScore ?? 0) < minMatchScore).length;
+  }, [jobs, minMatchScore]);
 
   const hasActiveFilters =
     portalFilter !== "ALL" || matchFilter !== "ALL" || remoteFilter !== "ALL" || searchQuery.trim() !== "";
@@ -306,6 +326,28 @@ export default function JobsPage() {
           </div>
         )}
       </div>
+
+      {/* Mindest-Match-Score-Hinweis & Toggle */}
+      {viewMode === "ACTIVE" && minMatchScore > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary-soft/20 p-3">
+          <span className="flex items-center gap-2 text-xs font-medium text-foreground">
+            <Filter className="h-3.5 w-3.5 text-primary" />
+            Nur Angebote mit Match-Score ≥ {minMatchScore}% werden angezeigt
+            {belowThresholdCount > 0 && (
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary">
+                {belowThresholdCount} unpassende ausgeblendet
+              </span>
+            )}
+          </span>
+          <button
+            type="button"
+            onClick={() => setRespectThreshold(!respectThreshold)}
+            className="text-xs font-semibold text-primary hover:underline"
+          >
+            {respectThreshold ? "Trotzdem alle anzeigen" : "Filter wieder aktivieren"}
+          </button>
+        </div>
+      )}
 
       {/* Filter- & Suchleiste */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface p-3.5 glass-card">

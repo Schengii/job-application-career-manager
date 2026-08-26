@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { coverLetterGenerateSchema } from "@/lib/validation";
 import { handleApiError } from "@/lib/apiUtils";
-import { generateCoverLetter } from "@/lib/coverLetterGenerator";
+import { generateCoverLetter, type CoverLetterTone } from "@/lib/coverLetterGenerator";
 import { getPreferencesWithProfile } from "@/lib/preferences";
 
 export async function POST(request: NextRequest) {
@@ -28,12 +28,17 @@ export async function POST(request: NextRequest) {
 
     const profile = await getPreferencesWithProfile();
 
+    // Explizit übergebene Tonalität hat Vorrang, sonst greift die für dieses
+    // Unternehmen hinterlegte Standard-Tonalität (Company.preferredTone),
+    // ansonsten der generatorseitige Default ("MODERN").
+    const effectiveTone = tone ?? (application.company.preferredTone as CoverLetterTone | null) ?? undefined;
+
     const content = generateCoverLetter({
       company: application.company,
       job: application.jobPosting,
       profile,
       position: application.position,
-      tone,
+      tone: effectiveTone,
       highlightProjectTitle,
     });
 

@@ -13,6 +13,8 @@ CREATE TABLE "Company" (
     "notes" TEXT,
     "tags" TEXT,
     "status" TEXT NOT NULL DEFAULT 'LEAD',
+    "letterTemplate" TEXT,
+    "preferredTone" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
@@ -138,6 +140,7 @@ CREATE TABLE "Preferences" (
     "minSalary" INTEGER,
     "profileSummary" TEXT,
     "weeklyGoal" INTEGER NOT NULL DEFAULT 5,
+    "minMatchScore" INTEGER NOT NULL DEFAULT 0,
     "excludedCompanies" TEXT,
     "excludedKeywords" TEXT,
     "excludedTechStack" TEXT,

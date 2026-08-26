@@ -6,6 +6,7 @@ import {
   APPLICATION_STATUS_VALUES,
   COMPANY_STATUS_VALUES,
   COVER_LETTER_STATUS_VALUES,
+  COVER_LETTER_TONE_VALUES,
   DOCUMENT_CATEGORY_VALUES,
   EDUCATION_TYPE_VALUES,
   INTERACTION_TYPE_VALUES,
@@ -26,6 +27,8 @@ export const companySchema = z.object({
   notes: z.string().optional().nullable(),
   tags: z.string().optional().nullable(),
   status: z.enum(COMPANY_STATUS_VALUES).optional(),
+  letterTemplate: z.string().optional().nullable(),
+  preferredTone: z.enum(COVER_LETTER_TONE_VALUES).optional().nullable(),
 });
 export const companyUpdateSchema = companySchema.partial();
 
@@ -112,6 +115,7 @@ export const preferencesSchema = z.object({
   minSalary: z.number().int().optional().nullable(),
   profileSummary: z.string().optional().nullable(),
   weeklyGoal: z.number().int().min(1).max(50).optional(),
+  minMatchScore: z.number().int().min(0).max(100).optional(),
   excludedCompanies: z.string().optional().nullable(),
   excludedKeywords: z.string().optional().nullable(),
   excludedTechStack: z.string().optional().nullable(),
@@ -170,7 +174,7 @@ export const projectEntryUpdateSchema = projectEntrySchema.partial();
 
 export const coverLetterGenerateSchema = z.object({
   applicationId: z.string().min(1),
-  tone: z.enum(["MODERN", "CLASSIC", "STARTUP", "DETAILED"]).optional(),
+  tone: z.enum(COVER_LETTER_TONE_VALUES).optional(),
   highlightProjectTitle: z.string().optional().nullable(),
 });
 

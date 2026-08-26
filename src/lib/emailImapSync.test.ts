@@ -35,11 +35,14 @@ describe("emailImapSync", () => {
       notes: null,
       tags: null,
       status: "IN_PROGRESS",
+      letterTemplate: null,
+      preferredTone: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
     jobPosting: null,
     coverLetter: null,
+    statusEvents: [],
     _count: { statusEvents: 1, documents: 0 },
   };
 
