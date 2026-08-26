@@ -2,16 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import {
-  Briefcase,
-  TrendingUp,
   Send,
-  Sparkles,
   RotateCcw,
   Award,
   CheckCircle2,
   AlertTriangle,
   Lightbulb,
-  User,
   Building2,
   Mic,
   MicOff,

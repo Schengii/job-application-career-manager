@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------------
 import { useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
-import { Mail, RefreshCw, CheckCircle2, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
+import { Mail, RefreshCw, CheckCircle2, ShieldCheck, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form";

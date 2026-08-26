@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
-import { Printer, FileText, CheckSquare, Settings, FileCode, ShieldCheck } from "lucide-react";
+import { Printer, FileText, CheckSquare, Settings, FileCode } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { PreferencesWithProfile } from "@/types";
 import { Button } from "@/components/ui/button";

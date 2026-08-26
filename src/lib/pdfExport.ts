@@ -16,7 +16,11 @@ export interface PdfExportOptions {
  * mit sauberen DIN A4 Seitenrändern, Page-Break-Regeln und CSS Paged Media (@page).
  */
 export function wrapHtmlForPdfExport(options: PdfExportOptions): string {
-  const { title, htmlContent, documentType } = options;
+  // `documentType` ist Teil der öffentlichen Options-Schnittstelle
+  // (dokumentiert die Absicht des Aufrufers, siehe `PdfExportOptions`),
+  // beeinflusst das erzeugte HTML hier aber aktuell nicht — daher bewusst
+  // nicht destrukturiert.
+  const { title, htmlContent } = options;
 
   return `<!DOCTYPE html>
 <html lang="de">

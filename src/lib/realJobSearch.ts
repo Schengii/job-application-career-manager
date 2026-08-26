@@ -68,7 +68,6 @@ export async function searchArbeitnow(params: LiveJobSearchParams): Promise<Simu
 
     const filtered = data.data.filter((item: Record<string, unknown>) => {
       const title = String(item.title || "").toLowerCase();
-      const desc = String(item.description || "").toLowerCase();
       const location = String(item.location || "").toLowerCase();
       const isRemote = Boolean(item.remote);
 

@@ -4,7 +4,7 @@
 // ATS Score & Resume Optimizer Card Component
 // -----------------------------------------------------------------------------
 import { useMemo } from "react";
-import { ShieldCheck, AlertTriangle, CheckCircle2, Sparkles, FileSearch } from "lucide-react";
+import { AlertTriangle, Sparkles, FileSearch } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { evaluateAtsCompatibility } from "@/lib/atsChecker";
 import type { PreferencesWithProfile } from "@/types";

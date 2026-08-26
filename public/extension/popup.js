@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         currentDescription = response.description || "";
       });
     }
-  } catch (err) {
+  } catch {
     statusDiv.className = "status error";
     statusDiv.textContent = "Fehler beim Lesen des Tabs.";
   }
@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         statusDiv.textContent = data.error || "Fehler beim Speichern.";
         saveBtn.disabled = false;
       }
-    } catch (error) {
+    } catch {
       statusDiv.className = "status error";
       statusDiv.textContent = "Dashboard nicht erreichbar (localhost:3000 läuft nicht?).";
       saveBtn.disabled = false;
