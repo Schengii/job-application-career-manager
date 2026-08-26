@@ -13,6 +13,7 @@
 // -----------------------------------------------------------------------------
 import { prisma } from "@/lib/prisma";
 import { backupSchema } from "@/lib/validation";
+import { createAutoSnapshot } from "@/lib/serverBackupRotation";
 import type { z } from "zod";
 
 export type BackupData = z.input<typeof backupSchema>;
@@ -72,6 +73,15 @@ export async function restoreFromBackup(rawData: unknown): Promise<{ success: bo
   // beantwortet (statt eines kryptischen 500ers durch einen fehlgeschlagenen
   // `as`-Cast irgendwo in der Transaktion).
   const data: ParsedBackupData = backupSchema.parse(rawData);
+
+  // Sicherheitsnetz: Ein Restore überschreibt bestehende Datensätze mit
+  // gleicher ID unwiderruflich (`upsert` mit `update:`). Vor dem Import wird
+  // daher automatisch ein Snapshot des JETZT (vor dem Restore) aktuellen
+  // Datenbestands angelegt — falls die importierte Datei versehentlich die
+  // falsche/eine veraltete war, lässt sich der vorherige Stand aus
+  // `./backups/` wiederherstellen. Best-effort, siehe
+  // src/lib/serverBackupRotation.ts.
+  await createAutoSnapshot("before-restore");
 
   const stats = {
     companies: 0,

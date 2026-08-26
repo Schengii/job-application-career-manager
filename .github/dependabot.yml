@@ -1,0 +1,29 @@
+version: 2
+updates:
+  # npm-Abhängigkeiten (package.json) — wöchentlich, gruppiert nach
+  # Major-Frameworks, damit z.B. React 19 & Next 16 nicht dutzendfach
+  # einzelne PRs erzeugen.
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      next-react:
+        patterns:
+          - "next"
+          - "react"
+          - "react-dom"
+          - "eslint-config-next"
+      prisma:
+        patterns:
+          - "prisma"
+          - "@prisma/*"
+      dev-dependencies:
+        dependency-type: "development"
+
+  # GitHub Actions Workflow-Versionen (z.B. actions/checkout, actions/setup-node)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

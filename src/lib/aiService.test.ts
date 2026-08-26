@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { polishCoverLetterWithAI, evaluateInterviewAnswerWithAI } from "./aiService";
 
 describe("aiService (hybrid offline/online)", () => {
@@ -33,5 +33,90 @@ describe("aiService (hybrid offline/online)", () => {
     expect(result.score).toBeGreaterThanOrEqual(50);
     expect(result.feedback).toBeDefined();
     expect(result.starMethodScore).toBeDefined();
+  });
+
+  describe("Provider-Integrationen (gemockter fetch)", () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("ruft Ollama auch OHNE apiKey auf (lokal, keine Authentifizierung nötig)", async () => {
+      const fetchMock = vi.fn(async (url: string | URL) => {
+        expect(String(url)).toBe("http://localhost:11434/api/chat");
+        return new Response(JSON.stringify({ message: { content: "Poliertes Anschreiben." } }), { status: 200 });
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await polishCoverLetterWithAI({
+        coverLetter: "Sehr geehrte Damen und Herren...",
+        provider: "ollama",
+        apiKey: null, // bewusst kein Key
+        model: "llama3.1",
+      });
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(result.usedAi).toBe(true);
+      expect(result.modelUsed).toContain("Ollama");
+      expect(result.polishedContent).toBe("Poliertes Anschreiben.");
+    });
+
+    it("ruft die Anthropic Messages API mit korrekten Headern auf, wenn ein Key gesetzt ist", async () => {
+      const fetchMock = vi.fn(async (url: string | URL, init?: RequestInit) => {
+        expect(String(url)).toBe("https://api.anthropic.com/v1/messages");
+        const headers = init?.headers as Record<string, string>;
+        expect(headers["x-api-key"]).toBe("sk-ant-test");
+        expect(headers["anthropic-version"]).toBeDefined();
+        return new Response(JSON.stringify({ content: [{ text: "Poliert via Claude." }] }), { status: 200 });
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await polishCoverLetterWithAI({
+        coverLetter: "Sehr geehrte Damen und Herren...",
+        provider: "anthropic",
+        apiKey: "sk-ant-test",
+      });
+
+      expect(result.usedAi).toBe(true);
+      expect(result.polishedContent).toBe("Poliert via Claude.");
+    });
+
+    it("fällt bei Anthropic OHNE apiKey auf die Offline-Heuristik zurück, statt zu fetchen", async () => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await polishCoverLetterWithAI({
+        coverLetter: "Sehr geehrte Damen und Herren, hiermit bewerbe ich mich mit großem Interesse auf Ihre ausgeschriebene Stelle.",
+        provider: "anthropic",
+        apiKey: "",
+      });
+
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(result.usedAi).toBe(false);
+    });
+
+    it("entfernt Markdown-Codefences aus Ollama-JSON-Antworten vor dem Parsen", async () => {
+      const fetchMock = vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            message: {
+              content: '```json\n{"score": 88, "feedback": "Solide Antwort.", "strengths": [], "improvements": []}\n```',
+            },
+          }),
+          { status: 200 }
+        )
+      );
+      vi.stubGlobal("fetch", fetchMock);
+
+      const result = await evaluateInterviewAnswerWithAI({
+        question: "Was ist der Unterschied zwischen Props und State?",
+        answer: "Props kommen von außen, State ist intern.",
+        provider: "ollama",
+        apiKey: null,
+      });
+
+      expect(result.usedAi).toBe(true);
+      expect(result.score).toBe(88);
+      expect(result.feedback).toBe("Solide Antwort.");
+    });
   });
 });

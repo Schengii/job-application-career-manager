@@ -2,15 +2,18 @@
 // Integrationstest: /api/preferences (GET/PATCH)
 // -----------------------------------------------------------------------------
 // Deckt insbesondere die Sicherheitslogik rund um `aiApiKey` ab: der Key darf
-// niemals im Klartext an den Client zurückgegeben werden, ein PATCH ohne das
-// Feld darf einen zuvor gespeicherten Key nicht überschreiben, und ein leerer
-// String muss den Key gezielt entfernen können (siehe src/lib/preferences.ts).
+// niemals im Klartext an den Client zurückgegeben werden, wird at-rest
+// verschlüsselt in der DB gespeichert (siehe src/lib/secretCrypto.ts), ein
+// PATCH ohne das Feld darf einen zuvor gespeicherten Key nicht überschreiben,
+// und ein leerer String muss den Key gezielt entfernen können (siehe
+// src/lib/preferences.ts).
 // -----------------------------------------------------------------------------
 import { beforeEach, describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import { GET, PATCH } from "./route";
 import { resetDb } from "@/test/dbTestUtils";
 import { prisma } from "@/lib/prisma";
+import { decryptSecret } from "@/lib/secretCrypto";
 
 function patchRequest(body: unknown) {
   return new NextRequest("http://localhost/api/preferences", {
@@ -34,7 +37,7 @@ describe("/api/preferences", () => {
     expect(body.hasAiApiKey).toBe(false);
   });
 
-  it("PATCH mit aiApiKey speichert den Key serverseitig, gibt ihn aber nie im Klartext zurück", async () => {
+  it("PATCH mit aiApiKey speichert den Key verschlüsselt, gibt ihn aber nie im Klartext zurück", async () => {
     const response = await PATCH(patchRequest({ aiApiKey: "sk-super-secret-12345" }));
     const body = await response.json();
 
@@ -42,9 +45,12 @@ describe("/api/preferences", () => {
     expect(body.hasAiApiKey).toBe(true);
     expect(body.aiApiKeyPreview).toBe("••••••••2345");
 
-    // Der reale Key landet weiterhin (nur serverseitig, z. B. für /api/ai) in der DB.
+    // Der reale Key landet weiterhin (nur serverseitig, z. B. für /api/ai) in
+    // der DB — aber verschlüsselt, nicht im Klartext (siehe secretCrypto.ts).
     const stored = await prisma.preferences.findUnique({ where: { id: "default" } });
-    expect(stored?.aiApiKey).toBe("sk-super-secret-12345");
+    expect(stored?.aiApiKey).not.toBe("sk-super-secret-12345");
+    expect(stored?.aiApiKey).toMatch(/^enc:v1:/);
+    expect(decryptSecret(stored!.aiApiKey!)).toBe("sk-super-secret-12345");
   });
 
   it("PATCH ohne aiApiKey-Feld lässt einen bereits gespeicherten Key unverändert", async () => {
@@ -57,7 +63,7 @@ describe("/api/preferences", () => {
     expect(body.hasAiApiKey).toBe(true);
 
     const stored = await prisma.preferences.findUnique({ where: { id: "default" } });
-    expect(stored?.aiApiKey).toBe("sk-original-key");
+    expect(decryptSecret(stored!.aiApiKey!)).toBe("sk-original-key");
   });
 
   it("PATCH mit leerem aiApiKey entfernt den gespeicherten Key gezielt", async () => {
