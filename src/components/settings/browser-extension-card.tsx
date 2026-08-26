@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Globe, Puzzle, CheckCircle2, ArrowRight } from "lucide-react";
+import { Download, Globe, Puzzle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 

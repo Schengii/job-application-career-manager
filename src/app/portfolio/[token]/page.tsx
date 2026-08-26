@@ -5,23 +5,19 @@
 // -----------------------------------------------------------------------------
 import { use, useEffect, useState } from "react";
 import useSWR from "swr";
-import Link from "next/link";
 import {
-  Briefcase,
   GraduationCap,
   FolderGit2,
   Mail,
   Phone,
   MapPin,
-  ExternalLink,
   Code2,
   Sparkles,
   ShieldCheck,
-  Award,
 } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { PreferencesWithProfile } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export default function PortfolioTokenPage({ params }: { params: Promise<{ token: string }> }) {

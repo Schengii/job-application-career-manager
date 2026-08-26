@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
-import { Calendar, Video, Tag, Clock, Plus, Hourglass } from "lucide-react";
+import { Calendar, Video, Tag, Hourglass } from "lucide-react";
 import { apiPatch } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";

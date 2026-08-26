@@ -29,7 +29,12 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const parsed = emailSyncRunSchema.parse(body);
+    // Nur zur Eingabe-Validierung aufgerufen (wirft bei ungültiger Form
+    // einen ZodError) — die Felder selbst (host/port/user/password/simulate)
+    // werden aktuell nicht ausgewertet, da dieser Endpunkt immer mit
+    // simulierten Inbox-Daten arbeitet (siehe `generateSampleInboxEmails`
+    // unten, analog zu den anderen "Simulator"-Features der App).
+    emailSyncRunSchema.parse(body);
 
     const preferences = await getOrCreatePreferences();
 

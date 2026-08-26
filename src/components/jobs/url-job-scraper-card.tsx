@@ -4,7 +4,7 @@
 // Job-URL Scraper & Web-Clipper Card
 // -----------------------------------------------------------------------------
 import { useState } from "react";
-import { Link2, Sparkles, Loader2, Plus, CheckCircle2, AlertTriangle, Building2, MapPin } from "lucide-react";
+import { Link2, Sparkles, Loader2, Plus, Building2, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form";

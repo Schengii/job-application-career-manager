@@ -9,13 +9,11 @@ import {
   Building2,
   MapPin,
   Globe2,
-  Sparkles,
   ExternalLink,
   PlusCircle,
   Check,
   AlertCircle,
   Loader2,
-  SlidersHorizontal,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -39,7 +37,9 @@ export function LiveJobSearchModal({ open, onClose, onJobAdded }: LiveJobSearchM
   const toast = useToast();
   const [query, setQuery] = useState("Fachinformatiker Anwendungsentwicklung");
   const [location, setLocation] = useState("Bonn");
-  const [radius, setRadius] = useState(50);
+  // TODO: `radius` ist aktuell fest auf 50km verdrahtet — es gibt noch kein
+  // UI-Steuerelement (z.B. Slider), um ihn zu ändern (daher kein `setRadius`).
+  const [radius] = useState(50);
   const [source, setSource] = useState<"ALL" | "ARBEITSAGENTUR" | "ARBEITNOW">("ALL");
 
   const [loading, setLoading] = useState(false);

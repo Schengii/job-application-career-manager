@@ -6,15 +6,9 @@
 import { useState, useMemo } from "react";
 import {
   Coins,
-  Calculator,
   Sparkles,
-  TrendingUp,
-  FileText,
   Copy,
   Check,
-  Building2,
-  Clock,
-  Car,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

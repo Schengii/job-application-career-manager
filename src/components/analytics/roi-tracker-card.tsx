@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import useSWR from "swr";
-import { Clock, TrendingUp, Zap, AlertCircle, CheckCircle2, Hourglass } from "lucide-react";
+import { Clock, TrendingUp, Zap, Hourglass } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import { ApplicationListItem } from "@/types";
 import { calculateRoiAnalytics } from "@/lib/roiAnalytics";

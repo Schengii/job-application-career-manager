@@ -8,6 +8,9 @@
 // (Adresse, Bewerbungsverlauf, hochgeladene Zeugnisse, Notizen) für jeden
 // mit der URL öffentlich einsehbar. `middleware.ts` schützt die App daher
 // optional mit einem einzigen Passwort (Umgebungsvariable `APP_PASSWORD`).
+// (Bewusst weiterhin `middleware.ts` statt des von Next.js 16 dokumentierten
+// `proxy.ts` — siehe der ausführliche Kommentar in middleware.ts selbst:
+// `proxy.ts` wird von Next.js 16.3.2 + Turbopack nachweislich nicht erkannt.)
 // Der Benutzername im Basic-Auth-Header wird ignoriert — es zählt
 // ausschließlich das Passwort, da die App nur für einen einzigen Nutzer
 // gedacht ist. Ist `APP_PASSWORD` nicht gesetzt, bleibt das Verhalten wie

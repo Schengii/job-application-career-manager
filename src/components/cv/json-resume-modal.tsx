@@ -4,7 +4,7 @@
 // JSON-Resume Import & Export Modal Component
 // -----------------------------------------------------------------------------
 import { useState } from "react";
-import { Download, Upload, FileCode, Check, AlertCircle, Loader2 } from "lucide-react";
+import { Download, Upload, FileCode, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/form";

@@ -111,7 +111,6 @@ export function generateNegotiationEmailScript(
   targetSalary: number,
   candidateName: string = "Alexander Schepp"
 ): string {
-  const diff = targetSalary - currentOffer.offer.baseSalaryYear;
   return `Sehr geehrte/r [Ansprechpartner],
 
 vielen Dank für das freundliche Gespräch und die Zusendung des Vertragsangebots für die Position als ${currentOffer.offer.role}. Die vorgestellten Projekte und die Zusammenarbeit mit dem Team bestärken mich sehr in meinem Wunsch, bei ${currentOffer.offer.companyName} zu starten.

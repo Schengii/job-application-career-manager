@@ -11,7 +11,6 @@ import {
   Building2,
   MessageSquare,
   Mic,
-  Coins,
 } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import { ApplicationListItem } from "@/types";

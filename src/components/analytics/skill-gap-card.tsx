@@ -4,7 +4,7 @@
 // Skill-Gap Matrix & Lern-Roadmap Component
 // -----------------------------------------------------------------------------
 import useSWR from "swr";
-import { Sparkles, TrendingUp, AlertCircle, CheckCircle2, BookOpen, Layers } from "lucide-react";
+import { AlertCircle, CheckCircle2, BookOpen, Layers } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SkillGapAnalysisResult } from "@/lib/skillGapAnalyzer";

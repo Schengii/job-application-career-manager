@@ -13,9 +13,7 @@ import {
   ArrowRight,
   RotateCcw,
   CheckCircle2,
-  AlertTriangle,
   Play,
-  Pause,
   Award,
   MessageSquare,
 } from "lucide-react";
@@ -31,7 +29,6 @@ import {
   generateFollowUpQuestion,
   AnswerEvaluation,
 } from "@/lib/mockInterviewEngine";
-import { polishCoverLetterWithAI } from "@/lib/aiService";
 
 interface VoiceInterviewRunnerProps {
   targetJobTitle?: string;
@@ -66,7 +63,10 @@ type WindowWithSpeechRecognition = Window & {
   webkitSpeechRecognition?: new () => SpeechRecognitionLike;
 };
 
-export function VoiceInterviewRunner({ targetJobTitle, onFinish }: VoiceInterviewRunnerProps) {
+// `targetJobTitle` ist Teil der öffentlichen Komponenten-Schnittstelle
+// (interview-prep/page.tsx übergibt ihn), wird im Funktionskörper aber
+// aktuell nicht verwendet — daher bewusst nicht destrukturiert.
+export function VoiceInterviewRunner({ onFinish }: VoiceInterviewRunnerProps) {
   const toast = useToast();
 
   // 5 Fragen für den Durchlauf auswählen
@@ -108,7 +108,13 @@ export function VoiceInterviewRunner({ targetJobTitle, onFinish }: VoiceIntervie
     window.speechSynthesis.speak(utterance);
   }
 
-  // Frage vorlesen, wenn Index wechselt
+  // Frage vorlesen, wenn Index wechselt. `currentQuestion`/`speakText`
+  // bewusst NICHT in der Dependency-Liste: Beide werden bei jedem Render neu
+  // berechnet (currentQuestion aus currentIndex, speakText liest
+  // voiceEnabled), sie in die Liste aufzunehmen würde die Frage z.B. auch
+  // beim bloßen Stummschalten/Entstummen erneut vorlesen lassen — hier soll
+  // ausschließlich ein Wechsel der Frage (currentIndex) bzw. des Ende-Status
+  // (isFinished) ein erneutes Vorlesen auslösen.
   useEffect(() => {
     if (!isFinished && currentQuestion) {
       speakText(currentQuestion.question);
@@ -118,6 +124,7 @@ export function VoiceInterviewRunner({ targetJobTitle, onFinish }: VoiceIntervie
         window.speechSynthesis.cancel();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, isFinished]);
 
   // STT: Spracheingabe initialisieren
