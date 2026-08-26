@@ -6,6 +6,13 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    // Erlaubt `import "./foo.mts"` mit expliziter Erweiterung (u. a. in
+    // playwright.config.mts/e2e/*.mts nötig, da TS bei moduleResolution
+    // "bundler" erweiterungslose Importe nicht zu `.mts`-Dateien auflöst).
+    // Nur mit `noEmit: true` zulässig — hier bereits der Fall, da dieses
+    // Projekt sowieso nie über `tsc` kompiliert (Next.js/Turbopack übernehmen
+    // das Bundling).
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",

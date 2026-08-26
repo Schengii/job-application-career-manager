@@ -58,6 +58,15 @@ next-env.d.ts
 /prisma/test.db
 /prisma/test.db-journal
 
+# SQLite-E2E-Testdatenbank (wird von e2e/global-setup.mts bei jedem Playwright-Lauf neu erzeugt)
+/prisma/e2e.db
+/prisma/e2e.db-journal
+
+# Playwright: Testberichte/-artefakte (Screenshots, Traces, HTML-Report)
+/playwright-report/
+/test-results/
+/blob-report/
+
 # Hochgeladene Bewerbungsunterlagen (persönliche Dokumente, nicht versionieren)
 /public/uploads/*
 !/public/uploads/.gitkeep

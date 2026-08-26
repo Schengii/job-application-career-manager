@@ -1,8 +1,9 @@
 name: CI
 
-# Lint, Testsuite (Vitest) und Produktions-Build bei jedem Push/PR auf main.
-# Das README verspricht diese Pipeline bereits ("CI/CD | GitHub Actions
-# (.github/workflows/ci.yml)") — dies ist die tatsächliche Umsetzung davon.
+# Lint, Testsuite (Vitest), Produktions-Build und E2E-Tests (Playwright) bei
+# jedem Push/PR auf main. Das README verspricht diese Pipeline bereits
+# ("CI/CD | GitHub Actions (.github/workflows/ci.yml)") — dies ist die
+# tatsächliche Umsetzung davon.
 
 on:
   push:
@@ -61,3 +62,42 @@ jobs:
 
       - name: Produktions-Build
         run: npm run build
+
+  e2e:
+    name: E2E-Tests (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+
+      # Siehe Kommentar im "lint-test-build"-Job oben: better-sqlite3 muss
+      # lokal gegen die exakten Node-Header dieses Runners kompiliert werden.
+      - name: Abhängigkeiten installieren
+        run: npm ci
+        env:
+          npm_config_build_from_source: "true"
+
+      - name: Prisma Client generieren
+        run: npx prisma generate
+
+      # Nur Chromium (siehe Begründung in playwright.config.mts) — spart
+      # Download-/Laufzeit gegenüber allen drei Playwright-Browsern.
+      - name: Playwright-Browser (Chromium) installieren
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E-Tests (Playwright)
+        run: npm run test:e2e
+
+      - name: Playwright-Report bei Fehlschlag hochladen
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

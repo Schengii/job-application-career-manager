@@ -12,6 +12,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "test:db:regenerate": "prisma migrate diff --from-empty --to-schema ./prisma/schema.prisma --script > prisma/test-schema.sql",
     "import:bewerbungsliste": "tsx scripts/import-bewerbungsliste.ts"
   },
@@ -32,6 +34,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",

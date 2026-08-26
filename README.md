@@ -122,7 +122,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 | State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
 | Audio     | Web Speech API (SpeechSynthesis für TTS & webkitSpeechRecognition für STT)|
 | Extension | Chrome/Edge Manifest V3 (Content Script, Popup UI, Background Worker)     |
-| Testing   | Vitest (228 automatisierte Tests: Unit-/API-Integrationstests, s. `vitest.global-setup.ts`, sowie Komponenten-Tests mit React Testing Library, s. `src/test/setupTests.ts`) |
+| Testing   | Vitest (236 automatisierte Tests: Unit-/API-Integrationstests, s. `vitest.global-setup.ts`, sowie Komponenten-Tests mit React Testing Library, s. `src/test/setupTests.ts`) + Playwright E2E-Tests gegen eine eigene SQLite-Testdatenbank (s. `playwright.config.mts`) |
 | CI/CD     | GitHub Actions (`.github/workflows/ci.yml`) für automatisierte Test- & Build-Pipelines |
 
 ---
@@ -187,7 +187,9 @@ Die Anwendung läuft anschließend unter **http://localhost:3000**.
 | `npm run dev`               | Entwicklungsserver (Turbopack) starten                            |
 | `npm run build`             | Produktions-Build erstellen (inkl. TypeScript-Check)               |
 | `npm run lint`               | ESLint ausführen                                                    |
-| `npm run test`                | Testsuite (Vitest, 228 Tests) einmalig ausführen                    |
+| `npm run test`                | Testsuite (Vitest, 236 Tests) einmalig ausführen                    |
+| `npm run test:e2e`            | E2E-Tests (Playwright) ausführen — startet den Dev-Server automatisch gegen `prisma/e2e.db` |
+| `npm run test:e2e:ui`         | E2E-Tests im interaktiven Playwright-UI-Modus ausführen             |
 | `npm run test:watch`           | Testsuite im Watch-Modus ausführen                                    |
 | `npm run test:db:regenerate`   | SQL-Fixture für die Test-DB neu generieren (nach Schema-Änderungen) |
 | `npx prisma studio`          | Datenbank-Inhalte im Browser ansehen/bearbeiten                     |
