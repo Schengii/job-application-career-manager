@@ -122,7 +122,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 | State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
 | Audio     | Web Speech API (SpeechSynthesis für TTS & webkitSpeechRecognition für STT)|
 | Extension | Chrome/Edge Manifest V3 (Content Script, Popup UI, Background Worker)     |
-| Testing   | Vitest (175 automatisierte Unit- & API-Integrationstests, s. `vitest.global-setup.ts`) |
+| Testing   | Vitest (191 automatisierte Unit- & API-Integrationstests, s. `vitest.global-setup.ts`) |
 | CI/CD     | GitHub Actions (`.github/workflows/ci.yml`) für automatisierte Test- & Build-Pipelines |
 
 ---
@@ -187,7 +187,7 @@ Die Anwendung läuft anschließend unter **http://localhost:3000**.
 | `npm run dev`               | Entwicklungsserver (Turbopack) starten                            |
 | `npm run build`             | Produktions-Build erstellen (inkl. TypeScript-Check)               |
 | `npm run lint`               | ESLint ausführen                                                    |
-| `npm run test`                | Testsuite (Vitest, 175 Tests) einmalig ausführen                    |
+| `npm run test`                | Testsuite (Vitest, 191 Tests) einmalig ausführen                    |
 | `npm run test:watch`           | Testsuite im Watch-Modus ausführen                                    |
 | `npm run test:db:regenerate`   | SQL-Fixture für die Test-DB neu generieren (nach Schema-Änderungen) |
 | `npx prisma studio`          | Datenbank-Inhalte im Browser ansehen/bearbeiten                     |
@@ -209,5 +209,6 @@ Schutzmaßnahmen greifen dabei zusätzlich:
 | KI-API-Key (Einstellungen) | At-Rest-Verschlüsselung (AES-256-GCM, `src/lib/secretCrypto.ts`) statt Klartext in der SQLite-Datei; wird zusätzlich nie im Klartext an den Client zurückgegeben und nie in Backup-Exporte mit aufgenommen. |
 | Stapel-Löschung & Restore | Automatischer JSON-Snapshot vor jeder unwiderruflichen Aktion (`src/lib/serverBackupRotation.ts`, rotierend unter `./backups/`). |
 | Passwortabgleich (`middleware.ts`) | Konstante-Zeit-Vergleich (`timingSafeEqual`) gegen Timing-Angriffe. |
+| Brute-Force auf `APP_PASSWORD` (`middleware.ts`) | Rate-Limiting mit Lockout pro Client (`src/lib/rateLimiter.ts`): Nach 10 Fehlversuchen in 15 Minuten wird die IP für 15 Minuten mit `429 Too Many Requests` gesperrt, statt weitere Versuche zuzulassen. |
 
 Details und Begründungen stehen jeweils als Kommentar direkt am Code.

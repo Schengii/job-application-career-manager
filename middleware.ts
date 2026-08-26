@@ -23,6 +23,7 @@
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
 import { isBasicAuthValid } from "@/lib/basicAuth";
+import { checkRateLimit, createRateLimitStore, recordFailure, recordSuccess } from "@/lib/rateLimiter";
 
 export const config = {
   // Schützt auch statische Dateien aus /public (z. B. hochgeladene
@@ -31,14 +32,56 @@ export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon\\.ico).*)"],
 };
 
+// Modul-Scope: eine Map pro laufender Server-Instanz, siehe Kommentar in
+// src/lib/rateLimiter.ts (warum in-memory statt in der Datenbank).
+const authAttempts = createRateLimitStore();
+
+/**
+ * Ermittelt einen möglichst stabilen Schlüssel pro Client für den
+ * Rate-Limiter. Auf Vercel setzt der Edge-Proxy `x-forwarded-for`; der erste
+ * Eintrag der Liste ist die tatsächliche Client-IP (weitere Einträge stammen
+ * von Vercels eigener Proxy-Kette). Ohne den Header (z. B. lokal ohne
+ * vorgeschalteten Proxy) greift ein fester Fallback-Key — dort ist
+ * `APP_PASSWORD` und damit dieser gesamte Codepfad ohnehin meist deaktiviert.
+ */
+function clientKey(request: NextRequest): string {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  if (forwardedFor) return forwardedFor.split(",")[0].trim();
+  return request.headers.get("x-real-ip") ?? "unknown";
+}
+
+function tooManyAttemptsResponse(retryAfterSeconds: number): NextResponse {
+  return new NextResponse("Zu viele fehlgeschlagene Versuche. Bitte später erneut versuchen.", {
+    status: 429,
+    headers: { "Retry-After": String(retryAfterSeconds) },
+  });
+}
+
 export function middleware(request: NextRequest) {
   const appPassword = process.env.APP_PASSWORD;
   if (!appPassword) {
     return NextResponse.next();
   }
 
+  const key = clientKey(request);
+  const now = Date.now();
+
+  // Bereits gesperrt? Dann gar nicht erst wieder den (konstante-Zeit-)
+  // Passwortvergleich ausführen — verhindert auch, dass ein gesperrter
+  // Angreifer per Anfragevolumen weiter Ressourcen verbraucht.
+  const lockStatus = checkRateLimit(authAttempts, key, now);
+  if (lockStatus.blocked) {
+    return tooManyAttemptsResponse(lockStatus.retryAfterSeconds);
+  }
+
   if (isBasicAuthValid(request.headers.get("authorization"), appPassword)) {
+    recordSuccess(authAttempts, key);
     return NextResponse.next();
+  }
+
+  const result = recordFailure(authAttempts, key, now);
+  if (result.blocked) {
+    return tooManyAttemptsResponse(result.retryAfterSeconds);
   }
 
   return new NextResponse("Authentifizierung erforderlich", {
