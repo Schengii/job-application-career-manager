@@ -225,6 +225,13 @@ model Preferences {
   remotePreference   String   @default("HYBRID") // ONSITE | HYBRID | REMOTE | ANY
   minSalary          Int?
   profileSummary     String? // Kurzprofil für den Anschreiben-Generator
+  // Fester Anschreiben-Haupttext (Werdegang, Projekt(e), Abschluss) — wird
+  // unverändert in jedes generierte Anschreiben übernommen (siehe
+  // src/lib/coverLetterGenerator.ts). Nur Empfänger-Adresse, Datum, Anrede
+  // und Einleitungssatz variieren pro Bewerbung.
+  standardCoverLetterBody   String?
+  // Vorlage für den Einleitungssatz mit Platzhaltern {company}/{position}.
+  coverLetterOpeningSentence String?
   weeklyGoal         Int      @default(5) // Wochenziel für Bewerbungen
   // Mindest-Match-Score (%), ab dem ein Stellenangebot auf /jobs standardmäßig
   // als "passend" angezeigt wird (0 = Filter deaktiviert, alle anzeigen).

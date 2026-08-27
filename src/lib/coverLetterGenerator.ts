@@ -1,16 +1,20 @@
 // -----------------------------------------------------------------------------
-// Anschreiben- & Kommunikations-Generator (inkl. Multi-Tone & Follow-Up)
+// Anschreiben- & Kommunikations-Generator (fester Vorlagentext + Follow-Up)
 // -----------------------------------------------------------------------------
-// Erstellt maßgeschneiderte Anschreiben & Nachfass-E-Mails auf Basis von:
-//   - Unternehmensdaten (Name, Adresse, Ansprechpartner)
-//   - Stellenangebot (Titel, Anforderungsprofil, Tech-Stack) — optional
-//   - Bewerberprofil (Präferenzen, Ausbildungs-/Umschulungsdaten, Projekte)
-// Unterstützt 4 Tonalitäten: MODERN, CLASSIC, STARTUP, DETAILED.
+// Erstellt Anschreiben nach einem festen, vom Nutzer in den Einstellungen
+// hinterlegten Vorlagentext (Preferences.standardCoverLetterBody) — bewusst
+// KEINE pro Bewerbung neu komponierte Tonalität/Projekt-Hervorhebung mehr
+// (frühere Versionen dieses Generators variierten Werdegang-/Projekt-/
+// Abschlussabsatz je nach Tonalität und Stellenanzeige). Nur die folgenden
+// vier Teile werden je Bewerbung ausgetauscht, der Rest bleibt IMMER gleich:
+//   1. Empfänger-Adresse (Unternehmen)
+//   2. Bewerbungsdatum
+//   3. Anrede (aus dem hinterlegten Ansprechpartner)
+//   4. Einleitungssatz (kurzer Satz mit Unternehmen & Position)
+// Ein pro Unternehmen hinterlegter Einstiegsabsatz (Company.letterTemplate)
+// überschreibt weiterhin gezielt nur den Einleitungssatz — der feste
+// Haupttext (Werdegang, Projekt, Abschluss) bleibt davon unberührt.
 // -----------------------------------------------------------------------------
-
-import type { CoverLetterTone } from "./constants";
-
-export type { CoverLetterTone };
 
 export type CoverLetterCompany = {
   name: string;
@@ -18,8 +22,9 @@ export type CoverLetterCompany = {
   postalCode?: string | null;
   city?: string | null;
   contactName?: string | null;
-  // Eigener Standard-Einstiegsabsatz (siehe Company.letterTemplate) — ersetzt,
-  // falls gesetzt, den automatisch generierten Intro-Absatz unten.
+  // Eigener Einleitungssatz (siehe Company.letterTemplate) — ersetzt, falls
+  // gesetzt, den automatisch aus coverLetterOpeningSentence erzeugten
+  // Einleitungssatz unten. Der feste Haupttext bleibt davon unberührt.
   letterTemplate?: string | null;
 };
 
@@ -28,18 +33,6 @@ export type CoverLetterJob = {
   techStack?: string | null;
   requirementsProfile?: string | null;
 } | null;
-
-export type CoverLetterEducationEntry = {
-  type: string;
-  title: string;
-  institution?: string | null;
-};
-
-export type CoverLetterProjectEntry = {
-  title: string;
-  description?: string | null;
-  techStack?: string | null;
-};
 
 export type CoverLetterProfile = {
   fullName?: string | null;
@@ -51,16 +44,19 @@ export type CoverLetterProfile = {
   desiredRole: string;
   techStack: string;
   profileSummary?: string | null;
-  educationEntries: CoverLetterEducationEntry[];
-  projectEntries: CoverLetterProjectEntry[];
+  // Der feste Anschreiben-Haupttext (Werdegang, Projekt(e), Abschluss) —
+  // wird unverändert in jedes Anschreiben übernommen. Siehe Einstellungen →
+  // Profil & Präferenzen. Leer/nicht gesetzt -> Platzhaltertext mit Hinweis,
+  // den Text zu hinterlegen (siehe DEFAULT_BODY_PLACEHOLDER).
+  standardCoverLetterBody?: string | null;
+  // Vorlage für den Einleitungssatz mit den Platzhaltern {company}/{position},
+  // z.B. "hiermit bewerbe ich mich bei {company} als {position}.". Siehe
+  // Einstellungen → Profil & Präferenzen.
+  coverLetterOpeningSentence?: string | null;
 };
 
 export function today(): string {
   return new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "long", year: "numeric" }).format(new Date());
-}
-
-function findEntry(entries: CoverLetterEducationEntry[], type: string) {
-  return entries.find((e) => e.type === type);
 }
 
 /** Stellt sicher, dass ein Satzfragment mit einem Satzzeichen endet */
@@ -88,34 +84,23 @@ export function buildSalutation(contactName: string | null | undefined): string 
   return `Sehr geehrte${gender === "herr" ? "r" : ""} ${genderWord} ${nameForSalutation},`;
 }
 
-/** Ermittelt die Schnittmenge aus Profil-Tech-Stack und Job-Anforderungen */
-function relevantSkills(profileTechStack: string, job: CoverLetterJob): string[] {
-  const profileSkills = profileTechStack.split(",").map((s) => s.trim()).filter(Boolean);
-  if (!job) return profileSkills.slice(0, 4);
+const DEFAULT_OPENING_TEMPLATE = "hiermit bewerbe ich mich bei {company} als {position}.";
+const DEFAULT_BODY_PLACEHOLDER =
+  "[Noch kein fester Anschreiben-Text hinterlegt — trage ihn unter Einstellungen → Profil & Präferenzen ein, damit er automatisch in jedes Anschreiben übernommen wird.]";
 
-  const jobText = `${job.techStack ?? ""} ${job.requirementsProfile ?? ""}`.toLowerCase();
-  const overlapping = profileSkills.filter((s) => jobText.includes(s.toLowerCase()));
-  return (overlapping.length > 0 ? overlapping : profileSkills).slice(0, 5);
+/** Ersetzt {company}/{position} in der Einleitungssatz-Vorlage. */
+export function renderOpeningSentence(template: string | null | undefined, company: string, position: string): string {
+  const base = template?.trim() || DEFAULT_OPENING_TEMPLATE;
+  return ensureSentence(base.replaceAll("{company}", company).replaceAll("{position}", position));
 }
 
 export function generateCoverLetter(params: {
   company: CoverLetterCompany;
-  job: CoverLetterJob;
+  job?: CoverLetterJob;
   profile: CoverLetterProfile;
   position: string;
-  tone?: CoverLetterTone;
-  highlightProjectTitle?: string | null;
 }): string {
-  const { company, job, profile, position, tone = "MODERN", highlightProjectTitle } = params;
-
-  const ausbildung = findEntry(profile.educationEntries, "AUSBILDUNG");
-  const umschulung = findEntry(profile.educationEntries, "UMSCHULUNG");
-  
-  const project = highlightProjectTitle
-    ? profile.projectEntries.find((p) => p.title === highlightProjectTitle) ?? profile.projectEntries[0]
-    : profile.projectEntries[0];
-
-  const skills = relevantSkills(profile.techStack, job);
+  const { company, profile, position } = params;
 
   const senderBlock = [
     profile.fullName,
@@ -138,86 +123,14 @@ export function generateCoverLetter(params: {
 
   const salutation = buildSalutation(company.contactName);
 
-  // --- TONALITÄTEN ---
-  let introParagraph = "";
-  let backgroundParagraph = "";
-  let projectParagraph = "";
-  let closingParagraph = "";
+  // Ein pro Unternehmen hinterlegter Einstiegsabsatz (Company.letterTemplate)
+  // hat Vorrang vor dem automatisch aus der Vorlage erzeugten Einleitungssatz
+  // — der feste Haupttext (nächster Absatz) bleibt davon unberührt.
+  const openingSentence = company.letterTemplate?.trim()
+    ? ensureSentence(company.letterTemplate.trim())
+    : renderOpeningSentence(profile.coverLetterOpeningSentence, company.name, position);
 
-  const projectDetails = project
-    ? `Besonders stolz bin ich auf mein Projekt "${project.title}"${project.techStack ? ` (${project.techStack})` : ""}, ${ensureSentence(
-        project.description ?? "in dem ich eigenständig eine vollständige Anwendung von der Konzeption bis zur Umsetzung realisiert habe",
-      )} Dieses Projekt belegt meine Fähigkeit, komplexe Anforderungen selbstständig in funktionierende, nutzerfreundliche Software zu überführen.`
-    : "";
-
-  const jobFitSentence = job?.requirementsProfile
-    ? `Die von Ihnen beschriebenen Anforderungen decken sich optimal mit meinem Profil: ${ensureSentence(job.requirementsProfile)}`
-    : profile.profileSummary
-      ? ensureSentence(profile.profileSummary)
-      : "";
-
-  switch (tone) {
-    case "CLASSIC":
-      introParagraph = `hiermit bewerbe ich mich mit großem Interesse auf die von Ihnen ausgeschriebene Position als ${position}. Als qualifizierter ${profile.desiredRole} mit fundierten Kenntnissen in modernen Webtechnologien möchte ich mein Wissen und Engagement gewinnbringend in Ihr Unternehmen einbringen.`;
-      backgroundParagraph = [
-        ausbildung ? `Meinen beruflichen Werdegang begann ich mit einer Ausbildung ${ausbildung.title.includes("Ausbildung") ? "" : "zum "}${ausbildung.title}${ausbildung.institution ? ` bei ${ausbildung.institution}` : ""}, wodurch ich eine strukturierte und gewissenhafte Arbeitsweise verinnerlicht habe.` : "",
-        umschulung ? `Im Rahmen meiner Umschulung ${umschulung.title.toLowerCase().includes("umschulung") ? "" : "zur "}${umschulung.title}${umschulung.institution ? ` bei ${umschulung.institution}` : ""} habe ich meine Leidenschaft für die Softwareentwicklung professionalisiert und mir tiefgehende Kenntnisse in ${skills.join(", ")} erarbeitet.` : "",
-      ].filter(Boolean).join(" ");
-      projectParagraph = [projectDetails, jobFitSentence].filter(Boolean).join(" ");
-      closingParagraph = `Über die Gelegenheit, mich Ihnen in einem persönlichen Vorstellungsgespräch vorzustellen und Sie von meiner Eignung zu überzeugen, freue ich mich sehr.`;
-      break;
-
-    case "STARTUP":
-      introParagraph = `Ihre Ausschreibung für die Rolle als "${position}" bei ${company.name} hat mich sofort begeistert. Als praxisorientierter ${profile.desiredRole} brenne ich für moderne Frontend-Architekturen und möchte aktiv dazu beitragen, mit ${skills.join(", ")} erstklassige digitale Produkte für Ihr Team zu entwickeln.`;
-      backgroundParagraph = [
-        "Meine Stärke liegt im schnellen Einarbeiten in neue Technologien und im Finden pragmatischer, wartbarer Lösungen.",
-        umschulung ? `Mit dem gezielten Fokus auf Anwendungsentwicklung bringe ich frische Motivation, saubere Code-Standards und echte Begeisterung für nutzerzentrierte Web-Apps mit.` : "",
-      ].filter(Boolean).join(" ");
-      projectParagraph = [projectDetails, jobFitSentence].filter(Boolean).join(" ");
-      closingParagraph = `Lassen Sie uns gerne in einem Kennenlerngespräch darüber austauschen, wie ich Ihr Team ab sofort tatkräftig unterstützen kann.`;
-      break;
-
-    case "DETAILED":
-      introParagraph = `mit großem Enthusiasmus bewerbe ich mich bei ${company.name} als ${position}. Mit meinem Profil als ${profile.desiredRole} bringe ich die ideale Kombination aus handwerklich präziser Denkweise, solider technischer Ausbildung und fundierter Expertise in ${skills.join(", ")} mit.`;
-      backgroundParagraph = [
-        ausbildung ? `Fundiertes technisches Verständnis, Prozessdisziplin und lösungsorientiertes Denken wurden bereits während meiner ersten Ausbildung ${ausbildung.title.includes("Ausbildung") ? "" : "zum "}${ausbildung.title} fest verankert.` : "",
-        umschulung ? `Die zielgerichtete Umschulung ${umschulung.title.toLowerCase().includes("umschulung") ? "" : "zur "}${umschulung.title} ermöglichte mir eine intensive Vertiefung in Fullstack- und Frontend-Entwicklung (TypeScript, React, moderne CSS-Frameworks & REST/API-Design).` : "",
-      ].filter(Boolean).join(" ");
-      projectParagraph = [
-        projectDetails,
-        "Besonderen Wert lege ich auf modulare Komponenten, saubere Typisierung, Performance-Optimierung und intuitive UI/UX.",
-        jobFitSentence,
-      ].filter(Boolean).join(" ");
-      closingParagraph = `Ich freue mich darauf, meine Fähigkeiten zeitnah in Ihre aktuellen Projekte einzubringen und überzeuge Sie gerne persönlich von meinen Qualifikationen.`;
-      break;
-
-    case "MODERN":
-    default:
-      introParagraph = `mit großem Interesse habe ich Ihre Stellenanzeige für die Position "${position}" gelesen. Als ${profile.desiredRole} mit Schwerpunkt Frontend-Entwicklung möchte ich mich bei ${company.name} bewerben und meine Erfahrung im Umgang mit ${skills.join(", ")} in Ihr Team einbringen.`;
-      backgroundParagraph = [
-        ausbildung ? `Meine berufliche Laufbahn habe ich mit der Ausbildung ${ausbildung.title.includes("Ausbildung") ? "" : "zum "}${ausbildung.title}${ausbildung.institution ? ` bei ${ausbildung.institution}` : ""} begonnen und dabei ein solides technisches Grundverständnis sowie eine strukturierte, präzise Arbeitsweise entwickelt.` : "",
-        umschulung ? `Durch die anschließende Umschulung ${umschulung.title.toLowerCase().includes("umschulung") ? "" : "zur "}${umschulung.title}${umschulung.institution ? ` bei ${umschulung.institution}` : ""} habe ich mich konsequent in Richtung Softwareentwicklung weiterentwickelt und mir fundierte Kenntnisse in ${skills.join(", ")} angeeignet.` : "",
-      ].filter(Boolean).join(" ");
-      projectParagraph = [projectDetails, jobFitSentence].filter(Boolean).join(" ");
-      closingParagraph = `Ich bringe eine hohe Lernbereitschaft, Teamfähigkeit und Freude an der Entwicklung moderner, nutzerfreundlicher Web-Anwendungen mit. Gerne überzeuge ich Sie in einem persönlichen Gespräch von meiner Motivation und meinen Fähigkeiten.`;
-      break;
-  }
-
-  // Eigene Unternehmens-Vorlage (Company.letterTemplate) hat Vorrang vor dem
-  // automatisch generierten Intro-Absatz — spart Zeit bei Unternehmen, für
-  // die bereits ein maßgeschneiderter Einstieg hinterlegt wurde, während der
-  // Rest des Anschreibens (Werdegang, Projekt, Abschluss) weiterhin
-  // automatisch aus dem Profil erzeugt wird.
-  if (company.letterTemplate?.trim()) {
-    introParagraph = ensureSentence(company.letterTemplate.trim());
-  }
-
-  const paragraphs = [
-    introParagraph,
-    backgroundParagraph,
-    projectParagraph,
-    closingParagraph,
-  ].filter((p) => p && p.trim().length > 0);
+  const body = profile.standardCoverLetterBody?.trim() || DEFAULT_BODY_PLACEHOLDER;
 
   return [
     senderBlock,
@@ -230,7 +143,8 @@ export function generateCoverLetter(params: {
     "",
     salutation,
     "",
-    ...paragraphs.map((p) => p + "\n"),
+    `${openingSentence}\n`,
+    `${body}\n`,
     "Mit freundlichen Grüßen",
     profile.fullName ?? "",
   ].join("\n");

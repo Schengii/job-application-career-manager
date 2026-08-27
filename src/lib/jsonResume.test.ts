@@ -18,6 +18,8 @@ describe("jsonResume", () => {
     remotePreference: "HYBRID",
     minSalary: 48000,
     profileSummary: "Frontend Developer",
+    standardCoverLetterBody: null,
+    coverLetterOpeningSentence: null,
     weeklyGoal: 5,
     excludedCompanies: null,
     excludedKeywords: null,

@@ -8,14 +8,15 @@
 // automatisch das komplette "Standard-Bewerbungspaket" vorbereitet:
 //   - alle als Standard markierten Dokumente (Document.isDefault, siehe
 //     Einstellungen → Dokumente) werden angehängt
-//   - ein Anschreiben wird generiert (inkl. eigener Firmen-Vorlage/-Tonalität,
-//     falls für das Unternehmen hinterlegt, siehe coverLetterGenerator.ts)
+//   - ein Anschreiben wird aus dem festen Vorlagentext generiert (siehe
+//     Einstellungen → Profil & Präferenzen, coverLetterGenerator.ts) — nur
+//     Empfänger-Adresse, Datum, Anrede & Einleitungssatz werden ausgetauscht
 // Beides bleibt im Bewerbungs-Detail jederzeit änderbar/ersetzbar.
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiUtils";
-import { generateCoverLetter, type CoverLetterTone } from "@/lib/coverLetterGenerator";
+import { generateCoverLetter } from "@/lib/coverLetterGenerator";
 import { getPreferencesWithProfile } from "@/lib/preferences";
 
 type Params = { params: Promise<{ id: string }> };
@@ -64,15 +65,15 @@ export async function POST(_request: NextRequest, { params }: Params) {
       });
     }
 
-    // Anschreiben automatisch generieren (nutzt ggf. die für dieses
-    // Unternehmen hinterlegte eigene Vorlage/Tonalität).
+    // Anschreiben automatisch aus dem festen Vorlagentext generieren (siehe
+    // src/lib/coverLetterGenerator.ts) — nutzt ggf. den für dieses
+    // Unternehmen hinterlegten eigenen Einleitungssatz.
     const profile = await getPreferencesWithProfile();
     const coverLetterContent = generateCoverLetter({
       company: application.company,
       job: application.jobPosting,
       profile,
       position: application.position,
-      tone: (application.company.preferredTone as CoverLetterTone | null) ?? undefined,
     });
     await prisma.coverLetter.create({
       data: { applicationId: application.id, content: coverLetterContent, status: "DRAFT" },

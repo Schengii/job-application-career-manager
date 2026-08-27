@@ -1,24 +1,20 @@
 "use client";
 
 // -----------------------------------------------------------------------------
-// Anschreiben-Panel mit Tonalitäts-Auswahl, DIN 5008 Druck & Nachfass-Generator
+// Anschreiben-Panel: feste Vorlage, DIN 5008 Druck & Nachfass-Generator
 // -----------------------------------------------------------------------------
 import { useState } from "react";
 import useSWR from "swr";
 import { Sparkles, Save, Send, Printer, Mail } from "lucide-react";
 import { apiPost, apiPatch, fetcher } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
-import { Textarea, Select } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { CoverLetterStatusBadge } from "@/components/status-badge";
-import type { ApplicationDetail, CoverLetter, PreferencesWithProfile } from "@/types";
-import type { CoverLetterTone } from "@/lib/coverLetterGenerator";
-import { COVER_LETTER_TONES } from "@/lib/constants";
+import type { ApplicationDetail, CoverLetter } from "@/types";
 import { CoverLetterPrintModal } from "./cover-letter-print-modal";
 import { FollowUpEmailModal } from "./follow-up-email-modal";
 import { CoverLetterKeywordBooster } from "./cover-letter-keyword-booster";
-
-const TONES = COVER_LETTER_TONES;
 
 export function CoverLetterPanel({
   application,
@@ -28,15 +24,11 @@ export function CoverLetterPanel({
   onChange: () => void;
 }) {
   const toast = useToast();
-  const { data: preferences } = useSWR<PreferencesWithProfile>("/api/preferences", fetcher);
+  // Nur für den eigenen Namen im Betreff des "Als E-Mail öffnen"-Buttons
+  // (handleOpenMailClient) benötigt.
+  const { data: preferences } = useSWR<{ fullName: string | null }>("/api/preferences", fetcher);
 
   const [content, setContent] = useState(application.coverLetter?.content ?? "");
-  // Ist für dieses Unternehmen eine bevorzugte Tonalität hinterlegt (siehe
-  // Unternehmens-Karte), wird sie hier als Startwert vorausgewählt.
-  const [tone, setTone] = useState<CoverLetterTone>(
-    (application.company.preferredTone as CoverLetterTone | null) ?? "MODERN"
-  );
-  const [selectedProject, setSelectedProject] = useState<string>("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -44,7 +36,6 @@ export function CoverLetterPanel({
   const [followUpModalOpen, setFollowUpModalOpen] = useState(false);
 
   const coverLetter = application.coverLetter;
-  const projectEntries = preferences?.projectEntries ?? [];
 
   const [polishing, setPolishing] = useState(false);
 
@@ -83,8 +74,6 @@ export function CoverLetterPanel({
     try {
       const result = await apiPost<CoverLetter>("/api/cover-letters/generate", {
         applicationId: application.id,
-        tone,
-        highlightProjectTitle: selectedProject || undefined,
       });
       setContent(result.content);
       onChange();
@@ -149,48 +138,12 @@ export function CoverLetterPanel({
       {/* Steuerungsleiste */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
         <div className="flex flex-wrap items-center gap-2">
-          <div>
-            <label htmlFor="tone-select" className="sr-only">
-              Tonalität
-            </label>
-            <Select
-              id="tone-select"
-              value={tone}
-              onChange={(e) => setTone(e.target.value as CoverLetterTone)}
-              className="h-8 text-xs py-1 w-auto"
-            >
-              {TONES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          {projectEntries.length > 0 && (
-            <div>
-              <label htmlFor="project-select" className="sr-only">
-                Hervorgehobenes Projekt
-              </label>
-              <Select
-                id="project-select"
-                value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
-                className="h-8 text-xs py-1 w-auto"
-              >
-                <option value="">Standard-Projekt ({projectEntries[0]?.title})</option>
-                {projectEntries.map((p) => (
-                  <option key={p.id} value={p.title}>
-                    Projekt: {p.title}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          )}
-
+          <span className="text-[11px] text-muted-foreground">
+            Nutzt deine feste Anschreiben-Vorlage (Einstellungen → Profil & Präferenzen)
+          </span>
           {application.company.letterTemplate && (
             <span className="text-[11px] font-medium text-primary" title={application.company.letterTemplate}>
-              Eigene Vorlage für {application.company.name} wird als Einstieg verwendet
+              — eigener Einleitungssatz für {application.company.name} wird verwendet
             </span>
           )}
         </div>

@@ -140,6 +140,8 @@ CREATE TABLE "Preferences" (
     "remotePreference" TEXT NOT NULL DEFAULT 'HYBRID',
     "minSalary" INTEGER,
     "profileSummary" TEXT,
+    "standardCoverLetterBody" TEXT,
+    "coverLetterOpeningSentence" TEXT,
     "weeklyGoal" INTEGER NOT NULL DEFAULT 5,
     "minMatchScore" INTEGER NOT NULL DEFAULT 0,
     "excludedCompanies" TEXT,

@@ -36,6 +36,8 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
     remotePreference: preferences.remotePreference,
     minSalary: preferences.minSalary ?? 0,
     profileSummary: preferences.profileSummary ?? "",
+    standardCoverLetterBody: preferences.standardCoverLetterBody ?? "",
+    coverLetterOpeningSentence: preferences.coverLetterOpeningSentence ?? "",
     weeklyGoal: preferences.weeklyGoal ?? 5,
     minMatchScore: preferences.minMatchScore ?? 0,
     excludedCompanies: preferences.excludedCompanies ?? "",
@@ -413,6 +415,47 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
             rows={3}
             value={form.profileSummary}
             onChange={(e) => setForm({ ...form, profileSummary: e.target.value })}
+          />
+        </Field>
+      </section>
+
+      {/* Feste Anschreiben-Vorlage: wird bei "Direkt bewerben" und jedem
+          generierten Anschreiben unverändert übernommen — nur Empfänger-
+          Adresse, Datum, Anrede und Einleitungssatz variieren pro Bewerbung
+          (siehe src/lib/coverLetterGenerator.ts). */}
+      <section className="rounded-xl border border-border bg-surface-hover/40 p-4 space-y-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Building2 className="h-4 w-4 text-primary" />
+          <span>Feste Anschreiben-Vorlage</span>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Dieser Text wird bei jeder Bewerbung (inkl. „Direkt bewerben&rdquo; in der Jobsuche) unverändert übernommen.
+          Nur Empfänger-Adresse, Datum, Anrede und der Einleitungssatz unten werden automatisch pro Unternehmen
+          angepasst — der Rest bleibt immer gleich.
+        </p>
+        <Field
+          label="Einleitungssatz-Vorlage"
+          htmlFor="p-opening-sentence"
+          hint='Platzhalter {company} und {position} werden automatisch ersetzt, z. B. "hiermit bewerbe ich mich bei {company} als {position}."'
+        >
+          <Input
+            id="p-opening-sentence"
+            value={form.coverLetterOpeningSentence}
+            onChange={(e) => setForm({ ...form, coverLetterOpeningSentence: e.target.value })}
+            placeholder="hiermit bewerbe ich mich bei {company} als {position}."
+          />
+        </Field>
+        <Field
+          label="Fester Haupttext (Werdegang, Projekt, Abschluss)"
+          htmlFor="p-cover-letter-body"
+          hint="Wird 1:1 in jedes generierte Anschreiben übernommen, direkt nach dem Einleitungssatz."
+        >
+          <Textarea
+            id="p-cover-letter-body"
+            rows={10}
+            className="font-mono text-sm leading-relaxed"
+            value={form.standardCoverLetterBody}
+            onChange={(e) => setForm({ ...form, standardCoverLetterBody: e.target.value })}
           />
         </Field>
       </section>

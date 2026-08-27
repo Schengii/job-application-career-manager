@@ -9,7 +9,7 @@ import { z } from "zod";
 import { batchActionSchema } from "@/lib/validation";
 import { addTag, removeTag } from "@/lib/tags";
 import { createAutoSnapshot } from "@/lib/serverBackupRotation";
-import { generateCoverLetter, type CoverLetterTone } from "@/lib/coverLetterGenerator";
+import { generateCoverLetter } from "@/lib/coverLetterGenerator";
 import { getPreferencesWithProfile } from "@/lib/preferences";
 
 const bulkRowSchema = z.object({
@@ -125,7 +125,6 @@ export async function POST(request: NextRequest) {
               job: application.jobPosting,
               profile,
               position: application.position,
-              tone: (application.company.preferredTone as CoverLetterTone | null) ?? undefined,
             });
             await prisma.coverLetter.create({ data: { applicationId: id, content, status: "DRAFT" } });
             coverLettersGenerated += 1;

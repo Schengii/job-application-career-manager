@@ -120,6 +120,12 @@ export const preferencesSchema = z.object({
   remotePreference: z.enum(REMOTE_PREFERENCE_VALUES).optional(),
   minSalary: z.number().int().optional().nullable(),
   profileSummary: z.string().optional().nullable(),
+  // Fester Anschreiben-Haupttext + Einleitungssatz-Vorlage (siehe
+  // src/lib/coverLetterGenerator.ts) — werden unverändert in jedes generierte
+  // Anschreiben übernommen, nur Empfänger/Datum/Anrede/Einleitungssatz
+  // variieren pro Bewerbung.
+  standardCoverLetterBody: z.string().optional().nullable(),
+  coverLetterOpeningSentence: z.string().optional().nullable(),
   weeklyGoal: z.number().int().min(1).max(50).optional(),
   minMatchScore: z.number().int().min(0).max(100).optional(),
   excludedCompanies: z.string().optional().nullable(),
@@ -182,8 +188,6 @@ export const projectEntryUpdateSchema = projectEntrySchema.partial();
 
 export const coverLetterGenerateSchema = z.object({
   applicationId: z.string().min(1),
-  tone: z.enum(COVER_LETTER_TONE_VALUES).optional(),
-  highlightProjectTitle: z.string().optional().nullable(),
 });
 
 export const coverLetterUpdateSchema = z.object({
@@ -223,6 +227,8 @@ export const backupPreferencesSchema = z
     remotePreference: z.string().optional(),
     minSalary: z.number().nullable().optional(),
     profileSummary: z.string().nullable().optional(),
+    standardCoverLetterBody: z.string().nullable().optional(),
+    coverLetterOpeningSentence: z.string().nullable().optional(),
     weeklyGoal: z.number().optional(),
     excludedCompanies: z.string().nullable().optional(),
     excludedKeywords: z.string().nullable().optional(),

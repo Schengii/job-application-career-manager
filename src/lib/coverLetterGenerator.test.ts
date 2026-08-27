@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generateCoverLetter, generateFollowUpEmail } from "./coverLetterGenerator";
+import { generateCoverLetter, generateFollowUpEmail, renderOpeningSentence } from "./coverLetterGenerator";
 
 const profile = {
   fullName: "Max Mustermann",
@@ -11,21 +11,15 @@ const profile = {
   desiredRole: "Fachinformatiker für Anwendungsentwicklung",
   techStack: "TypeScript,React,CSS",
   profileSummary: "Motivierter Fachinformatiker mit Frontend-Fokus.",
-  educationEntries: [
-    { type: "AUSBILDUNG", title: "Elektroniker für Betriebstechnik", institution: "IHK Bonn" },
-    { type: "UMSCHULUNG", title: "Fachinformatiker für Anwendungsentwicklung", institution: "IHK Bonn" },
-  ],
-  projectEntries: [
-    { title: "electroCheck-ai", description: "eine KI-gestützte Prüf-Anwendung", techStack: "TypeScript,React" },
-    { title: "career-dashboard", description: "ein modernes Dashboard zur Verwaltung", techStack: "Next.js,TypeScript" },
-  ],
+  standardCoverLetterBody:
+    "Während meiner Umschulung habe ich mir fundierte Kenntnisse in TypeScript und React erarbeitet.\n\nBesonders stolz bin ich auf mein Projekt „electroCheck-ai“.",
+  coverLetterOpeningSentence: "hiermit bewerbe ich mich bei {company} als {position}.",
 };
 
 describe("generateCoverLetter", () => {
   it("verwendet eine korrekte, geschlechtsspezifische Anrede mit Nachname statt Vorname", () => {
     const letter = generateCoverLetter({
       company: { name: "Musterfirma GmbH", contactName: "Frau Dr. Julia Weber" },
-      job: null,
       profile,
       position: "Frontend-Entwickler",
     });
@@ -36,7 +30,6 @@ describe("generateCoverLetter", () => {
   it("verwendet die korrekte männliche Anrede", () => {
     const letter = generateCoverLetter({
       company: { name: "Musterfirma GmbH", contactName: "Herr Thomas Klein" },
-      job: null,
       profile,
       position: "Frontend-Entwickler",
     });
@@ -46,69 +39,78 @@ describe("generateCoverLetter", () => {
   it("fällt ohne Ansprechpartner auf die neutrale Anrede zurück", () => {
     const letter = generateCoverLetter({
       company: { name: "Musterfirma GmbH" },
-      job: null,
       profile,
       position: "Frontend-Entwickler",
     });
     expect(letter).toContain("Sehr geehrte Damen und Herren,");
   });
 
-  it("fügt zwischen Projektbeschreibung und Folgesatz ein Satzzeichen ein (Regression)", () => {
+  it("übernimmt den festen Anschreiben-Haupttext unverändert", () => {
     const letter = generateCoverLetter({
       company: { name: "Musterfirma GmbH" },
-      job: null,
       profile,
       position: "Frontend-Entwickler",
     });
-    expect(letter).toContain("eine KI-gestützte Prüf-Anwendung. Dieses Projekt");
+    expect(letter).toContain(profile.standardCoverLetterBody);
   });
 
-  it("unterstützt die Tonalität CLASSIC mit formeller Ansprache", () => {
+  it("baut den Einleitungssatz aus der Vorlage mit Unternehmen & Position", () => {
     const letter = generateCoverLetter({
-      company: { name: "Großkonzern AG" },
-      job: null,
+      company: { name: "Acme GmbH" },
       profile,
       position: "Softwareentwickler",
-      tone: "CLASSIC",
     });
-    expect(letter).toContain("hiermit bewerbe ich mich mit großem Interesse");
-    expect(letter).toContain("Über die Gelegenheit, mich Ihnen in einem persönlichen Vorstellungsgespräch vorzustellen");
+    expect(letter).toContain("hiermit bewerbe ich mich bei Acme GmbH als Softwareentwickler.");
   });
 
-  it("unterstützt die Tonalität STARTUP mit agilem Fokus", () => {
+  it("nutzt für zwei unterschiedliche Unternehmen denselben Haupttext, aber unterschiedliche Kopfdaten", () => {
+    const letterA = generateCoverLetter({ company: { name: "Firma A", city: "Köln" }, profile, position: "Entwickler" });
+    const letterB = generateCoverLetter({ company: { name: "Firma B", city: "München" }, profile, position: "Entwickler" });
+
+    // Kopfbereich (Empfänger-Adresse) unterscheidet sich ...
+    expect(letterA).toContain("Firma A");
+    expect(letterA).toContain("Köln");
+    expect(letterB).toContain("Firma B");
+    expect(letterB).toContain("München");
+    // ... der feste Haupttext bleibt in beiden identisch.
+    const bodyA = letterA.split(profile.standardCoverLetterBody!.split("\n\n")[0])[1];
+    const bodyB = letterB.split(profile.standardCoverLetterBody!.split("\n\n")[0])[1];
+    expect(bodyA).toBe(bodyB);
+  });
+
+  it("verwendet einen pro Unternehmen hinterlegten Einleitungssatz (Company.letterTemplate) anstelle der Vorlage", () => {
     const letter = generateCoverLetter({
-      company: { name: "Tech Startup GmbH" },
-      job: null,
+      company: { name: "Acme GmbH", letterTemplate: "Ihre Mission hat mich sofort überzeugt" },
       profile,
-      position: "Frontend-Entwickler",
-      tone: "STARTUP",
+      position: "Softwareentwickler",
     });
-    expect(letter).toContain("Ihre Ausschreibung für die Rolle als \"Frontend-Entwickler\" bei Tech Startup GmbH hat mich sofort begeistert");
-    expect(letter).toContain("Lassen Sie uns gerne in einem Kennenlerngespräch");
+    expect(letter).toContain("Ihre Mission hat mich sofort überzeugt.");
+    expect(letter).not.toContain("hiermit bewerbe ich mich bei Acme GmbH");
+    // Der feste Haupttext bleibt trotz eigenem Einleitungssatz unverändert.
+    expect(letter).toContain(profile.standardCoverLetterBody);
   });
 
-  it("unterstützt die Tonalität DETAILED mit Fokus auf Umschulung & Tech-Stack", () => {
-    const letter = generateCoverLetter({
-      company: { name: "DevOps Solutions GmbH" },
-      job: null,
-      profile,
-      position: "Fullstack Developer",
-      tone: "DETAILED",
-    });
-    expect(letter).toContain("mit großem Enthusiasmus bewerbe ich mich");
-    expect(letter).toContain("Besonderen Wert lege ich auf modulare Komponenten");
-  });
-
-  it("erlaubt die gezielte Auswahl des hervorzuhebenden Projekts", () => {
+  it("zeigt einen Platzhalter-Hinweis, wenn noch kein fester Haupttext hinterlegt ist", () => {
     const letter = generateCoverLetter({
       company: { name: "Musterfirma GmbH" },
-      job: null,
-      profile,
+      profile: { ...profile, standardCoverLetterBody: null },
       position: "Frontend-Entwickler",
-      highlightProjectTitle: "career-dashboard",
     });
-    expect(letter).toContain("career-dashboard");
-    expect(letter).toContain("ein modernes Dashboard zur Verwaltung");
+    expect(letter).toContain("Noch kein fester Anschreiben-Text hinterlegt");
+  });
+});
+
+describe("renderOpeningSentence", () => {
+  it("ersetzt {company} und {position} in der Vorlage", () => {
+    expect(renderOpeningSentence("Bewerbung bei {company} als {position}", "Acme GmbH", "Entwickler")).toBe(
+      "Bewerbung bei Acme GmbH als Entwickler."
+    );
+  });
+
+  it("fällt ohne Vorlage auf einen Standardsatz zurück", () => {
+    expect(renderOpeningSentence(null, "Acme GmbH", "Entwickler")).toBe(
+      "hiermit bewerbe ich mich bei Acme GmbH als Entwickler."
+    );
   });
 });
 

@@ -18,6 +18,8 @@ describe("atsChecker", () => {
     remotePreference: "HYBRID",
     minSalary: 48000,
     profileSummary: "Fachinformatiker für Anwendungsentwicklung mit starkem Fokus auf modernes React, TypeScript und Fullstack Next.js Entwicklung.",
+    standardCoverLetterBody: null,
+    coverLetterOpeningSentence: null,
     weeklyGoal: 5,
     excludedCompanies: null,
     excludedKeywords: null,

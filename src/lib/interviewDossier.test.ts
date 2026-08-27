@@ -81,6 +81,8 @@ describe("interviewDossier generator", () => {
     remotePreference: "HYBRID",
     minSalary: 45000,
     profileSummary: "Motivierter Frontend Entwickler",
+    standardCoverLetterBody: null,
+    coverLetterOpeningSentence: null,
     weeklyGoal: 5,
     excludedCompanies: null,
     excludedKeywords: null,

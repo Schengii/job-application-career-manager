@@ -18,6 +18,8 @@ describe("cvGenerator", () => {
     minSalary: null,
     remotePreference: "REMOTE",
     profileSummary: "Motivierter Frontend-Entwickler mit technischem Hintergrund.",
+    standardCoverLetterBody: null,
+    coverLetterOpeningSentence: null,
     weeklyGoal: 5,
     excludedCompanies: null,
     excludedKeywords: null,
