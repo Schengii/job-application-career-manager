@@ -14,6 +14,13 @@ import type { Prisma } from "@/generated/prisma/client";
 
 export type ApplicationSortOption = "DATE_DESC" | "DATE_ASC" | "COMPANY_ASC" | "STATUS";
 
+// Antwortform von GET /api/applications/status-counts — Facet-Counts pro
+// Status unter den übrigen aktiven Filtern, genutzt von der Excel-
+// Tabellenansicht (src/components/excel/excel-grid-table.tsx) für die
+// Zähler in den Status-Dropdown-Optionen (die sonst nur die aktuell
+// geladene Seite zählen würden statt aller Bewerbungen).
+export type ApplicationStatusCounts = { total: number; byStatus: Record<string, number> };
+
 export type ApplicationQueryParams = {
   status?: string | null;
   portal?: string | null;

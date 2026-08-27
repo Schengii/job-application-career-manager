@@ -28,6 +28,7 @@ import { useToast } from "@/components/ui/toast";
 import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/constants";
 import type { ApplicationListItem } from "@/types";
 import type { PaginatedResult } from "@/lib/apiUtils";
+import type { ApplicationStatusCounts } from "@/lib/applicationQuery";
 import { applicationsToCsv, downloadCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
 import { ExcelImportModal } from "@/components/excel/excel-import-modal";
@@ -113,6 +114,20 @@ function buildFilteredQueryUrl(page: number, filters: CommittedFilters): string 
   if (filters.onlyFollowUps) params.set("onlyFollowUps", "true");
   params.set("sortBy", filters.sortBy);
   return `/api/applications?${params.toString()}`;
+}
+
+/**
+ * Baut die Query-URL für die Status-Facet-Counts (s. status-counts/route.ts)
+ * — bewusst OHNE `status` selbst: die Zählung pro Status soll unabhängig von
+ * einem ggf. bereits gewählten Status sein (sonst würden die anderen
+ * Dropdown-Optionen sofort 0 anzeigen, sobald ein Status ausgewählt ist).
+ */
+function buildStatusCountsQueryUrl(filters: CommittedFilters): string {
+  const params = new URLSearchParams();
+  if (filters.portal !== "ALL") params.set("portal", filters.portal);
+  if (filters.search.trim()) params.set("search", filters.search.trim());
+  if (filters.onlyFollowUps) params.set("onlyFollowUps", "true");
+  return `/api/applications/status-counts?${params.toString()}`;
 }
 
 /** Wandelt ein ApplicationListItem aus der API in eine editierbare Grid-Zeile um. */
@@ -207,6 +222,13 @@ function ExcelGridContent({
   // anderen Filterkombination gehören als die bereits geladenen Zeilen.
   const appliedFiltersRef = useRef<CommittedFilters>(DEFAULT_FILTERS);
 
+  // Treibt den Status-Facet-Counts-Request unten an (nur portal/search/
+  // onlyFollowUps sind relevant, s. buildStatusCountsQueryUrl) — wird IMMER
+  // zusammen mit appliedFiltersRef aktualisiert, also erst NACHDEM ein
+  // Filterwechsel tatsächlich angewendet wurde (nicht bei jedem Tastendruck
+  // oder bei einer wegen ungespeicherter Änderungen abgelehnten Änderung).
+  const [countsFilters, setCountsFilters] = useState<CommittedFilters>(DEFAULT_FILTERS);
+
   /**
    * Lädt Seite 1 unter den übergebenen Filtern neu und ersetzt die bisher
    * geladenen (gespeicherten) Zeilen damit — ungespeicherte neue Zeilen
@@ -224,6 +246,7 @@ function ExcelGridContent({
       setTotal(result.total);
       setLoadedPages(1);
       appliedFiltersRef.current = filters;
+      setCountsFilters(filters);
     } catch {
       toast.error("Gefilterte Bewerbungen konnten nicht geladen werden.");
     } finally {
@@ -272,6 +295,17 @@ function ExcelGridContent({
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- commitFilterChange liest bewusst nur über Refs (rowsRef/appliedFiltersRef), kein stale-closure-Risiko.
   }, [searchQuery]);
+
+  // Facet-Counts pro Status für die Dropdown-Optionen (s. status-counts/
+  // route.ts) — reagiert auf `countsFilters`, das erst NACH einem tatsächlich
+  // angewendeten Filterwechsel aktualisiert wird (s. reloadFirstPage). Läuft
+  // bewusst über SWR statt über einen manuellen Effect-Aufruf: rein lesend,
+  // ohne Risiko für ungespeicherte Änderungen, daher kein commitFilterChange-
+  // Gate nötig.
+  const { data: statusCounts } = useSWR<ApplicationStatusCounts>(
+    buildStatusCountsQueryUrl(countsFilters),
+    fetcher
+  );
 
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [columnPopoverOpen, setColumnPopoverOpen] = useState(false);
@@ -594,10 +628,15 @@ function ExcelGridContent({
             }}
             className="h-8 w-auto text-xs"
           >
-            <option value="ALL">Alle Status ({rows.length})</option>
+            {/* Zähler kommen aus dem Facet-Counts-Endpoint (über alle
+                Bewerbungen, nicht nur die aktuell geladene Seite) — bis zum
+                ersten Laden wird kein Zähler angezeigt statt eines
+                irreführenden 0. */}
+            <option value="ALL">Alle Status{statusCounts ? ` (${statusCounts.total})` : ""}</option>
             {APPLICATION_STATUSES.map((s) => (
               <option key={s.value} value={s.value}>
-                {s.label} ({rows.filter((r) => r.status === s.value).length})
+                {s.label}
+                {statusCounts ? ` (${statusCounts.byStatus[s.value] ?? 0})` : ""}
               </option>
             ))}
           </Select>
