@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     const profile = await getPreferencesWithProfile();
 
-    const content = generateCoverLetter({
+    const { content, usedAiForOpening } = await generateCoverLetter({
       company: application.company,
       job: application.jobPosting,
       profile,
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       create: { applicationId, content, status: "DRAFT" },
     });
 
-    return NextResponse.json(coverLetter, { status: 201 });
+    return NextResponse.json({ ...coverLetter, usedAiForOpening }, { status: 201 });
   } catch (error) {
     return handleApiError(error);
   }

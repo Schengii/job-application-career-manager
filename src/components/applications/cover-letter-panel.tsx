@@ -72,12 +72,16 @@ export function CoverLetterPanel({
   async function handleGenerate() {
     setGenerating(true);
     try {
-      const result = await apiPost<CoverLetter>("/api/cover-letters/generate", {
+      const result = await apiPost<CoverLetter & { usedAiForOpening: boolean }>("/api/cover-letters/generate", {
         applicationId: application.id,
       });
       setContent(result.content);
       onChange();
-      toast.success("Anschreiben wurde neu generiert.");
+      toast.success(
+        result.usedAiForOpening
+          ? "Anschreiben generiert — Einleitungssatz individuell per KI formuliert."
+          : "Anschreiben generiert — Einleitungssatz aus der Vorlage (kein KI-Provider konfiguriert oder Anfrage fehlgeschlagen)."
+      );
     } catch {
       toast.error("Anschreiben konnte nicht generiert werden.");
     } finally {
@@ -139,7 +143,7 @@ export function CoverLetterPanel({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[11px] text-muted-foreground">
-            Nutzt deine feste Anschreiben-Vorlage (Einstellungen → Profil & Präferenzen)
+            Fester Haupttext + individueller, per KI formulierter Einleitungssatz (Einstellungen → Profil & Präferenzen)
           </span>
           {application.company.letterTemplate && (
             <span className="text-[11px] font-medium text-primary" title={application.company.letterTemplate}>

@@ -419,10 +419,12 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
         </Field>
       </section>
 
-      {/* Feste Anschreiben-Vorlage: wird bei "Direkt bewerben" und jedem
-          generierten Anschreiben unverändert übernommen — nur Empfänger-
-          Adresse, Datum, Anrede und Einleitungssatz variieren pro Bewerbung
-          (siehe src/lib/coverLetterGenerator.ts). */}
+      {/* Feste Anschreiben-Vorlage: der Haupttext wird bei "Direkt bewerben"
+          und jedem generierten Anschreiben unverändert übernommen. Nur
+          Empfänger-Adresse, Datum, Anrede und der Einleitungssatz variieren
+          pro Bewerbung — der Einleitungssatz wird bei konfiguriertem
+          KI-Provider individuell generiert, die Vorlage hier ist der
+          Fallback (siehe src/lib/coverLetterGenerator.ts). */}
       <section className="rounded-xl border border-border bg-surface-hover/40 p-4 space-y-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <Building2 className="h-4 w-4 text-primary" />
@@ -430,11 +432,16 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
         </div>
         <p className="text-xs text-muted-foreground leading-relaxed">
           Dieser Text wird bei jeder Bewerbung (inkl. „Direkt bewerben&rdquo; in der Jobsuche) unverändert übernommen.
-          Nur Empfänger-Adresse, Datum, Anrede und der Einleitungssatz unten werden automatisch pro Unternehmen
-          angepasst — der Rest bleibt immer gleich.
+          Empfänger-Adresse, Datum und Anrede werden automatisch pro Unternehmen angepasst — der Rest bleibt immer gleich.
+        </p>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Der <strong>Einleitungssatz</strong> wird bei konfiguriertem KI-Provider (Abschnitt unten) individuell pro
+          Unternehmen formuliert — je mehr Notizen du bei einem Unternehmen hinterlegst (Unternehmens-Detailseite →
+          Bearbeiten → Notizen), desto passender wird der Satz. Ohne KI-Provider (oder bei einer Massenaktion über
+          viele Bewerbungen) greift stattdessen die feste Vorlage unten.
         </p>
         <Field
-          label="Einleitungssatz-Vorlage"
+          label="Einleitungssatz-Vorlage (Fallback ohne KI)"
           htmlFor="p-opening-sentence"
           hint='Platzhalter {company} und {position} werden automatisch ersetzt, z. B. "mit großem Interesse habe ich Ihre Stellenanzeige für die Position als {position} bei {company} gelesen."'
         >

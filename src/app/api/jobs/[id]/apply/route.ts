@@ -10,7 +10,8 @@
 //     Einstellungen → Dokumente) werden angehängt
 //   - ein Anschreiben wird aus dem festen Vorlagentext generiert (siehe
 //     Einstellungen → Profil & Präferenzen, coverLetterGenerator.ts) — nur
-//     Empfänger-Adresse, Datum, Anrede & Einleitungssatz werden ausgetauscht
+//     Empfänger-Adresse, Datum, Anrede & ein individueller, ggf. per KI
+//     erzeugter Einleitungssatz werden ausgetauscht
 // Beides bleibt im Bewerbungs-Detail jederzeit änderbar/ersetzbar.
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
@@ -69,7 +70,7 @@ export async function POST(_request: NextRequest, { params }: Params) {
     // src/lib/coverLetterGenerator.ts) — nutzt ggf. den für dieses
     // Unternehmen hinterlegten eigenen Einleitungssatz.
     const profile = await getPreferencesWithProfile();
-    const coverLetterContent = generateCoverLetter({
+    const { content: coverLetterContent } = await generateCoverLetter({
       company: application.company,
       job: application.jobPosting,
       profile,

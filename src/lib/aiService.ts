@@ -262,6 +262,91 @@ ${coverLetter}`;
   };
 }
 
+export type GenerateOpeningSentenceParams = {
+  companyName: string;
+  companyNotes?: string | null;
+  position: string;
+  jobDescription?: string | null;
+  jobRequirementsProfile?: string | null;
+  jobTechStack?: string | null;
+  profileTechStack?: string | null;
+  provider?: AiProvider | string | null;
+  apiKey?: string | null;
+  model?: string | null;
+};
+
+export type GenerateOpeningSentenceResult = {
+  /** Leerstring, wenn kein Provider konfiguriert war/der Request fehlschlug —
+   *  der Aufrufer (coverLetterGenerator.ts) fällt dann auf die feste
+   *  Einleitungssatz-Vorlage zurück. */
+  sentence: string;
+  usedAi: boolean;
+  modelUsed: string;
+};
+
+/**
+ * Formuliert per KI einen einzelnen, individuellen Einleitungssatz für ein
+ * Anschreiben, der ausdrückt, warum sich der Bewerber gerade bei DIESEM
+ * Unternehmen für DIESE Position bewirbt. Ohne konfigurierten Provider (oder
+ * bei einem fehlgeschlagenen Request) liefert diese Funktion einen leeren
+ * String zurück — es gibt hier bewusst KEINE lokale Heuristik-Simulation
+ * einer "individuellen" Begründung (das wäre nicht ehrlich individuell),
+ * stattdessen greift beim Aufrufer die neutrale, aber ehrliche
+ * Platzhalter-Vorlage aus den Einstellungen.
+ */
+export async function generateOpeningSentenceWithAI(
+  params: GenerateOpeningSentenceParams
+): Promise<GenerateOpeningSentenceResult> {
+  const {
+    companyName,
+    companyNotes,
+    position,
+    jobDescription,
+    jobRequirementsProfile,
+    jobTechStack,
+    profileTechStack,
+    provider,
+    apiKey,
+    model,
+  } = params;
+
+  const context = [
+    companyNotes?.trim() ? `Notizen zum Unternehmen: ${companyNotes.trim()}` : null,
+    jobRequirementsProfile?.trim() ? `Anforderungsprofil der Stelle: ${jobRequirementsProfile.trim()}` : null,
+    jobTechStack?.trim() ? `Geforderter Tech-Stack der Stelle: ${jobTechStack.trim()}` : null,
+    jobDescription?.trim() ? `Auszug Stellenbeschreibung: ${jobDescription.trim().slice(0, 500)}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const prompt = `Du hilfst dabei, GENAU EINEN Einleitungssatz für ein deutsches Bewerbungsanschreiben zu formulieren.
+
+Unternehmen: ${companyName}
+Position: ${position}
+Eigener Tech-Stack des Bewerbers: ${profileTechStack || "TypeScript, React, Next.js"}
+${context || "Keine weiteren Informationen zum Unternehmen oder zur Stelle vorhanden."}
+
+Der Satz folgt direkt nach "Sehr geehrte Damen und Herren," (klein weitergeschrieben, keine eigene Anrede) und soll ausdrücken, warum sich der Bewerber genau bei ${companyName} auf die Position "${position}" bewirbt bzw. was ihn daran besonders interessiert.
+
+Regeln:
+1. Gib NUR diesen einen Satz zurück — keine Einleitung, keine Anführungszeichen, keine Erklärung.
+2. Erfinde KEINE konkreten Fakten über das Unternehmen (Produkte, Kunden, Unternehmensmission etc.), die dir oben nicht explizit gegeben wurden. Formuliere stattdessen allgemein plausibel, aber spezifisch bezogen auf Position, Anforderungen und Tech-Stack.
+3. Vermeide ausgelutschte Floskeln wie "hiermit bewerbe ich mich" oder "mit großem Interesse habe ich Ihre Stellenanzeige gelesen".
+4. Maximal 35 Wörter, ein einzelner Satz.`;
+
+  const completion = await getAiCompletion({ provider, apiKey, model, prompt });
+  if (!completion) {
+    return { sentence: "", usedAi: false, modelUsed: "Lokale Heuristik (Offline)" };
+  }
+
+  const cleaned = completion.content
+    .trim()
+    .replace(/^["„“]|["“]$/g, "")
+    .trim();
+
+  return { sentence: cleaned, usedAi: true, modelUsed: completion.modelUsed };
+}
+
 export async function evaluateInterviewAnswerWithAI(
   params: EvaluateInterviewAnswerParams
 ): Promise<EvaluateInterviewAnswerResult> {

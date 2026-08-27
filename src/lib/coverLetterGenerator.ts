@@ -10,11 +10,14 @@
 //   1. Empfänger-Adresse (Unternehmen)
 //   2. Bewerbungsdatum
 //   3. Anrede (aus dem hinterlegten Ansprechpartner)
-//   4. Einleitungssatz (kurzer Satz mit Unternehmen & Position)
+//   4. Einleitungssatz — individuell, warum genau DIESES Unternehmen/DIESE
+//      Position (siehe generateOpeningSentenceWithAI() in aiService.ts, mit
+//      Platzhalter-Vorlage als Fallback ohne konfigurierten KI-Provider)
 // Ein pro Unternehmen hinterlegter Einstiegsabsatz (Company.letterTemplate)
 // überschreibt weiterhin gezielt nur den Einleitungssatz — der feste
 // Haupttext (Werdegang, Projekt, Abschluss) bleibt davon unberührt.
 // -----------------------------------------------------------------------------
+import { generateOpeningSentenceWithAI } from "./aiService";
 
 export type CoverLetterCompany = {
   name: string;
@@ -22,9 +25,14 @@ export type CoverLetterCompany = {
   postalCode?: string | null;
   city?: string | null;
   contactName?: string | null;
+  // Freitext-Notizen zum Unternehmen (Company.notes) — fließen, falls
+  // vorhanden, als Kontext in die KI-Generierung des Einleitungssatzes ein
+  // (siehe generateOpeningSentenceWithAI()). Je mehr hier hinterlegt ist,
+  // desto individueller kann der Satz ausfallen.
+  notes?: string | null;
   // Eigener Einleitungssatz (siehe Company.letterTemplate) — ersetzt, falls
-  // gesetzt, den automatisch aus coverLetterOpeningSentence erzeugten
-  // Einleitungssatz unten. Der feste Haupttext bleibt davon unberührt.
+  // gesetzt, den automatisch erzeugten Einleitungssatz unten (weder KI noch
+  // Vorlage). Der feste Haupttext bleibt davon unberührt.
   letterTemplate?: string | null;
 };
 
@@ -32,6 +40,7 @@ export type CoverLetterJob = {
   title: string;
   techStack?: string | null;
   requirementsProfile?: string | null;
+  description?: string | null;
 } | null;
 
 export type CoverLetterProfile = {
@@ -49,10 +58,15 @@ export type CoverLetterProfile = {
   // Profil & Präferenzen. Leer/nicht gesetzt -> Platzhaltertext mit Hinweis,
   // den Text zu hinterlegen (siehe DEFAULT_BODY_PLACEHOLDER).
   standardCoverLetterBody?: string | null;
-  // Vorlage für den Einleitungssatz mit den Platzhaltern {company}/{position},
-  // z.B. "hiermit bewerbe ich mich bei {company} als {position}.". Siehe
-  // Einstellungen → Profil & Präferenzen.
+  // Vorlage für den Einleitungssatz mit den Platzhaltern {company}/{position}
+  // — Fallback, wenn kein KI-Provider konfiguriert ist oder die
+  // KI-Generierung fehlschlägt. Siehe Einstellungen → Profil & Präferenzen.
   coverLetterOpeningSentence?: string | null;
+  // KI-Provider-Konfiguration (siehe src/lib/aiService.ts) — wird für den
+  // individuellen, unternehmensspezifischen Einleitungssatz genutzt.
+  aiProvider?: string | null;
+  aiApiKey?: string | null;
+  aiModel?: string | null;
 };
 
 export function today(): string {
@@ -95,13 +109,29 @@ export function renderOpeningSentence(template: string | null | undefined, compa
   return ensureSentence(base.replaceAll("{company}", company).replaceAll("{position}", position));
 }
 
-export function generateCoverLetter(params: {
+export type GenerateCoverLetterResult = {
+  content: string;
+  /** Ob der Einleitungssatz per KI (statt der Platzhalter-Vorlage) erzeugt wurde. */
+  usedAiForOpening: boolean;
+};
+
+/**
+ * @param useAi Standardmäßig `true` — pro Bewerbung wird versucht, den
+ *   Einleitungssatz individuell per KI zu formulieren (siehe
+ *   generateOpeningSentenceWithAI()), mit der Platzhalter-Vorlage als
+ *   Fallback ohne konfigurierten Provider oder bei einem Fehler. Für
+ *   Massenaktionen (z.B. den Bulk-„Standardpaket anwenden") bewusst auf
+ *   `false` setzbar, um nicht pro Bewerbung einen (langsamen/kostenpflichtigen)
+ *   KI-Request auszulösen — dort greift dann direkt die Vorlage.
+ */
+export async function generateCoverLetter(params: {
   company: CoverLetterCompany;
   job?: CoverLetterJob;
   profile: CoverLetterProfile;
   position: string;
-}): string {
-  const { company, profile, position } = params;
+  useAi?: boolean;
+}): Promise<GenerateCoverLetterResult> {
+  const { company, job, profile, position, useAi = true } = params;
 
   const senderBlock = [
     profile.fullName,
@@ -125,15 +155,39 @@ export function generateCoverLetter(params: {
   const salutation = buildSalutation(company.contactName);
 
   // Ein pro Unternehmen hinterlegter Einstiegsabsatz (Company.letterTemplate)
-  // hat Vorrang vor dem automatisch aus der Vorlage erzeugten Einleitungssatz
-  // — der feste Haupttext (nächster Absatz) bleibt davon unberührt.
-  const openingSentence = company.letterTemplate?.trim()
+  // hat weiterhin Vorrang vor jeder Automatik (weder KI noch Vorlage) — der
+  // feste Haupttext (nächster Absatz) bleibt in jedem Fall unberührt.
+  let openingSentence: string | null = company.letterTemplate?.trim()
     ? ensureSentence(company.letterTemplate.trim())
-    : renderOpeningSentence(profile.coverLetterOpeningSentence, company.name, position);
+    : null;
+  let usedAiForOpening = false;
+
+  if (!openingSentence && useAi) {
+    const aiResult = await generateOpeningSentenceWithAI({
+      companyName: company.name,
+      companyNotes: company.notes,
+      position,
+      jobDescription: job?.description,
+      jobRequirementsProfile: job?.requirementsProfile,
+      jobTechStack: job?.techStack,
+      profileTechStack: profile.techStack,
+      provider: profile.aiProvider,
+      apiKey: profile.aiApiKey,
+      model: profile.aiModel,
+    });
+    if (aiResult.sentence) {
+      openingSentence = ensureSentence(aiResult.sentence);
+      usedAiForOpening = true;
+    }
+  }
+
+  if (!openingSentence) {
+    openingSentence = renderOpeningSentence(profile.coverLetterOpeningSentence, company.name, position);
+  }
 
   const body = profile.standardCoverLetterBody?.trim() || DEFAULT_BODY_PLACEHOLDER;
 
-  return [
+  const content = [
     senderBlock,
     "",
     recipientBlock,
@@ -149,6 +203,8 @@ export function generateCoverLetter(params: {
     "Mit freundlichen Grüßen",
     profile.fullName ?? "",
   ].join("\n");
+
+  return { content, usedAiForOpening };
 }
 
 /**

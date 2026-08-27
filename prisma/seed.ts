@@ -301,22 +301,26 @@ async function main() {
   });
   const company1 = await prisma.company.findUniqueOrThrow({ where: { id: rheinwerk.id } });
 
-  const coverLetterContent = generateCoverLetter({
+  // useAi: false -> Seed-Daten bleiben deterministisch und hängen nicht von
+  // einem konfigurierten KI-Provider oder einer Netzwerkverbindung ab.
+  const { content: coverLetterContent } = await generateCoverLetter({
     company: company1,
     job: job1,
     profile: profileForLetter,
     position: app1.position,
+    useAi: false,
   });
 
   await prisma.coverLetter.create({
     data: { applicationId: app1.id, content: coverLetterContent, status: "SENT" },
   });
 
-  const coverLetterContent2 = generateCoverLetter({
+  const { content: coverLetterContent2 } = await generateCoverLetter({
     company: dortmunderSoftwareschmiede,
     job: job2,
     profile: profileForLetter,
     position: app2.position,
+    useAi: false,
   });
   await prisma.coverLetter.create({
     data: { applicationId: app2.id, content: coverLetterContent2, status: "SENT" },

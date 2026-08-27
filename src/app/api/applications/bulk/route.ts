@@ -120,11 +120,17 @@ export async function POST(request: NextRequest) {
           }
 
           if (!application.coverLetter) {
-            const content = generateCoverLetter({
+            // useAi: false — bei einer Massenaktion über potenziell viele
+            // Bewerbungen würde ein KI-Request pro Bewerbung (Sekunden
+            // Latenz + Kosten) die Aktion unvorhersehbar verlangsamen und
+            // verteuern; die Einleitungssatz-Vorlage greift hier direkt
+            // (siehe src/lib/coverLetterGenerator.ts).
+            const { content } = await generateCoverLetter({
               company: application.company,
               job: application.jobPosting,
               profile,
               position: application.position,
+              useAi: false,
             });
             await prisma.coverLetter.create({ data: { applicationId: id, content, status: "DRAFT" } });
             coverLettersGenerated += 1;

@@ -275,11 +275,14 @@ async function main() {
       },
     });
 
-    const coverLetterContent = generateCoverLetter({
+    // useAi: false -> ein Massenimport über potenziell viele Zeilen soll
+    // nicht pro Zeile einen KI-Request auslösen (Laufzeit/Kosten).
+    const { content: coverLetterContent } = await generateCoverLetter({
       company,
       job: null,
       profile: profileWithRelations,
       position,
+      useAi: false,
     });
     await prisma.coverLetter.create({
       data: { applicationId: application.id, content: coverLetterContent, status: "SENT" },
