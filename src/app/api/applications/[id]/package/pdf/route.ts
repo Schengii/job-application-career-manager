@@ -33,6 +33,7 @@ export async function GET(
         name: d.document.name,
         fileUrl: d.document.fileUrl,
         mimeType: d.document.mimeType,
+        category: d.document.category,
       })),
     });
 

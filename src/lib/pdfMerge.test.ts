@@ -15,6 +15,7 @@ let testPdfPath: string;
 let testPngPath: string;
 let largePngPath: string;
 let unsupportedPath: string;
+let lebenslaufPdfPath: string;
 
 beforeAll(async () => {
   await fs.mkdir(UPLOAD_DIR, { recursive: true });
@@ -30,6 +31,17 @@ beforeAll(async () => {
 
   testPdfPath = path.join(UPLOAD_DIR, "test-pdfmerge-fixture.pdf");
   await fs.writeFile(testPdfPath, fixtureBytes);
+
+  // Ein-Seiten-PDF als Lebenslauf-Fixture mit einer bewusst UNGEWÖHNLICHEN,
+  // eindeutig wiedererkennbaren Seitengröße (statt der A4/Letter-Größen der
+  // anderen Fixtures) — so lässt sich die Sortierung (sortDocumentsForPackage())
+  // über `getSize()` verifizieren, ohne Text aus dem gemergten PDF extrahieren
+  // zu müssen (das kann pdf-lib nicht).
+  const LEBENSLAUF_FIXTURE_SIZE: [number, number] = [400, 500];
+  const lebenslaufDoc = await PDFDocument.create();
+  lebenslaufDoc.addPage(LEBENSLAUF_FIXTURE_SIZE);
+  lebenslaufPdfPath = path.join(UPLOAD_DIR, "test-pdfmerge-lebenslauf.pdf");
+  await fs.writeFile(lebenslaufPdfPath, await lebenslaufDoc.save());
 
   testPngPath = path.join(UPLOAD_DIR, "test-pdfmerge-fixture.png");
   await fs.writeFile(testPngPath, Buffer.from(TINY_PNG_BASE64, "base64"));
@@ -57,7 +69,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await Promise.all(
-    [testPdfPath, testPngPath, largePngPath, unsupportedPath].map((p) => fs.rm(p, { force: true }).catch(() => {}))
+    [testPdfPath, testPngPath, largePngPath, unsupportedPath, lebenslaufPdfPath].map((p) => fs.rm(p, { force: true }).catch(() => {}))
   );
 });
 
@@ -94,6 +106,25 @@ describe("createApplicationPdfPackage", () => {
       documents: [{ name: "Scan", fileUrl: "/uploads/test-pdfmerge-fixture.png" }],
     });
     expect(await pageCount(bytes)).toBe(1);
+  });
+
+  it("setzt den Lebenslauf (category: LEBENSLAUF) direkt nach dem Anschreiben, unabhängig von der Anhang-Reihenfolge", async () => {
+    const bytes = await createApplicationPdfPackage({
+      coverLetterContent: "Bewerbung als Test-Position\n\nSehr geehrte Damen und Herren,",
+      documents: [
+        // Zeugnis wird bewusst VOR dem Lebenslauf übergeben — die Sortierung
+        // muss den Lebenslauf trotzdem an die erste Stelle (direkt nach dem
+        // Anschreiben) ziehen.
+        { name: "Zeugnis", fileUrl: "/uploads/test-pdfmerge-fixture.pdf", category: "ZEUGNIS_AUSBILDUNG" },
+        { name: "Lebenslauf", fileUrl: "/uploads/test-pdfmerge-lebenslauf.pdf", category: "LEBENSLAUF" },
+      ],
+    });
+
+    const doc = await PDFDocument.load(bytes);
+    // Seite 0 = Anschreiben, Seite 1 muss die Lebenslauf-Fixture sein
+    // (eindeutig an ihrer ungewöhnlichen Seitengröße erkennbar).
+    const lebenslaufPage = doc.getPages()[1];
+    expect([lebenslaufPage.getWidth(), lebenslaufPage.getHeight()]).toEqual([400, 500]);
   });
 
   it("kombiniert Anschreiben + PDF + Bild in der richtigen Reihenfolge", async () => {
@@ -140,8 +171,35 @@ describe("createApplicationPdfPackage", () => {
     expect(bytes.length).toBeLessThan(originalSize * 0.5);
   });
 
-  it("erzeugt bei langem Anschreiben-Text mehrere Seiten (automatischer Seitenumbruch)", async () => {
-    const longParagraph = "Dies ist ein sehr langer Testsatz, der wiederholt wird. ".repeat(120);
+  it("passt ein realistisch langes Anschreiben (~2700 Zeichen, wie ein echtes Anschreiben) auf genau eine Seite", async () => {
+    const realisticBody = [
+      "mit großem Interesse habe ich Ihre Stellenanzeige für die Position als Frontend-Entwickler bei Acme GmbH gelesen.",
+      "",
+      "technik und komplexe Systeme haben mich schon immer fasziniert – früher beim Programmieren von industriellen Produktionsanlagen als Elektroniker, heute beim Entwickeln von modernen, nutzerfreundlichen Web- und App-Anwendungen. Nach einer gesundheitsbedingten beruflichen Neuorientierung habe ich im Juni 2026 meine Umschulung zum Fachinformatiker für Anwendungsentwicklung erfolgreich abgeschlossen. Nun brenne ich darauf, mein erlerntes Wissen in Ihrem Entwicklungsteam in die Praxis umzusetzen und echten Mehrwert zu schaffen.",
+      "",
+      "Während meines zweijährigen Betriebspraktikums bei der Deutschen Forschungsgemeinschaft (DFG) in Bonn konnte ich mich von Beginn an in einem professionellen Entwicklungsumfeld einbringen. Mein technischer Schwerpunkt lag hierbei auf der modernen Frontend-Entwicklung mit HTML5, CSS3 und JavaScript, gefolgt von einer intensiven Spezialisierung auf TypeScript und modulare Frontend-Architekturen.",
+      "",
+      "Wie zielgerichtet ich neue Technologien kombiniere, zeigt mein eigenständig realisiertes Abschlussprojekt, eine mobile-first Web- und App-Anwendung. Hierbei habe ich eine externe API via REST-Schnittstelle angebunden, um basierend auf flexiblen Benutzereingaben dynamisch Inhalte zu generieren.",
+      "",
+      "Als gelernter Elektroniker für Betriebstechnik arbeitete ich mit Word, Excel und Gimp und programmierte im Tia-Portal und in Grafcet für eine speicherprogrammierbare Steuerung (SPS). Nach der Ausbildung wechselte ich den Betrieb sowie die Tätigkeit und war für fast 1,5 Jahre als Prüftechniker im Außendienst deutschlandweit unterwegs.",
+      "",
+      "Für den Einstieg in Ihre Projekte stehe ich Ihnen ab sofort zur Verfügung. Ich freue mich auf die Gelegenheit, mich Ihnen in einem persönlichen Gespräch vorzustellen.",
+    ].join("\n");
+
+    const bytes = await createApplicationPdfPackage({
+      coverLetterContent: `Max Mustermann\nMusterstraße 1\n53111 Bonn\n\nAcme GmbH\nMusterweg 1\n50667 Köln\n\n27. August 2026\n\nBewerbung als Frontend-Entwickler\n\nSehr geehrte Damen und Herren,\n\n${realisticBody}\n\nMit freundlichen Grüßen\nMax Mustermann`,
+      documents: [],
+    });
+
+    expect(await pageCount(bytes)).toBe(1);
+  });
+
+  it("erzeugt bei extrem langem Anschreiben-Text mehrere Seiten (Fallback, wenn selbst die kleinste Schriftgröße nicht mehr reicht)", async () => {
+    // Deutlich länger als jedes echte Anschreiben — die Auto-Fit-Logik
+    // (findFontSizeForOnePage()) schrumpft die Schrift bis zur konfigurierten
+    // Untergrenze, ab der bewusst wieder mehrseitig umgebrochen wird, statt
+    // unleserlich klein zu werden (siehe pdfMerge.ts).
+    const longParagraph = "Dies ist ein sehr langer Testsatz, der wiederholt wird. ".repeat(400);
     const bytes = await createApplicationPdfPackage({
       coverLetterContent: longParagraph,
       documents: [],

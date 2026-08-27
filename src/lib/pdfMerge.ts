@@ -11,11 +11,23 @@ import path from "path";
 import { PDFDocument, StandardFonts, PageSizes, type PDFFont } from "pdf-lib";
 import sharp from "sharp";
 
-const FONT_SIZE = 11;
-const LINE_HEIGHT = FONT_SIZE * 1.45;
-const PARAGRAPH_GAP = LINE_HEIGHT * 0.55;
-// ~20mm Rand (1mm ≈ 2.8346pt), analog zu den @page-Regeln in src/lib/pdfExport.ts
-const MARGIN = 56.7;
+// Ein Anschreiben soll IMMER auf eine einzige DIN-A4-Seite passen (gängige
+// Konvention für Bewerbungen) — statt einer fixen Schriftgröße wird deshalb
+// mit MAX_FONT_SIZE begonnen und in kleinen Schritten verkleinert, bis der
+// Text bei gegebener Zeilenhöhe/Rand rechnerisch auf eine Seite passt (siehe
+// findFontSizeForOnePage() unten). So bleibt es unabhängig von der exakten
+// Länge des (ggf. per KI individuell formulierten, siehe
+// coverLetterGenerator.ts) Einleitungssatzes robust, statt bei einem
+// zufällig etwas längeren Satz wieder auf zwei Seiten zu kippen.
+const MAX_FONT_SIZE = 11;
+const MIN_FONT_SIZE = 8.5;
+const FONT_SIZE_STEP = 0.25;
+const LINE_HEIGHT_RATIO = 1.22;
+const PARAGRAPH_GAP_RATIO = LINE_HEIGHT_RATIO * 0.6;
+// ~15mm Rand (1mm ≈ 2.8346pt) — etwas knapper als die 20mm der Druckvorschau
+// (src/lib/pdfExport.ts), damit auch bei MAX_FONT_SIZE noch Spielraum für
+// eine Seite bleibt, ohne den Text selbst kürzen zu müssen.
+const MARGIN = 42.5;
 // Zeugnis-Scans von Handy/Scanner liegen oft bei mehreren Megapixeln/mehreren
 // MB unkomprimiert (PNG) — für A4-Druck reicht eine deutlich kleinere
 // Auflösung völlig aus. 1600px auf der langen Seite entspricht bei A4-Breite
@@ -46,13 +58,67 @@ function wrapLine(text: string, font: PDFFont, size: number, maxWidth: number): 
   return lines;
 }
 
-/** Rendert einen Text (z.B. das generierte Anschreiben) als eigenständiges PDF mit Zeilenumbruch & automatischem Seitenumbruch. */
+/** Zählt, wie viele gerenderte Zeilen (inkl. Wortumbruch) der Text bei einer gegebenen Schriftgröße benötigt, sowie die daraus resultierende Gesamthöhe in PDF-Punkten. */
+function measureContent(
+  content: string,
+  font: PDFFont,
+  boldFont: PDFFont,
+  fontSize: number,
+  maxWidth: number
+): number {
+  const lineHeight = fontSize * LINE_HEIGHT_RATIO;
+  const paragraphGap = fontSize * PARAGRAPH_GAP_RATIO;
+  let height = 0;
+
+  for (const rawLine of content.split("\n")) {
+    if (rawLine.trim() === "") {
+      height += paragraphGap;
+      continue;
+    }
+    const useFont = rawLine.startsWith("Bewerbung als") ? boldFont : font;
+    height += wrapLine(rawLine, useFont, fontSize, maxWidth).length * lineHeight;
+  }
+
+  return height;
+}
+
+/**
+ * Ermittelt die größte Schriftgröße (zwischen MIN_FONT_SIZE und
+ * MAX_FONT_SIZE), bei der `content` noch komplett auf eine A4-Seite passt —
+ * damit ein Anschreiben unabhängig von seiner genauen Länge immer eine
+ * einzige Seite bleibt, statt bei etwas längerem Text (z.B. einem länger
+ * formulierten KI-Einleitungssatz) ungewollt auf Seite 2 überzulaufen.
+ * Erreicht der Text selbst bei MIN_FONT_SIZE keine eine Seite mehr, wird
+ * MIN_FONT_SIZE zurückgegeben (dann läuft der Text bewusst über — lieber
+ * lesbar auf zwei Seiten als unleserlich klein auf einer).
+ */
+function findFontSizeForOnePage(content: string, font: PDFFont, boldFont: PDFFont, maxWidth: number, maxHeight: number): number {
+  for (let size = MAX_FONT_SIZE; size >= MIN_FONT_SIZE; size -= FONT_SIZE_STEP) {
+    if (measureContent(content, font, boldFont, size, maxWidth) <= maxHeight) {
+      return size;
+    }
+  }
+  return MIN_FONT_SIZE;
+}
+
+/**
+ * Rendert einen Text (z.B. das generierte Anschreiben) als eigenständiges
+ * PDF — passt die Schriftgröße automatisch an, damit der Text auf eine
+ * einzige DIN-A4-Seite passt (siehe findFontSizeForOnePage() oben), mit
+ * automatischem Seitenumbruch als Fallback für den (seltenen) Fall, dass
+ * selbst MIN_FONT_SIZE nicht ausreicht.
+ */
 async function renderTextAsPdf(content: string): Promise<PDFDocument> {
   const pdfDoc = await PDFDocument.create();
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const [pageWidth, pageHeight] = PageSizes.A4;
   const maxWidth = pageWidth - MARGIN * 2;
+  const maxHeight = pageHeight - MARGIN * 2;
+
+  const fontSize = findFontSizeForOnePage(content, font, boldFont, maxWidth, maxHeight);
+  const lineHeight = fontSize * LINE_HEIGHT_RATIO;
+  const paragraphGap = fontSize * PARAGRAPH_GAP_RATIO;
 
   let page = pdfDoc.addPage([pageWidth, pageHeight]);
   let y = pageHeight - MARGIN;
@@ -66,16 +132,16 @@ async function renderTextAsPdf(content: string): Promise<PDFDocument> {
 
   for (const rawLine of content.split("\n")) {
     if (rawLine.trim() === "") {
-      y -= PARAGRAPH_GAP;
+      y -= paragraphGap;
       continue;
     }
     // Die Betreffzeile ("Bewerbung als ...", siehe coverLetterGenerator.ts)
     // wird fett hervorgehoben, analog zur Druckvorschau im Browser.
     const useFont = rawLine.startsWith("Bewerbung als") ? boldFont : font;
-    for (const wrapped of wrapLine(rawLine, useFont, FONT_SIZE, maxWidth)) {
+    for (const wrapped of wrapLine(rawLine, useFont, fontSize, maxWidth)) {
       ensureSpace();
-      page.drawText(wrapped, { x: MARGIN, y, size: FONT_SIZE, font: useFont });
-      y -= LINE_HEIGHT;
+      page.drawText(wrapped, { x: MARGIN, y, size: fontSize, font: useFont });
+      y -= lineHeight;
     }
   }
 
@@ -137,6 +203,7 @@ export type MergeDocumentInput = {
   name: string;
   fileUrl?: string | null;
   mimeType?: string | null;
+  category?: string | null;
 };
 
 export type MergeApplicationPdfParams = {
@@ -145,15 +212,27 @@ export type MergeApplicationPdfParams = {
 };
 
 /**
+ * Sortiert die angehängten Dokumente für eine sinnvolle Lesereihenfolge:
+ * Lebenslauf direkt nach dem Anschreiben, alles andere (Zeugnisse etc.)
+ * danach in der ursprünglichen Anhang-Reihenfolge. `Array.prototype.sort`
+ * ist stabil (garantiert seit ES2019), daher bleibt die relative Reihenfolge
+ * innerhalb jeder der beiden Gruppen erhalten.
+ */
+function sortDocumentsForPackage(documents: MergeDocumentInput[]): MergeDocumentInput[] {
+  return [...documents].sort((a, b) => Number(b.category === "LEBENSLAUF") - Number(a.category === "LEBENSLAUF"));
+}
+
+/**
  * Erstellt EIN kombiniertes PDF aus dem generierten Anschreiben (als eigene
- * Textseite(n)) gefolgt von allen angehängten Dokumenten in ihrer
- * Anhang-Reihenfolge: bestehende PDFs werden seitenweise übernommen, Bilder
- * (PNG/JPEG, z.B. gescannte Zeugnisse) werden als eigene Seite eingefügt.
- * Andere Formate (z.B. .docx) werden übersprungen, da sie sich ohne externe
- * Konvertierung nicht verlustfrei in ein PDF einbetten lassen — sie bleiben
- * über den ZIP-Export (src/lib/zipPackage.ts) weiterhin separat verfügbar.
- * Ein einzelnes fehlerhaftes/fehlendes Dokument bricht den restlichen Merge
- * nicht ab (siehe readUploadedFile()/try-catch pro Dokument).
+ * Textseite(n)) gefolgt vom Lebenslauf (falls unter den angehängten
+ * Dokumenten vorhanden) und danach allen übrigen Dokumenten (siehe
+ * sortDocumentsForPackage()): bestehende PDFs werden seitenweise übernommen,
+ * Bilder (PNG/JPEG, z.B. gescannte Zeugnisse) werden als eigene Seite
+ * eingefügt. Andere Formate (z.B. .docx) werden übersprungen, da sie sich
+ * ohne externe Konvertierung nicht verlustfrei in ein PDF einbetten lassen —
+ * sie bleiben über den ZIP-Export (src/lib/zipPackage.ts) weiterhin separat
+ * verfügbar. Ein einzelnes fehlerhaftes/fehlendes Dokument bricht den
+ * restlichen Merge nicht ab (siehe readUploadedFile()/try-catch pro Dokument).
  */
 export async function createApplicationPdfPackage(params: MergeApplicationPdfParams): Promise<Uint8Array> {
   const merged = await PDFDocument.create();
@@ -164,7 +243,7 @@ export async function createApplicationPdfPackage(params: MergeApplicationPdfPar
     for (const p of copiedPages) merged.addPage(p);
   }
 
-  for (const doc of params.documents) {
+  for (const doc of sortDocumentsForPackage(params.documents)) {
     if (!doc.fileUrl) continue;
     const bytes = await readUploadedFile(doc.fileUrl);
     if (!bytes) continue;
