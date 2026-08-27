@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
 // In-Process Hintergrund-Scheduler: läuft, solange der Node-Prozess lebt
 // (gestartet über src/instrumentation.ts beim Serverstart), und führt
-// periodisch zwei Dinge aus:
+// periodisch drei Dinge aus:
 //   1. Bei aktiviertem IMAP: neue E-Mails abrufen (src/lib/imapClient.ts) und
 //      bei erkannten Statuswechsel-Vorschlägen eine Push-Benachrichtigung
 //      verschicken (der Status wird NICHT automatisch geändert — das bleibt
@@ -9,6 +9,10 @@
 //      Fehlklassifikationen zu vermeiden).
 //   2. Fällige Termin-/Follow-up-/Statuswechsel-Benachrichtigungen per Push
 //      verschicken (src/lib/pushNotifications.ts).
+//   3. Höchstens einmal alle 24h ein automatisches Backup anlegen (siehe
+//      src/lib/serverBackupRotation.ts) — unabhängig von destruktiven
+//      Aktionen, damit auch bei reiner Nutzung ohne Löschen/Restore
+//      regelmäßig ein aktueller Snapshot existiert.
 // Über die Einstellungen (Preferences.backgroundSchedulerEnabled, Default
 // true) abschaltbar.
 // -----------------------------------------------------------------------------
@@ -17,6 +21,7 @@ import { getOrCreatePreferences } from "./preferences";
 import { fetchInboxMessages } from "./imapClient";
 import { processSyncedEmails } from "./emailImapSync";
 import { sendDueNotifications, sendEmailMatchNotifications } from "./pushNotifications";
+import { createPeriodicSnapshotIfDue } from "./serverBackupRotation";
 import type { ApplicationListItem } from "@/types";
 
 const TICK_INTERVAL_MS = 15 * 60 * 1000;
@@ -63,6 +68,9 @@ export async function runSchedulerTick(): Promise<void> {
     });
     await sendDueNotifications().catch((error) => {
       console.error("scheduler: Push-Versand fehlgeschlagen.", error);
+    });
+    await createPeriodicSnapshotIfDue().catch((error) => {
+      console.error("scheduler: Periodisches Backup fehlgeschlagen.", error);
     });
   } catch (error) {
     console.error("scheduler: Tick fehlgeschlagen.", error);

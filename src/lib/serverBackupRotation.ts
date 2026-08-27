@@ -61,3 +61,43 @@ async function pruneOldSnapshots(): Promise<void> {
   const toDelete = autoSnapshots.slice(0, excess);
   await Promise.all(toDelete.map((f) => fs.unlink(path.join(BACKUP_DIR, f)).catch(() => {})));
 }
+
+// -----------------------------------------------------------------------------
+// Periodisches Backup (unabhängig von destruktiven Aktionen)
+// -----------------------------------------------------------------------------
+// Wird vom Hintergrund-Scheduler (src/lib/scheduler.ts) bei jedem Tick
+// aufgerufen — legt aber höchstens alle `PERIODIC_INTERVAL_MS` tatsächlich
+// einen neuen Snapshot an, statt bei jedem 15-Minuten-Tick. Teilt sich mit
+// den destruktiven Auto-Snapshots dieselbe Rotation (`pruneOldSnapshots()`,
+// `MAX_AUTO_SNAPSHOTS`), damit es nicht zwei unabhängige Aufbewahrungs-Töpfe
+// gibt. Existiert absichtlich ohne eigenes Preferences-Feld/Schema-Änderung
+// — der Zeitstempel der zuletzt geschriebenen Datei im Dateisystem selbst
+// reicht als "letzter Lauf war am..."-Information.
+// -----------------------------------------------------------------------------
+const PERIODIC_LABEL = "scheduled";
+const PERIODIC_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 Stunden
+
+/**
+ * Legt genau dann einen neuen Snapshot an, wenn entweder noch nie einer
+ * existiert oder der letzte periodische Snapshot älter als 24h ist.
+ * Best-effort wie `createAutoSnapshot()` — wirft nie nach außen.
+ */
+export async function createPeriodicSnapshotIfDue(): Promise<void> {
+  try {
+    await fs.mkdir(BACKUP_DIR, { recursive: true });
+    const entries = await fs.readdir(BACKUP_DIR);
+    const periodicSnapshots = entries
+      .filter((f) => f.startsWith("auto-") && f.endsWith(`-${PERIODIC_LABEL}.json`))
+      .sort();
+    const newest = periodicSnapshots[periodicSnapshots.length - 1];
+
+    if (newest) {
+      const stats = await fs.stat(path.join(BACKUP_DIR, newest));
+      if (Date.now() - stats.mtimeMs < PERIODIC_INTERVAL_MS) return; // noch aktuell genug
+    }
+
+    await createAutoSnapshot(PERIODIC_LABEL);
+  } catch (err) {
+    console.warn("serverBackupRotation: Periodischer Snapshot-Check fehlgeschlagen:", err);
+  }
+}

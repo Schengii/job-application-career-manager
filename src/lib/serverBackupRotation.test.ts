@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { promises as fs } from "fs";
 import path from "path";
-import { createAutoSnapshot } from "./serverBackupRotation";
+import { createAutoSnapshot, createPeriodicSnapshotIfDue } from "./serverBackupRotation";
 import { resetDb, createTestCompany } from "@/test/dbTestUtils";
 
 const BACKUP_DIR = path.join(process.cwd(), "backups");
@@ -53,6 +53,58 @@ describe("serverBackupRotation", () => {
     await fs.writeFile(BACKUP_DIR, "not a directory");
 
     await expect(createAutoSnapshot("should-not-throw")).resolves.toBeUndefined();
+
+    await fs.rm(BACKUP_DIR, { force: true });
+  });
+});
+
+describe("createPeriodicSnapshotIfDue", () => {
+  beforeEach(async () => {
+    await resetDb();
+    await fs.rm(BACKUP_DIR, { recursive: true, force: true });
+  });
+
+  afterEach(async () => {
+    await fs.rm(BACKUP_DIR, { recursive: true, force: true });
+  });
+
+  it("legt einen Snapshot an, wenn noch nie einer existiert hat", async () => {
+    await createPeriodicSnapshotIfDue();
+
+    const files = await listAutoSnapshots();
+    expect(files).toHaveLength(1);
+    expect(files[0]).toContain("scheduled");
+  });
+
+  it("legt KEINEN neuen Snapshot an, wenn der letzte periodische Snapshot jünger als 24h ist", async () => {
+    await createPeriodicSnapshotIfDue();
+    const filesAfterFirst = await listAutoSnapshots();
+    expect(filesAfterFirst).toHaveLength(1);
+
+    await createPeriodicSnapshotIfDue();
+
+    const filesAfterSecond = await listAutoSnapshots();
+    expect(filesAfterSecond).toHaveLength(1); // unverändert, kein zweiter Snapshot
+  });
+
+  it("legt erneut einen Snapshot an, wenn der letzte periodische Snapshot älter als 24h ist", async () => {
+    await createPeriodicSnapshotIfDue();
+    const [existing] = await listAutoSnapshots();
+
+    // Simuliert "vor über 24h geschrieben", ohne 24h warten zu müssen.
+    const staleTime = new Date(Date.now() - 25 * 60 * 60 * 1000);
+    await fs.utimes(path.join(BACKUP_DIR, existing), staleTime, staleTime);
+
+    await createPeriodicSnapshotIfDue();
+
+    const filesAfter = await listAutoSnapshots();
+    expect(filesAfter).toHaveLength(2);
+  });
+
+  it("wirft keinen Fehler, wenn das Schreiben fehlschlägt (best-effort)", async () => {
+    await fs.writeFile(BACKUP_DIR, "not a directory");
+
+    await expect(createPeriodicSnapshotIfDue()).resolves.toBeUndefined();
 
     await fs.rm(BACKUP_DIR, { force: true });
   });

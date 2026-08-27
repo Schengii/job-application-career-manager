@@ -30,6 +30,11 @@ vi.mock("./pushNotifications", () => ({
   sendEmailMatchNotifications: (...args: unknown[]) => mockSendEmailMatchNotifications(...args),
 }));
 
+const mockCreatePeriodicSnapshotIfDue = vi.fn();
+vi.mock("./serverBackupRotation", () => ({
+  createPeriodicSnapshotIfDue: () => mockCreatePeriodicSnapshotIfDue(),
+}));
+
 function basePreferences(overrides: Partial<{ backgroundSchedulerEnabled: boolean; imapEnabled: boolean }> = {}) {
   return { backgroundSchedulerEnabled: true, imapEnabled: false, ...overrides };
 }
@@ -42,15 +47,33 @@ describe("runSchedulerTick", () => {
     mockSendEmailMatchNotifications.mockResolvedValue({ sent: 0, skipped: 0 });
     mockFetchInboxMessages.mockResolvedValue({ messages: [], usedRealImap: true });
     mockProcessSyncedEmails.mockReturnValue({ matchedActions: [], unmatchedEmails: [], totalEmailsScanned: 0, syncedAt: "" });
+    mockCreatePeriodicSnapshotIfDue.mockResolvedValue(undefined);
   });
 
-  it("führt weder E-Mail-Sync noch Push-Versand aus, wenn der Scheduler deaktiviert ist", async () => {
+  it("führt weder E-Mail-Sync noch Push-Versand noch das periodische Backup aus, wenn der Scheduler deaktiviert ist", async () => {
     mockGetOrCreatePreferences.mockResolvedValue(basePreferences({ backgroundSchedulerEnabled: false }));
 
     await runSchedulerTick();
 
     expect(mockFetchInboxMessages).not.toHaveBeenCalled();
     expect(mockSendDueNotifications).not.toHaveBeenCalled();
+    expect(mockCreatePeriodicSnapshotIfDue).not.toHaveBeenCalled();
+  });
+
+  it("prüft bei jedem Tick, ob ein periodisches Backup fällig ist", async () => {
+    mockGetOrCreatePreferences.mockResolvedValue(basePreferences());
+
+    await runSchedulerTick();
+
+    expect(mockCreatePeriodicSnapshotIfDue).toHaveBeenCalledOnce();
+  });
+
+  it("bricht den Tick nicht komplett ab, wenn das periodische Backup wirft", async () => {
+    mockGetOrCreatePreferences.mockResolvedValue(basePreferences());
+    mockCreatePeriodicSnapshotIfDue.mockRejectedValue(new Error("Festplatte voll"));
+
+    await expect(runSchedulerTick()).resolves.toBeUndefined();
+    expect(mockSendDueNotifications).toHaveBeenCalledOnce();
   });
 
   it("überspringt den E-Mail-Sync bei deaktiviertem IMAP, führt aber weiterhin sendDueNotifications aus", async () => {
