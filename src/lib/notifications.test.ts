@@ -74,9 +74,31 @@ describe("notifications", () => {
     oldDate.setDate(oldDate.getDate() - 20);
 
     const app = dummyApp({ applicationDate: oldDate });
-    const notifs = getNotificationsFromApplications([app], ["followup-app-1"]);
+    const [notif] = getNotificationsFromApplications([app]);
+    expect(notif).toBeDefined();
 
-    expect(notifs.length).toBe(0);
+    const notifsAfterDismiss = getNotificationsFromApplications([app], [notif.id]);
+    expect(notifsAfterDismiss.length).toBe(0);
+  });
+
+  it("erzeugt nach einer Terminverschiebung eine neue, nicht mehr durch die alte dismissedId gedeckte Überfällig-Benachrichtigung", () => {
+    // Regressionstest für einen Bug: die Dedup-/Dismiss-ID basierte früher
+    // NUR auf der Application-ID (`overdue-${app.id}`), nicht auf dem
+    // konkreten Termin — eine einmal gesendete/verworfene Benachrichtigung
+    // blieb dadurch nach einer Terminverschiebung für immer unterdrückt,
+    // obwohl der neue Termin einen eigenständigen Hinweis verdient.
+    const firstDueDate = new Date();
+    firstDueDate.setDate(firstDueDate.getDate() - 2);
+    const appBeforeReschedule = dummyApp({ nextStep: "Rückmeldung einholen", nextStepDate: firstDueDate });
+    const [firstNotif] = getNotificationsFromApplications([appBeforeReschedule]).filter((n) => n.type === "OVERDUE");
+    expect(firstNotif).toBeDefined();
+
+    const rescheduledDate = new Date();
+    rescheduledDate.setDate(rescheduledDate.getDate() - 5);
+    const appAfterReschedule = dummyApp({ nextStep: "Rückmeldung einholen", nextStepDate: rescheduledDate });
+    const notifsAfterReschedule = getNotificationsFromApplications([appAfterReschedule], [firstNotif.id]);
+
+    expect(notifsAfterReschedule.some((n) => n.type === "OVERDUE")).toBe(true);
   });
 
   it("erzeugt eine Absage-Benachrichtigung, wenn der letzte Status-Event 'REJECTED' ist", () => {

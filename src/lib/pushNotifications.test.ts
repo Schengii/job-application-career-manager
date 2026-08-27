@@ -98,6 +98,30 @@ describe("sendDueNotifications", () => {
     expect(mockSendNotification).not.toHaveBeenCalled();
   });
 
+  it("verschickt eine fällige Benachrichtigung bei zeitlich überlappenden Aufrufen nur EINMAL (kein Duplikat-Versand)", async () => {
+    // Regressionstest für ein Check-then-Act-Rennen: sendDueNotifications()
+    // wird von 3 unsynchronisierten Stellen aufgerufen (Scheduler-Tick,
+    // Statuswechsel-Route, E-Mail-Sync-Route). Laufen zwei Aufrufe
+    // überlappend, dürfen sie NICHT beide dieselbe (noch nicht als gesendet
+    // markierte) Benachrichtigung an alle Subscriptions verschicken.
+    await createSubscription("https://push.example.com/device-1");
+    await createSubscription("https://push.example.com/device-2");
+    const company = await createTestCompany();
+    const app = await prisma.application.create({
+      data: { position: "Frontend-Entwickler", status: "OFFER", companyId: company.id },
+    });
+    await prisma.applicationStatusEvent.create({
+      data: { applicationId: app.id, status: "OFFER" },
+    });
+
+    const [first, second] = await Promise.all([sendDueNotifications(), sendDueNotifications()]);
+
+    // Zusammen genau 2 Sends (1 Benachrichtigung x 2 Subscriptions) — nicht 4.
+    expect(first.sent + second.sent).toBe(2);
+    expect(mockSendNotification).toHaveBeenCalledTimes(2);
+    expect(await prisma.sentPushNotification.count()).toBe(1);
+  });
+
   it("markiert eine fällige Benachrichtigung auch ohne registrierte Subscription als bearbeitet", async () => {
     const company = await createTestCompany();
     const app = await prisma.application.create({

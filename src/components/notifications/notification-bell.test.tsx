@@ -86,6 +86,13 @@ describe("NotificationBell", () => {
     await user.click(screen.getByRole("button", { name: "Ausblenden" }));
 
     expect(screen.getByText(/Alles erledigt/)).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem("career_manager_dismissed_notifs")!)).toEqual(["overdue-1"]);
+    // Die ID enthält seit dem Dedup-Fix (s. notifications.test.ts) auch das
+    // Zieldatum, nicht nur die Application-ID — sonst würde eine
+    // Terminverschiebung eine bereits verworfene Benachrichtigung dauerhaft
+    // unterdrücken.
+    const expectedDateKey = new Date(YESTERDAY).toISOString().slice(0, 10);
+    expect(JSON.parse(localStorage.getItem("career_manager_dismissed_notifs")!)).toEqual([
+      `overdue-1-${expectedDateKey}`,
+    ]);
   });
 });

@@ -16,9 +16,18 @@ describe("buildApplicationWhere", () => {
     });
   });
 
-  it("filtert nach Tag via contains", () => {
+  it("filtert nach Tag exakt (Position im kommaseparierten String egal, aber kein Teilstring-Treffer wie 'react' in 'react19')", () => {
     expect(buildApplicationWhere({ tag: "Prio1" })).toEqual({
-      AND: [{ tags: { contains: "Prio1" } }],
+      AND: [
+        {
+          OR: [
+            { tags: { equals: "Prio1" } },
+            { tags: { startsWith: "Prio1," } },
+            { tags: { endsWith: ",Prio1" } },
+            { tags: { contains: ",Prio1," } },
+          ],
+        },
+      ],
     });
   });
 

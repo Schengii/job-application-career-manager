@@ -125,6 +125,33 @@ describe("/api/applications", () => {
     expect(body.data[0].status).toBe("SENT");
   });
 
+  it("GET filtert im paginierten Modus exakt nach Tag (kein Teilstring-Treffer wie 'react' in 'react19')", async () => {
+    // Regressionstest: buildApplicationWhere() nutzte früher `contains`, ein
+    // reiner Teilstring-Filter — "react" traf dadurch fälschlich auch
+    // "react19" (beides reale, vordefinierte Tags dieses Projekts, s.
+    // TAG_COLOR_PRESETS in src/lib/tags.ts), inkonsistent zum exakten
+    // client-seitigen `parseTags(a.tags).includes(tag)` im Kanban-Board.
+    const company = await createTestCompany();
+    await prisma.application.create({
+      data: { position: "Nur react", tags: "typescript,react", companyId: company.id },
+    });
+    await prisma.application.create({
+      data: { position: "Nur react19", tags: "react19", companyId: company.id },
+    });
+    await prisma.application.create({
+      data: { position: "react als einziger Tag", tags: "react", companyId: company.id },
+    });
+
+    const response = await GET(getRequest("?page=1&pageSize=25&tag=react"));
+    const body = await response.json();
+
+    expect(body.total).toBe(2);
+    expect(body.data.map((a: { position: string }) => a.position).sort()).toEqual([
+      "Nur react",
+      "react als einziger Tag",
+    ]);
+  });
+
   it("GET sortiert im paginierten Modus nach Unternehmen (A-Z), wenn sortBy=COMPANY_ASC gesetzt ist", async () => {
     const companyB = await createTestCompany({ name: "Beta AG" });
     const companyA = await createTestCompany({ name: "Acme GmbH" });

@@ -53,12 +53,24 @@ export function buildApplicationWhere(params: ApplicationQueryParams): Prisma.Ap
   }
 
   if (params.tag) {
-    // Tags sind ein kommaseparierter String (siehe src/lib/tags.ts) — ein
-    // `contains`-Filter ist eine Näherung an das exakte, client-seitige
-    // `parseTags(a.tags).includes(tag)`. Für einzelne Tags ohne
-    // Teilstring-Überschneidung (z.B. "Prio1" ist kein Teilstring eines
-    // anderen realistischen Tags) liefert das identische Ergebnisse.
-    and.push({ tags: { contains: params.tag } });
+    // Tags sind ein kommaseparierter String OHNE Leerzeichen um die Kommas
+    // (siehe stringifyTags() in src/lib/tags.ts — jeder Schreibpfad geht
+    // darüber). Ein einfacher `contains`-Filter wäre nur eine Näherung und
+    // liefert falsch-positive Treffer bei Tags, die Teilstring eines anderen
+    // sind (z.B. "react" träfe fälschlich auch "react19" — beides reale,
+    // vordefinierte Tags dieses Projekts, s. TAG_COLOR_PRESETS in tags.ts).
+    // Die 4 Varianten unten bilden exakt jede mögliche Position eines Tags
+    // in der kommaseparierten Liste ab (einziger Tag / erster / letzter /
+    // mittendrin) und entsprechen damit exakt dem client-seitigen
+    // `parseTags(a.tags).includes(tag)` aus dem Kanban-Board.
+    and.push({
+      OR: [
+        { tags: { equals: params.tag } },
+        { tags: { startsWith: `${params.tag},` } },
+        { tags: { endsWith: `,${params.tag}` } },
+        { tags: { contains: `,${params.tag},` } },
+      ],
+    });
   }
 
   if (params.search?.trim()) {

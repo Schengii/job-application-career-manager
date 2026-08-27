@@ -1,8 +1,25 @@
 // -----------------------------------------------------------------------------
 // Benachrichtigungs-Logik für Termine, Fristen und Nachfass-Aktionen
 // -----------------------------------------------------------------------------
-import type { ApplicationListItem } from "@/types";
+import type { Application, ApplicationStatusEvent, Company } from "@/types";
 import { getFollowUpStatus } from "@/lib/followUp";
+
+// Bewusst NUR die Felder, die getNotificationsFromApplications() unten
+// tatsächlich liest — NICHT das volle `ApplicationListItem` (das zusätzlich
+// `jobPosting`/`coverLetter`/`_count` verlangt). Aufrufer wie
+// src/lib/pushNotifications.ts laden die Applications serverseitig gezielt
+// OHNE diese (hier ungenutzten) Relationen; ein `ApplicationListItem`-Cast an
+// dieser Stelle würde vortäuschen, sie seien vorhanden, obwohl sie es zur
+// Laufzeit nicht sind. `ApplicationListItem` erfüllt diesen (schmaleren) Typ
+// strukturell weiterhin, bestehende Aufrufer (NotificationBell,
+// RecentResponsesCard) bleiben also unverändert kompatibel.
+export type NotificationSourceApplication = Pick<
+  Application,
+  "id" | "status" | "position" | "applicationDate" | "nextStepDate" | "nextStep"
+> & {
+  company: Pick<Company, "name">;
+  statusEvents?: Pick<ApplicationStatusEvent, "id" | "status" | "changedAt">[];
+};
 
 export type AppNotification = {
   id: string;
@@ -48,8 +65,14 @@ const STATUS_NOTIFICATION_META: Record<
   },
 };
 
+/** `YYYY-MM-DD` für den Dedup-ID-Bestandteil unten — `null`/`undefined` wird zu einem stabilen Platzhalter statt die ID unbrauchbar zu machen. */
+function toDateKey(date: Date | string | null | undefined): string {
+  if (!date) return "unbekannt";
+  return new Date(date).toISOString().slice(0, 10);
+}
+
 export function getNotificationsFromApplications(
-  applications: ApplicationListItem[],
+  applications: NotificationSourceApplication[],
   dismissedIds: string[] = []
 ): AppNotification[] {
   const notifications: AppNotification[] = [];
@@ -82,7 +105,12 @@ export function getNotificationsFromApplications(
 
     // 1. Überfälliger Termin
     if (followUp.isOverdue && app.nextStepDate) {
-      const notifId = `overdue-${app.id}`;
+      // ID enthält bewusst das Zieldatum (nicht nur die Application-ID) —
+      // sonst würde eine bereits einmal gesendete/dismissed Benachrichtigung
+      // (SentPushNotification bzw. dismissedIds) nach einer Terminverschiebung
+      // dauerhaft unterdrückt bleiben, obwohl der NEUE Termin einen eigenen
+      // Hinweis verdient (siehe Code-Review-Finding "stale per-application dedup").
+      const notifId = `overdue-${app.id}-${toDateKey(app.nextStepDate)}`;
       if (!dismissedIds.includes(notifId)) {
         notifications.push({
           id: notifId,
@@ -100,7 +128,7 @@ export function getNotificationsFromApplications(
 
     // 2. Anstehender Termin in den nächsten 48h
     if (followUp.isDueSoon && !followUp.isOverdue && app.nextStepDate) {
-      const notifId = `duesoon-${app.id}`;
+      const notifId = `duesoon-${app.id}-${toDateKey(app.nextStepDate)}`;
       if (!dismissedIds.includes(notifId)) {
         notifications.push({
           id: notifId,
@@ -118,7 +146,10 @@ export function getNotificationsFromApplications(
 
     // 3. Nachfassen empfohlen (> 14 Tage ohne Rückmeldung)
     if (followUp.isFollowUpSuggested) {
-      const notifId = `followup-${app.id}`;
+      // Anker ist hier das Bewerbungsdatum statt eines Zieltermins (es gibt
+      // keinen) — ändert sich dieses (z.B. nachträgliche Korrektur), ist das
+      // ebenfalls ein neuer, eigenständiger Anlass für einen erneuten Hinweis.
+      const notifId = `followup-${app.id}-${toDateKey(app.applicationDate)}`;
       if (!dismissedIds.includes(notifId)) {
         notifications.push({
           id: notifId,

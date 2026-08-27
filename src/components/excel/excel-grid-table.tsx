@@ -39,6 +39,11 @@ import { ExcelImportModal } from "@/components/excel/excel-import-modal";
 // wie die Tabellenansicht (src/lib/apiUtils.ts).
 const EXCEL_PAGE_SIZE = 50;
 
+// Verzögerung, bevor eine geänderte Volltextsuche einen neuen (paginierten,
+// serverseitig gefilterten) Request auslöst — verhindert einen Request pro
+// Tastenanschlag. Gleicher Wert wie in src/app/applications/page.tsx.
+const SEARCH_DEBOUNCE_MS = 300;
+
 export type ExcelRow = {
   id: string;
   companyName: string;
@@ -80,6 +85,35 @@ const DEFAULT_COLUMNS: VisibleColumns = {
 };
 
 const COLS_STORAGE_KEY = "career_manager_excel_cols";
+
+type CommittedFilters = {
+  status: string;
+  portal: string;
+  search: string;
+  onlyFollowUps: boolean;
+  sortBy: SortOption;
+};
+
+const DEFAULT_FILTERS: CommittedFilters = {
+  status: "ALL",
+  portal: "ALL",
+  search: "",
+  onlyFollowUps: false,
+  sortBy: "DATE_DESC",
+};
+
+/** Baut die paginierte, serverseitig gefilterte Applications-URL (siehe src/lib/applicationQuery.ts). */
+function buildFilteredQueryUrl(page: number, filters: CommittedFilters): string {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("pageSize", String(EXCEL_PAGE_SIZE));
+  if (filters.status !== "ALL") params.set("status", filters.status);
+  if (filters.portal !== "ALL") params.set("portal", filters.portal);
+  if (filters.search.trim()) params.set("search", filters.search.trim());
+  if (filters.onlyFollowUps) params.set("onlyFollowUps", "true");
+  params.set("sortBy", filters.sortBy);
+  return `/api/applications?${params.toString()}`;
+}
 
 /** Wandelt ein ApplicationListItem aus der API in eine editierbare Grid-Zeile um. */
 function toExcelRow(app: ApplicationListItem): ExcelRow {
@@ -144,6 +178,101 @@ function ExcelGridContent({
   const [portalFilter, setPortalFilter] = useState("ALL");
   const [onlyFollowUps, setOnlyFollowUps] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>("DATE_DESC");
+
+  // Filter/Suche laufen serverseitig (siehe src/lib/applicationQuery.ts) —
+  // sonst würden Suche/Filter nur die aktuell geladene(n) Seite(n) durchsuchen
+  // und echte Treffer auf noch nicht geladenen Seiten verstecken.
+  //
+  // Der eigentliche Reload wird bewusst NICHT aus einem `useEffect` heraus
+  // ausgelöst, der auf die Filter-States "reagiert" — ein Effect, der direkt
+  // synchron eine setState-Kette lostritt (Ladeindikator setzen, Zeilen
+  // ersetzen), erzeugt unnötige Render-Kaskaden und widerspricht dem in
+  // diesem Projekt etablierten Muster (siehe src/app/applications/page.tsx:
+  // Datenladen läuft ausschließlich über SWR bzw. direkt aus Event-Handlern,
+  // nie aus einem Effect heraus). Stattdessen löst JEDE Filteränderung den
+  // Reload direkt aus ihrem jeweiligen Event-Handler aus (s. commitFilterChange
+  // unten); nur die Debounce-Verzögerung der Volltextsuche bleibt ein
+  // `useEffect`, weil sie an eine Zeitspanne statt an ein konkretes Nutzer-
+  // Event gebunden ist — der eigentliche Reload passiert aber auch hier erst
+  // im (asynchronen) `setTimeout`-Callback, nicht synchron im Effect-Body.
+  const rowsRef = useRef(rows);
+  useEffect(() => {
+    rowsRef.current = rows;
+  }, [rows]);
+
+  // Die Filter-Kombination, die tatsächlich in `rows`/`total` widergespiegelt
+  // ist (kann von den aktuellen Auswahl-States abweichen, wenn ein Reload
+  // wegen ungespeicherter Änderungen abgelehnt wurde, s.u.) — "Weitere laden"
+  // baut IMMER auf dieser Referenz auf, damit angehängte Seiten nie zu einer
+  // anderen Filterkombination gehören als die bereits geladenen Zeilen.
+  const appliedFiltersRef = useRef<CommittedFilters>(DEFAULT_FILTERS);
+
+  /**
+   * Lädt Seite 1 unter den übergebenen Filtern neu und ersetzt die bisher
+   * geladenen (gespeicherten) Zeilen damit — ungespeicherte neue Zeilen
+   * (`temp-...`) bleiben dabei unberührt erhalten, da Filter auf sie nicht
+   * sinnvoll anwendbar sind (sie existieren serverseitig noch gar nicht).
+   */
+  async function reloadFirstPage(filters: CommittedFilters) {
+    setLoadingMore(true);
+    try {
+      const result = await fetcher<PaginatedResult<ApplicationListItem>>(buildFilteredQueryUrl(1, filters));
+      setRows((prev) => {
+        const tempRows = prev.filter((r) => r.id.startsWith("temp-"));
+        return [...tempRows, ...result.data.map(toExcelRow)];
+      });
+      setTotal(result.total);
+      setLoadedPages(1);
+      appliedFiltersRef.current = filters;
+    } catch {
+      toast.error("Gefilterte Bewerbungen konnten nicht geladen werden.");
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
+  /**
+   * Wendet eine Filteränderung an: no-op, falls sie gegenüber der zuletzt
+   * geladenen Kombination nichts ändert; fragt bei ungespeicherten Änderungen
+   * an bereits geladenen Zeilen zuerst nach Bestätigung (sonst würden diese
+   * beim Neuladen stillschweigend verworfen); lädt sonst Seite 1 neu.
+   * Liest `rowsRef.current` statt des `rows`-States direkt, damit auch der
+   * verzögerte Aufruf aus dem Such-Debounce (s.u.) immer den aktuellen
+   * Bearbeitungsstand sieht, nicht den zum Zeitpunkt des Tastendrucks.
+   */
+  function commitFilterChange(overrides: Partial<CommittedFilters>) {
+    const next: CommittedFilters = { ...appliedFiltersRef.current, ...overrides };
+    const applied = appliedFiltersRef.current;
+    const unchanged =
+      next.status === applied.status &&
+      next.portal === applied.portal &&
+      next.search === applied.search &&
+      next.onlyFollowUps === applied.onlyFollowUps &&
+      next.sortBy === applied.sortBy;
+    if (unchanged) return;
+
+    const hasUnsavedPersistedEdits = rowsRef.current.some((r) => r.isDirty && !r.id.startsWith("temp-"));
+    if (
+      hasUnsavedPersistedEdits &&
+      !confirm(
+        "Es gibt ungespeicherte Änderungen an bereits geladenen Zeilen. Beim Filtern werden diese Zeilen neu vom Server geladen — ungespeicherte Änderungen gehen dabei verloren. Trotzdem fortfahren?"
+      )
+    ) {
+      // Auswahl bleibt sichtbar geändert, aber die geladenen Zeilen werden
+      // NICHT neu geladen, solange nicht gespeichert oder erneut bestätigt
+      // wird — verhindert stillen Datenverlust an unsaved Edits.
+      return;
+    }
+
+    void reloadFirstPage(next);
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => commitFilterChange({ search: searchQuery }), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- commitFilterChange liest bewusst nur über Refs (rowsRef/appliedFiltersRef), kein stale-closure-Risiko.
+  }, [searchQuery]);
+
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [columnPopoverOpen, setColumnPopoverOpen] = useState(false);
   const columnPopoverRef = useRef<HTMLDivElement>(null);
@@ -214,38 +343,14 @@ function ExcelGridContent({
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"IDLE" | "SAVING" | "SAVED">("IDLE");
 
+  // Status/Portal/Suche/Wiedervorlage werden serverseitig gefiltert (s.o.,
+  // reloadFirstPage) — `rows` enthält daher bereits nur Treffer (plus
+  // ungespeicherte neue Zeilen, die absichtlich NICHT gefiltert werden, s.
+  // handleAddRow). Hier bleibt nur noch die client-seitige Sortierung, damit
+  // neu hinzugefügte Zeilen sinnvoll einsortiert erscheinen, ohne dafür einen
+  // Server-Roundtrip zu brauchen.
   const filteredRows = useMemo(() => {
-    let list = [...rows];
-
-    // Status Filter
-    if (statusFilter !== "ALL") {
-      list = list.filter((r) => r.status === statusFilter);
-    }
-
-    // Portal Filter
-    if (portalFilter !== "ALL") {
-      list = list.filter((r) => r.portal === portalFilter);
-    }
-
-    // Search Query
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      list = list.filter(
-        (r) =>
-          r.companyName.toLowerCase().includes(q) ||
-          r.position.toLowerCase().includes(q) ||
-          r.portal.toLowerCase().includes(q) ||
-          r.notes.toLowerCase().includes(q) ||
-          r.contactName.toLowerCase().includes(q)
-      );
-    }
-
-    // Follow Up Filter
-    if (onlyFollowUps) {
-      list = list.filter((r) => r.nextStep || r.nextStepDate);
-    }
-
-    // Sorting
+    const list = [...rows];
     list.sort((a, b) => {
       if (sortBy === "DATE_DESC") {
         return b.applicationDate.localeCompare(a.applicationDate);
@@ -261,9 +366,8 @@ function ExcelGridContent({
       }
       return 0;
     });
-
     return list;
-  }, [rows, searchQuery, statusFilter, portalFilter, onlyFollowUps, sortBy]);
+  }, [rows, sortBy]);
 
   const hasActiveFilters = statusFilter !== "ALL" || portalFilter !== "ALL" || searchQuery.trim() !== "" || onlyFollowUps;
 
@@ -272,6 +376,7 @@ function ExcelGridContent({
     setPortalFilter("ALL");
     setSearchQuery("");
     setOnlyFollowUps(false);
+    commitFilterChange({ status: "ALL", portal: "ALL", search: "", onlyFollowUps: false });
   }
 
   function handleCellChange(id: string, field: keyof ExcelRow, value: string) {
@@ -351,8 +456,12 @@ function ExcelGridContent({
     setLoadingMore(true);
     try {
       const nextPage = loadedPages + 1;
+      // Baut IMMER auf der zuletzt tatsächlich angewendeten Filterkombination
+      // auf (nicht auf den evtl. noch ungespeichert geänderten Auswahl-States,
+      // s. appliedFiltersRef oben) — sonst könnten Zeilen zweier
+      // unterschiedlicher Filterkombinationen im selben Grid landen.
       const result = await fetcher<PaginatedResult<ApplicationListItem>>(
-        `/api/applications?page=${nextPage}&pageSize=${EXCEL_PAGE_SIZE}`
+        buildFilteredQueryUrl(nextPage, appliedFiltersRef.current)
       );
       setRows((prev) => {
         const existingIds = new Set(prev.map((r) => r.id));
@@ -389,7 +498,13 @@ function ExcelGridContent({
   }
 
   const dirtyCount = rows.filter((r) => r.isDirty).length;
-  const hasMoreRows = rows.length < total;
+  // Nur bereits gespeicherte (vom Server geladene) Zeilen zählen für den
+  // "gibt es noch mehr?"-Vergleich mit `total` — unsaved neue Zeilen
+  // (`temp-...`, s. handleAddRow) existieren serverseitig noch nicht und
+  // würden sonst `hasMoreRows` verfälschen (z.B. fälschlich auf `false`
+  // setzen, obwohl serverseitig noch weitere Seiten offen sind).
+  const persistedRowCount = rows.filter((r) => !r.id.startsWith("temp-")).length;
+  const hasMoreRows = persistedRowCount < total;
 
   return (
     <div className="flex flex-col gap-4 animate-fade-in">
@@ -471,8 +586,12 @@ function ExcelGridContent({
 
           {/* Status Filter */}
           <Select
+            aria-label="Nach Status filtern"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              commitFilterChange({ status: e.target.value });
+            }}
             className="h-8 w-auto text-xs"
           >
             <option value="ALL">Alle Status ({rows.length})</option>
@@ -485,8 +604,12 @@ function ExcelGridContent({
 
           {/* Portal Filter */}
           <Select
+            aria-label="Nach Portal filtern"
             value={portalFilter}
-            onChange={(e) => setPortalFilter(e.target.value)}
+            onChange={(e) => {
+              setPortalFilter(e.target.value);
+              commitFilterChange({ portal: e.target.value });
+            }}
             className="h-8 w-auto text-xs"
           >
             <option value="ALL">Alle Portale</option>
@@ -499,8 +622,12 @@ function ExcelGridContent({
 
           {/* Sortierung */}
           <Select
+            aria-label="Sortierung"
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            onChange={(e) => {
+              setSortBy(e.target.value as SortOption);
+              commitFilterChange({ sortBy: e.target.value as SortOption });
+            }}
             className="h-8 w-auto text-xs"
           >
             <option value="DATE_DESC">Datum (Neueste zuerst)</option>
@@ -512,7 +639,11 @@ function ExcelGridContent({
           {/* Nur Wiedervorlage */}
           <button
             type="button"
-            onClick={() => setOnlyFollowUps(!onlyFollowUps)}
+            onClick={() => {
+              const next = !onlyFollowUps;
+              setOnlyFollowUps(next);
+              commitFilterChange({ onlyFollowUps: next });
+            }}
             className={cn(
               "flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors",
               onlyFollowUps
@@ -659,8 +790,8 @@ function ExcelGridContent({
           )}
 
           <span className="ml-auto text-[11px] text-muted-foreground">
-            {filteredRows.length} von {rows.length} geladenen Zeilen
-            {hasMoreRows && ` (insgesamt ${total})`}
+            {rows.length} geladene Zeile{rows.length === 1 ? "" : "n"}
+            {hasMoreRows && ` (insgesamt ${total} Treffer)`}
           </span>
         </div>
       </div>
@@ -872,7 +1003,7 @@ function ExcelGridContent({
         <div className="flex justify-center">
           <Button size="sm" variant="outline" onClick={handleLoadMore} disabled={loadingMore} className="card-hover-effect">
             {loadingMore ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
-            {loadingMore ? "Lade …" : `Weitere ${Math.min(EXCEL_PAGE_SIZE, total - rows.length)} laden`}
+            {loadingMore ? "Lade …" : `Weitere ${Math.min(EXCEL_PAGE_SIZE, total - persistedRowCount)} laden`}
           </Button>
         </div>
       )}

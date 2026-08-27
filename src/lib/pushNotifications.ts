@@ -13,7 +13,7 @@ import { prisma } from "./prisma";
 import { getVapidKeys } from "./vapidKeys";
 import { getNotificationsFromApplications, type AppNotification } from "./notifications";
 import type { MatchedEmailAction } from "./emailImapSync";
-import type { ApplicationListItem, PushSubscription } from "@/types";
+import type { PushSubscription } from "@/types";
 
 export type PushPayload = {
   title: string;
@@ -55,6 +55,30 @@ export async function sendPushToSubscription(
   }
 }
 
+/**
+ * Beansprucht eine Benachrichtigungs-ID atomar über die Unique-Constraint auf
+ * `SentPushNotification.id`, BEVOR irgendein Push verschickt wird — statt
+ * (wie zuvor) erst eine Momentaufnahme der bereits gesendeten IDs zu lesen
+ * und den Dedup-Eintrag erst NACH dem Versand zu schreiben. Letzteres ist ein
+ * klassisches Check-then-Act-Rennen: sendDueNotifications() wird von 3
+ * unsynchronisierten Stellen aufgerufen (Scheduler-Tick, Statuswechsel-Route,
+ * E-Mail-Sync-Route) — laufen zwei Aufrufe zeitlich überlappend, würden ohne
+ * dieses atomare Claim beide dieselbe (noch nicht als gesendet markierte)
+ * Benachrichtigung sehen und doppelt an alle Subscriptions verschicken.
+ * Gibt `false` zurück, wenn ein anderer, gleichzeitig laufender Aufruf diese
+ * ID bereits beansprucht hat (Unique-Constraint-Verletzung, Prisma-Code
+ * P2002) — das ist der Normalfall bei Überschneidungen, kein echter Fehler.
+ */
+async function tryClaimNotification(id: string): Promise<boolean> {
+  try {
+    await prisma.sentPushNotification.create({ data: { id } });
+    return true;
+  } catch (error) {
+    if ((error as { code?: string })?.code === "P2002") return false;
+    throw error;
+  }
+}
+
 function toPushPayload(notification: AppNotification): PushPayload {
   return {
     title: notification.title,
@@ -75,9 +99,20 @@ export type SendDueNotificationsResult = { sent: number; skipped: number };
  */
 export async function sendDueNotifications(): Promise<SendDueNotificationsResult> {
   try {
-    const applications = (await prisma.application.findMany({
-      include: {
-        company: true,
+    // Absichtlich NUR die von getNotificationsFromApplications() benötigten
+    // Felder/Relationen laden (siehe NotificationSourceApplication in
+    // notifications.ts) — kein Cast auf das volle ApplicationListItem nötig,
+    // das zusätzlich jobPosting/coverLetter/_count verlangen würde, welche
+    // dieser Query bewusst nicht lädt.
+    const applications = await prisma.application.findMany({
+      select: {
+        id: true,
+        status: true,
+        position: true,
+        applicationDate: true,
+        nextStepDate: true,
+        nextStep: true,
+        company: { select: { name: true } },
         statusEvents: {
           orderBy: { changedAt: "desc" },
           take: 3,
@@ -85,7 +120,7 @@ export async function sendDueNotifications(): Promise<SendDueNotificationsResult
         },
       },
       orderBy: { updatedAt: "desc" },
-    })) as unknown as ApplicationListItem[];
+    });
 
     // Die client-seitige "dismissedIds"-Liste (localStorage, s.
     // useDismissedNotifications.ts) ist hier irrelevant — Dedup läuft
@@ -103,25 +138,27 @@ export async function sendDueNotifications(): Promise<SendDueNotificationsResult
     const subscriptions = await prisma.pushSubscription.findMany();
 
     let sent = 0;
+    let skipped = notifications.length - due.length;
     for (const notification of due) {
+      // Claim VOR dem Versand (s. tryClaimNotification) — verhindert, dass
+      // ein zeitlich überlappender zweiter Aufruf (Scheduler-Tick,
+      // Statuswechsel-Route, E-Mail-Sync) dieselbe Benachrichtigung erneut
+      // verschickt, auch wenn diese `alreadySent`-Momentaufnahme sie noch
+      // nicht kannte.
+      const claimed = await tryClaimNotification(notification.id);
+      if (!claimed) {
+        skipped++;
+        continue;
+      }
+
       const payload = toPushPayload(notification);
       for (const subscription of subscriptions) {
         const ok = await sendPushToSubscription(subscription, payload);
         if (ok) sent++;
       }
-      // Als "bearbeitet" markieren, auch wenn aktuell keine Subscription
-      // registriert ist (subscriptions.length === 0) — sonst würde diese
-      // Benachrichtigung sofort erneut als "fällig" gelten, sobald sich der
-      // Nutzer später doch für Push anmeldet, obwohl sie ggf. längst
-      // veraltet ist.
-      await prisma.sentPushNotification.upsert({
-        where: { id: notification.id },
-        update: {},
-        create: { id: notification.id },
-      });
     }
 
-    return { sent, skipped: notifications.length - due.length };
+    return { sent, skipped };
   } catch (error) {
     console.error("pushNotifications: sendDueNotifications() fehlgeschlagen.", error);
     return { sent: 0, skipped: 0 };
@@ -160,6 +197,14 @@ export async function sendEmailMatchNotifications(
         continue;
       }
 
+      // Claim VOR dem Versand — s. Kommentar bei tryClaimNotification()/
+      // sendDueNotifications() oben.
+      const claimed = await tryClaimNotification(id);
+      if (!claimed) {
+        skipped++;
+        continue;
+      }
+
       const payload: PushPayload = {
         title: "Neue E-Mail erkannt",
         body: `${action.application.company.name}: ${action.email.subject} — Statusvorschlag prüfen.`,
@@ -170,7 +215,6 @@ export async function sendEmailMatchNotifications(
         const ok = await sendPushToSubscription(subscription, payload);
         if (ok) sent++;
       }
-      await prisma.sentPushNotification.upsert({ where: { id }, update: {}, create: { id } });
     }
 
     return { sent, skipped };
