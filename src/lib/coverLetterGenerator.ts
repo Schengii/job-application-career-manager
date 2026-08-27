@@ -84,7 +84,8 @@ export function buildSalutation(contactName: string | null | undefined): string 
   return `Sehr geehrte${gender === "herr" ? "r" : ""} ${genderWord} ${nameForSalutation},`;
 }
 
-const DEFAULT_OPENING_TEMPLATE = "hiermit bewerbe ich mich bei {company} als {position}.";
+const DEFAULT_OPENING_TEMPLATE =
+  "mit großem Interesse habe ich Ihre Stellenanzeige für die Position als {position} bei {company} gelesen.";
 const DEFAULT_BODY_PLACEHOLDER =
   "[Noch kein fester Anschreiben-Text hinterlegt — trage ihn unter Einstellungen → Profil & Präferenzen ein, damit er automatisch in jedes Anschreiben übernommen wird.]";
 

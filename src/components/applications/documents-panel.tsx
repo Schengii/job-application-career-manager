@@ -59,11 +59,18 @@ export function DocumentsPanel({
         <p className="text-xs text-muted-foreground">
           {application.documents.length} Dokument(e) zugeordnet
         </p>
-        <a href={`/api/applications/${application.id}/package`} download>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4" /> Bewerbungspaket (ZIP) herunterladen
-          </Button>
-        </a>
+        <div className="flex items-center gap-2">
+          <a href={`/api/applications/${application.id}/package/pdf`} download>
+            <Button variant="outline" size="sm" title="Anschreiben + alle angehängten PDFs/Scans als EIN zusammengeführtes PDF">
+              <Download className="h-4 w-4" /> Bewerbungspaket (PDF) herunterladen
+            </Button>
+          </a>
+          <a href={`/api/applications/${application.id}/package`} download>
+            <Button variant="ghost" size="sm" title="Anschreiben + Dokumente als einzelne Dateien in einem ZIP">
+              <Download className="h-4 w-4" /> als ZIP
+            </Button>
+          </a>
+        </div>
       </div>
 
       {application.documents.length === 0 ? (

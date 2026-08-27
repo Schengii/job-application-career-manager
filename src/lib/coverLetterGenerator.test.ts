@@ -109,7 +109,7 @@ describe("renderOpeningSentence", () => {
 
   it("fällt ohne Vorlage auf einen Standardsatz zurück", () => {
     expect(renderOpeningSentence(null, "Acme GmbH", "Entwickler")).toBe(
-      "hiermit bewerbe ich mich bei Acme GmbH als Entwickler."
+      "mit großem Interesse habe ich Ihre Stellenanzeige für die Position als Entwickler bei Acme GmbH gelesen."
     );
   });
 });

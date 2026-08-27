@@ -436,13 +436,13 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
         <Field
           label="Einleitungssatz-Vorlage"
           htmlFor="p-opening-sentence"
-          hint='Platzhalter {company} und {position} werden automatisch ersetzt, z. B. "hiermit bewerbe ich mich bei {company} als {position}."'
+          hint='Platzhalter {company} und {position} werden automatisch ersetzt, z. B. "mit großem Interesse habe ich Ihre Stellenanzeige für die Position als {position} bei {company} gelesen."'
         >
           <Input
             id="p-opening-sentence"
             value={form.coverLetterOpeningSentence}
             onChange={(e) => setForm({ ...form, coverLetterOpeningSentence: e.target.value })}
-            placeholder="hiermit bewerbe ich mich bei {company} als {position}."
+            placeholder="mit großem Interesse habe ich Ihre Stellenanzeige für die Position als {position} bei {company} gelesen."
           />
         </Field>
         <Field

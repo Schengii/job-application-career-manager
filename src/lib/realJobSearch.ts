@@ -1,6 +1,13 @@
 // -----------------------------------------------------------------------------
 // Echte Live-Jobsuche: Bundesagentur für Arbeit API & Arbeitnow API
 // -----------------------------------------------------------------------------
+// Response-Cache: identische Suchanfragen (z.B. mehrfaches Klicken, ein neu
+// geöffneter Tab mit denselben Filtern) lösen innerhalb der TTL keinen
+// erneuten externen API-Aufruf aus — spart unnötige Requests gegen die
+// Bundesagentur-/Arbeitnow-APIs und macht wiederholte Suchen spürbar
+// schneller. In-memory, modul-weit einmal angelegt (dasselbe Idiom wie der
+// Rate-Limiter in src/lib/rateLimiter.ts: ein einziger Server-Prozess für
+// diese Single-User-App, kein verteilter Cache nötig).
 import { SimulatedJobPosting } from "./mockJobPortals";
 
 export interface LiveJobSearchParams {
@@ -202,10 +209,27 @@ function generateLiveFallbackJobs(params: LiveJobSearchParams): SimulatedJobPost
   ];
 }
 
-/**
- * Hauptsuchfunktion: Aggregiert Ergebnisse aus allen Quellen
- */
-export async function searchRealJobs(params: LiveJobSearchParams): Promise<LiveJobSearchResult> {
+const SEARCH_CACHE_TTL_MS = 5 * 60 * 1000; // 5 Minuten
+// Obergrenze für die Anzahl gleichzeitig vorgehaltener Suchanfragen — schützt
+// vor unbegrenztem Speicherwachstum, falls sehr viele unterschiedliche
+// Filterkombinationen durchprobiert werden. Bei Erreichen wird der älteste
+// Eintrag verdrängt (FIFO), analog zu `maxTrackedKeys` in rateLimiter.ts.
+const SEARCH_CACHE_MAX_ENTRIES = 200;
+
+type CacheEntry = { result: LiveJobSearchResult; expiresAt: number };
+const searchCache = new Map<string, CacheEntry>();
+
+function cacheKeyFor(params: LiveJobSearchParams): string {
+  return JSON.stringify({
+    query: params.query ?? "",
+    location: params.location ?? "",
+    radius: params.radius ?? null,
+    source: params.source ?? "ALL",
+    limit: params.limit ?? 20,
+  });
+}
+
+async function searchRealJobsUncached(params: LiveJobSearchParams): Promise<LiveJobSearchResult> {
   const sourcesQueried: string[] = [];
   const results: SimulatedJobPosting[] = [];
 
@@ -239,4 +263,35 @@ export async function searchRealJobs(params: LiveJobSearchParams): Promise<LiveJ
     sourcesQueried,
     isFallback: false,
   };
+}
+
+/**
+ * Hauptsuchfunktion: Aggregiert Ergebnisse aus allen Quellen. Identische
+ * Anfragen (gleiche query/location/radius/source/limit) werden für
+ * `SEARCH_CACHE_TTL_MS` aus dem In-Memory-Cache beantwortet, statt erneut
+ * die externen Job-Portal-APIs abzufragen.
+ */
+export async function searchRealJobs(params: LiveJobSearchParams): Promise<LiveJobSearchResult> {
+  const key = cacheKeyFor(params);
+  const cached = searchCache.get(key);
+  const now = Date.now();
+
+  if (cached && cached.expiresAt > now) {
+    return cached.result;
+  }
+
+  const result = await searchRealJobsUncached(params);
+
+  if (searchCache.size >= SEARCH_CACHE_MAX_ENTRIES && !searchCache.has(key)) {
+    const oldestKey = searchCache.keys().next().value;
+    if (oldestKey !== undefined) searchCache.delete(oldestKey);
+  }
+  searchCache.set(key, { result, expiresAt: now + SEARCH_CACHE_TTL_MS });
+
+  return result;
+}
+
+/** Nur für Tests: leert den Suchergebnis-Cache zwischen Testfällen. */
+export function clearSearchCache(): void {
+  searchCache.clear();
 }
