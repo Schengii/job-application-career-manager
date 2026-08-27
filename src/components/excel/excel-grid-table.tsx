@@ -27,9 +27,17 @@ import { Select } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
 import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/constants";
 import type { ApplicationListItem } from "@/types";
+import type { PaginatedResult } from "@/lib/apiUtils";
 import { applicationsToCsv, downloadCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
 import { ExcelImportModal } from "@/components/excel/excel-import-modal";
+
+// Seitengröße für den initialen Ladevorgang & jedes weitere "Weitere laden"
+// (siehe applyPage()/handleLoadMore unten). Begrenzt die anfänglich geladene
+// (und ins DOM gerenderte) Zeilenmenge, statt bei jedem Öffnen der Ansicht
+// sofort ALLE Bewerbungen zu laden — nutzt dieselbe Pagination-Infrastruktur
+// wie die Tabellenansicht (src/lib/apiUtils.ts).
+const EXCEL_PAGE_SIZE = 50;
 
 export type ExcelRow = {
   id: string;
@@ -73,10 +81,35 @@ const DEFAULT_COLUMNS: VisibleColumns = {
 
 const COLS_STORAGE_KEY = "career_manager_excel_cols";
 
-export function ExcelGridTable() {
-  const { data: applications, isLoading } = useSWR<ApplicationListItem[]>("/api/applications", fetcher);
+/** Wandelt ein ApplicationListItem aus der API in eine editierbare Grid-Zeile um. */
+function toExcelRow(app: ApplicationListItem): ExcelRow {
+  return {
+    id: app.id,
+    companyName: app.company.name,
+    position: app.position,
+    status: app.status,
+    applicationDate: app.applicationDate ? new Date(app.applicationDate).toISOString().slice(0, 10) : "",
+    portal: app.source || app.jobPosting?.portalSource || "",
+    contactName: app.company.contactName || "",
+    contactEmail: app.company.contactEmail || "",
+    contactPhone: app.company.contactPhone || "",
+    nextStep: app.nextStep || "",
+    nextStepDate: app.nextStepDate ? new Date(app.nextStepDate).toISOString().slice(0, 10) : "",
+    notes: app.notes || "",
+    isDirty: false,
+  };
+}
 
-  if (isLoading || !applications) {
+export function ExcelGridTable() {
+  // Lädt nur die erste Seite (s. EXCEL_PAGE_SIZE) statt aller Bewerbungen auf
+  // einmal — weitere Seiten werden bei Bedarf über den "Weitere laden"-Button
+  // in ExcelGridContent nachgeladen (siehe handleLoadMore).
+  const { data: firstPage, isLoading } = useSWR<PaginatedResult<ApplicationListItem>>(
+    `/api/applications?page=1&pageSize=${EXCEL_PAGE_SIZE}`,
+    fetcher
+  );
+
+  if (isLoading || !firstPage) {
     return (
       <div className="rounded-xl border border-border bg-surface p-12 text-center text-sm text-muted-foreground">
         Lade Excel-Tabelle …
@@ -84,30 +117,27 @@ export function ExcelGridTable() {
     );
   }
 
-  return <ExcelGridContent initialApplications={applications} />;
+  return <ExcelGridContent initialApplications={firstPage.data} initialTotal={firstPage.total} />;
 }
 
-function ExcelGridContent({ initialApplications }: { initialApplications: ApplicationListItem[] }) {
+function ExcelGridContent({
+  initialApplications,
+  initialTotal,
+}: {
+  initialApplications: ApplicationListItem[];
+  initialTotal: number;
+}) {
   const { mutate } = useSWRConfig();
   const toast = useToast();
 
-  const [rows, setRows] = useState<ExcelRow[]>(() =>
-    initialApplications.map((app) => ({
-      id: app.id,
-      companyName: app.company.name,
-      position: app.position,
-      status: app.status,
-      applicationDate: app.applicationDate ? new Date(app.applicationDate).toISOString().slice(0, 10) : "",
-      portal: app.source || app.jobPosting?.portalSource || "",
-      contactName: app.company.contactName || "",
-      contactEmail: app.company.contactEmail || "",
-      contactPhone: app.company.contactPhone || "",
-      nextStep: app.nextStep || "",
-      nextStepDate: app.nextStepDate ? new Date(app.nextStepDate).toISOString().slice(0, 10) : "",
-      notes: app.notes || "",
-      isDirty: false,
-    }))
-  );
+  const [rows, setRows] = useState<ExcelRow[]>(() => initialApplications.map(toExcelRow));
+  // Gesamtzahl aller Bewerbungen (nicht nur der geladenen) — für die
+  // "Weitere laden"-Anzeige und um zu wissen, ob überhaupt noch etwas
+  // nachzuladen ist.
+  const [total, setTotal] = useState(initialTotal);
+  const [loadedPages, setLoadedPages] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [exportingAll, setExportingAll] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -317,13 +347,49 @@ function ExcelGridContent({ initialApplications }: { initialApplications: Applic
     }
   }
 
-  function handleExportCsv() {
-    if (!initialApplications?.length) return;
-    downloadCsv(`bewerbungsliste-excel-${new Date().toISOString().slice(0, 10)}.csv`, applicationsToCsv(initialApplications));
-    toast.success("Tabelle als CSV/Excel exportiert.");
+  async function handleLoadMore() {
+    setLoadingMore(true);
+    try {
+      const nextPage = loadedPages + 1;
+      const result = await fetcher<PaginatedResult<ApplicationListItem>>(
+        `/api/applications?page=${nextPage}&pageSize=${EXCEL_PAGE_SIZE}`
+      );
+      setRows((prev) => {
+        const existingIds = new Set(prev.map((r) => r.id));
+        const newRows = result.data.filter((app) => !existingIds.has(app.id)).map(toExcelRow);
+        return [...prev, ...newRows];
+      });
+      setTotal(result.total);
+      setLoadedPages(nextPage);
+    } catch {
+      toast.error("Weitere Zeilen konnten nicht geladen werden.");
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
+  async function handleExportCsv() {
+    // Exportiert bewusst ALLE Bewerbungen (nicht nur die aktuell geladenen
+    // Grid-Zeilen) — dafür ein frischer, ungepaginierter Fetch beim Klick,
+    // statt die komplette Liste schon beim Öffnen der Ansicht laden zu müssen.
+    setExportingAll(true);
+    try {
+      const all = await fetcher<ApplicationListItem[]>("/api/applications");
+      if (!all.length) {
+        toast.error("Keine Bewerbungen zum Exportieren vorhanden.");
+        return;
+      }
+      downloadCsv(`bewerbungsliste-excel-${new Date().toISOString().slice(0, 10)}.csv`, applicationsToCsv(all));
+      toast.success("Tabelle als CSV/Excel exportiert.");
+    } catch {
+      toast.error("Export fehlgeschlagen.");
+    } finally {
+      setExportingAll(false);
+    }
   }
 
   const dirtyCount = rows.filter((r) => r.isDirty).length;
+  const hasMoreRows = rows.length < total;
 
   return (
     <div className="flex flex-col gap-4 animate-fade-in">
@@ -358,8 +424,9 @@ function ExcelGridContent({ initialApplications }: { initialApplications: Applic
               <Plus className="h-4 w-4" /> Neue Zeile
             </Button>
 
-            <Button size="sm" variant="outline" onClick={handleExportCsv} className="card-hover-effect">
-              <Download className="h-4 w-4" /> Export
+            <Button size="sm" variant="outline" onClick={handleExportCsv} disabled={exportingAll} className="card-hover-effect">
+              {exportingAll ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Export {exportingAll ? "…" : "(alle)"}
             </Button>
 
             <Button
@@ -592,7 +659,8 @@ function ExcelGridContent({ initialApplications }: { initialApplications: Applic
           )}
 
           <span className="ml-auto text-[11px] text-muted-foreground">
-            {filteredRows.length} von {rows.length} Zeilen
+            {filteredRows.length} von {rows.length} geladenen Zeilen
+            {hasMoreRows && ` (insgesamt ${total})`}
           </span>
         </div>
       </div>
@@ -799,6 +867,15 @@ function ExcelGridContent({ initialApplications }: { initialApplications: Applic
           </table>
         </div>
       </div>
+
+      {hasMoreRows && (
+        <div className="flex justify-center">
+          <Button size="sm" variant="outline" onClick={handleLoadMore} disabled={loadingMore} className="card-hover-effect">
+            {loadingMore ? <RefreshCw className="h-4 w-4 animate-spin" /> : null}
+            {loadingMore ? "Lade …" : `Weitere ${Math.min(EXCEL_PAGE_SIZE, total - rows.length)} laden`}
+          </Button>
+        </div>
+      )}
 
       <ExcelImportModal
         open={importModalOpen}

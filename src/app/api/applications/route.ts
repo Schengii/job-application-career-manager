@@ -6,44 +6,53 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { applicationSchema } from "@/lib/validation";
 import { handleApiError, parsePagination, toDateOrNull, toPaginatedResult } from "@/lib/apiUtils";
+import { buildApplicationOrderBy, buildApplicationWhere, parseApplicationQueryParams } from "@/lib/applicationQuery";
+
+const include = {
+  company: true,
+  jobPosting: true,
+  coverLetter: true,
+  // Nur die letzten 3 Status-Events (neueste zuerst) — für die
+  // Benachrichtigungs-Zentrale (src/lib/notifications.ts), die daraus
+  // Absage-/Zusage-/Interview-Benachrichtigungen ableitet.
+  statusEvents: {
+    orderBy: { changedAt: "desc" as const },
+    take: 3,
+    select: { id: true, status: true, changedAt: true },
+  },
+  _count: { select: { statusEvents: true, documents: true } },
+} as const;
 
 export async function GET(request: NextRequest) {
-  const status = request.nextUrl.searchParams.get("status");
-  const where = status ? { status } : undefined;
   const pagination = parsePagination(request.nextUrl.searchParams);
-
-  const include = {
-    company: true,
-    jobPosting: true,
-    coverLetter: true,
-    // Nur die letzten 3 Status-Events (neueste zuerst) — für die
-    // Benachrichtigungs-Zentrale (src/lib/notifications.ts), die daraus
-    // Absage-/Zusage-/Interview-Benachrichtigungen ableitet.
-    statusEvents: {
-      orderBy: { changedAt: "desc" as const },
-      take: 3,
-      select: { id: true, status: true, changedAt: true },
-    },
-    _count: { select: { statusEvents: true, documents: true } },
-  } as const;
 
   // Ohne ?page=/?pageSize= bleibt die Antwort ein einfaches Array (siehe
   // Kommentar zu `parsePagination` in apiUtils.ts) — das ist der Pfad, den
-  // alle bestehenden Frontend-Views (Dashboard, Kanban, Excel-Grid, ...)
-  // weiterhin nutzen.
+  // Kanban-Board, Dashboard-Metriken & Notification-Bell weiterhin nutzen,
+  // unverändert nur mit `?status`-Filter (kein Portal-/Tag-/Volltext-/
+  // Follow-up-Filter oder Sortierung im unpaginierten Modus).
   if (!pagination) {
+    const status = request.nextUrl.searchParams.get("status");
     const applications = await prisma.application.findMany({
-      where,
+      where: status ? { status } : undefined,
       orderBy: { updatedAt: "desc" },
       include,
     });
     return NextResponse.json(applications);
   }
 
+  // Paginierter Modus (Tabellen-/Excel-Ansicht, s. src/lib/applicationQuery.ts):
+  // Filterung & Sortierung laufen serverseitig, damit sie sich nicht mit der
+  // Pagination widersprechen — ein client-seitiger Filter auf nur einer
+  // geladenen Seite würde sonst Treffer auf anderen Seiten verstecken.
+  const queryParams = parseApplicationQueryParams(request.nextUrl.searchParams);
+  const where = buildApplicationWhere(queryParams);
+  const orderBy = buildApplicationOrderBy(queryParams.sortBy);
+
   const [applications, total] = await Promise.all([
     prisma.application.findMany({
       where,
-      orderBy: { updatedAt: "desc" },
+      orderBy,
       include,
       skip: pagination.skip,
       take: pagination.take,

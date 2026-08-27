@@ -6,10 +6,12 @@
 // portable JSON-Datei.
 //
 // Sicherheit: `preferences.aiApiKey` (der KI-API-Key des Nutzers, z. B. für
-// OpenAI/Anthropic) wird bewusst NICHT exportiert. Ein Backup landet leicht
-// in Cloud-Speichern, E-Mail-Anhängen oder Support-Anfragen — ein
-// mitexportierter Klartext-Key wäre ein Datenleck. Nach einem Restore muss
-// der KI-Key daher ggf. erneut in den Einstellungen hinterlegt werden.
+// OpenAI/Anthropic) und `preferences.imapPassword` (das IMAP-Passwort für den
+// E-Mail-Auto-Sync) werden bewusst NICHT exportiert. Ein Backup landet leicht
+// in Cloud-Speichern, E-Mail-Anhängen oder Support-Anfragen — selbst der
+// verschlüsselte Chiffretext wäre dort ein unnötiges Risiko. Nach einem
+// Restore müssen KI-Key und IMAP-Passwort daher ggf. erneut in den
+// Einstellungen hinterlegt werden.
 // -----------------------------------------------------------------------------
 import { prisma } from "@/lib/prisma";
 import { backupSchema } from "@/lib/validation";
@@ -37,9 +39,10 @@ export async function createFullBackup(): Promise<BackupData> {
       prisma.document.findMany(),
     ]);
 
-  // aiApiKey bewusst herausfiltern (siehe Kommentar oben).
-  const { aiApiKey: _aiApiKey, ...preferencesWithoutSecret } = preferences ?? {};
+  // aiApiKey & imapPassword bewusst herausfiltern (siehe Kommentar oben).
+  const { aiApiKey: _aiApiKey, imapPassword: _imapPassword, ...preferencesWithoutSecret } = preferences ?? {};
   void _aiApiKey;
+  void _imapPassword;
 
   return {
     version: 1,

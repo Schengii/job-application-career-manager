@@ -78,4 +78,46 @@ describe("/api/preferences", () => {
     const stored = await prisma.preferences.findUnique({ where: { id: "default" } });
     expect(stored?.aiApiKey).toBeNull();
   });
+
+  // Dieselbe Sicherheitslogik gilt seit dem echten IMAP-Sync (src/lib/imapClient.ts)
+  // auch für imapPassword — dupliziert die drei aiApiKey-Tests oben 1:1.
+  it("PATCH mit imapPassword speichert das Passwort verschlüsselt, gibt es aber nie im Klartext zurück", async () => {
+    const response = await PATCH(patchRequest({ imapPassword: "app-password-12345" }));
+    const body = await response.json();
+
+    expect(body.imapPassword).toBeNull();
+    expect(body.hasImapPassword).toBe(true);
+    expect(body.imapPasswordPreview).toBe("••••••••2345");
+
+    const stored = await prisma.preferences.findUnique({ where: { id: "default" } });
+    expect(stored?.imapPassword).not.toBe("app-password-12345");
+    expect(stored?.imapPassword).toMatch(/^enc:v1:/);
+    expect(decryptSecret(stored!.imapPassword!)).toBe("app-password-12345");
+  });
+
+  it("PATCH ohne imapPassword-Feld lässt ein bereits gespeichertes Passwort unverändert", async () => {
+    await PATCH(patchRequest({ imapPassword: "original-app-password" }));
+
+    const response = await PATCH(patchRequest({ imapHost: "imap.gmail.com" }));
+    const body = await response.json();
+
+    expect(body.imapHost).toBe("imap.gmail.com");
+    expect(body.hasImapPassword).toBe(true);
+
+    const stored = await prisma.preferences.findUnique({ where: { id: "default" } });
+    expect(decryptSecret(stored!.imapPassword!)).toBe("original-app-password");
+  });
+
+  it("PATCH mit leerem imapPassword entfernt das gespeicherte Passwort gezielt", async () => {
+    await PATCH(patchRequest({ imapPassword: "to-be-removed" }));
+
+    const response = await PATCH(patchRequest({ imapPassword: "" }));
+    const body = await response.json();
+
+    expect(body.hasImapPassword).toBe(false);
+    expect(body.imapPasswordPreview).toBeNull();
+
+    const stored = await prisma.preferences.findUnique({ where: { id: "default" } });
+    expect(stored?.imapPassword).toBeNull();
+  });
 });

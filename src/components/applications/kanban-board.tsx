@@ -3,8 +3,9 @@
 // -----------------------------------------------------------------------------
 // Kanban-Board für Bewerbungen mit klaren Farbakzenten
 // -----------------------------------------------------------------------------
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { MoreVertical } from "lucide-react";
 import { APPLICATION_STATUSES } from "@/lib/constants";
 import { formatDate, cn } from "@/lib/utils";
 import type { ApplicationListItem } from "@/types";
@@ -42,6 +43,82 @@ const COLUMN_COLORS: Record<string, { header: string; dot: string; cardBorder: s
   },
 };
 
+/**
+ * Tastatur-/Screenreader-Alternative zum Maus-Drag&Drop: ein fokussierbarer
+ * "⋮"-Button pro Karte öffnet ein Menü mit allen Zielspalten. Bewusst als
+ * separates Element NEBEN dem `<Link>` (nicht darin verschachtelt) gerendert
+ * — ein `<button>` innerhalb eines `<a>` wäre ungültiges/für Screenreader
+ * verwirrendes HTML (verschachtelter interaktiver Inhalt).
+ */
+function StatusMoveMenu({
+  app,
+  onMove,
+}: {
+  app: ApplicationListItem;
+  onMove: (targetStatus: string, targetLabel: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="absolute right-1.5 top-1.5" ref={menuRef}>
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Status von ${app.company.name} ändern`}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen((o) => !o);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") setOpen(false);
+        }}
+        className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors"
+      >
+        <MoreVertical className="h-3.5 w-3.5" />
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          aria-label="Zielspalte wählen"
+          className="absolute right-0 top-7 z-20 w-48 rounded-lg border border-border bg-surface py-1 shadow-2xl animate-scale-in"
+        >
+          {APPLICATION_STATUSES.filter((s) => s.value !== app.status).map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              role="menuitem"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setOpen(false);
+                onMove(s.value, s.label);
+              }}
+              className="block w-full px-3 py-1.5 text-left text-xs text-foreground hover:bg-surface-hover hover:text-primary transition-colors"
+            >
+              Nach „{s.label}“ verschieben
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function KanbanBoard({
   applications,
   onStatusChange,
@@ -51,9 +128,23 @@ export function KanbanBoard({
 }) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
+  // Bestätigungstext für Screenreader-Nutzer: Maus-Drag&Drop liefert sonst
+  // keinerlei Feedback für Assistive Technologien, dass sich der Status einer
+  // Karte geändert hat.
+  const [announcement, setAnnouncement] = useState("");
+
+  function handleMove(app: ApplicationListItem, targetStatus: string, targetLabel: string) {
+    onStatusChange(app.id, targetStatus);
+    setAnnouncement(`${app.company.name} nach „${targetLabel}“ verschoben.`);
+  }
 
   return (
     <div className="scroll-thin flex gap-4 overflow-x-auto pb-4">
+      {/* aria-live-Region für die Statuswechsel-Bestätigung (Maus-DnD & Tastatur-Menü) */}
+      <div className="sr-only" role="status" aria-live="polite">
+        {announcement}
+      </div>
+
       {APPLICATION_STATUSES.map((col) => {
         const items = applications.filter((a) => a.status === col.value);
         const colStyle = COLUMN_COLORS[col.value] || COLUMN_COLORS.DRAFT;
@@ -73,7 +164,8 @@ export function KanbanBoard({
             onDrop={(e) => {
               e.preventDefault();
               setDragOverStatus(null);
-              if (dragId) onStatusChange(dragId, col.value);
+              const draggedApp = applications.find((a) => a.id === dragId);
+              if (draggedApp) handleMove(draggedApp, col.value, col.label);
               setDragId(null);
             }}
           >
@@ -91,32 +183,34 @@ export function KanbanBoard({
             {/* Karten-Liste */}
             <div className="flex min-h-[140px] flex-col gap-2.5 p-2.5">
               {items.map((app) => (
-                <Link
-                  key={app.id}
-                  href={`/applications/${app.id}`}
-                  draggable
-                  onDragStart={(e) => {
-                    setDragId(app.id);
-                    e.dataTransfer.effectAllowed = "move";
-                  }}
-                  onDragEnd={() => setDragId(null)}
-                  className={cn(
-                    "block cursor-grab rounded-lg border border-border bg-surface p-3.5 shadow-2xs transition-all card-hover-effect active:cursor-grabbing",
-                    colStyle.cardBorder,
-                    dragId === app.id && "opacity-40 scale-95"
-                  )}
-                >
-                  <p className="truncate text-sm font-semibold text-foreground">{app.company.name}</p>
-                  <p className="truncate text-xs text-muted-foreground mt-0.5">{app.position}</p>
-                  <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/40 pt-1.5">
-                    <span>{formatDate(app.applicationDate)}</span>
-                    {(app.source || app.jobPosting?.portalSource) && (
-                      <span className="truncate max-w-[100px] text-[10px] bg-surface-hover px-1.5 py-0.5 rounded font-medium">
-                        {app.source || app.jobPosting?.portalSource}
-                      </span>
+                <div key={app.id} className="relative">
+                  <Link
+                    href={`/applications/${app.id}`}
+                    draggable
+                    onDragStart={(e) => {
+                      setDragId(app.id);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragEnd={() => setDragId(null)}
+                    className={cn(
+                      "block cursor-grab rounded-lg border border-border bg-surface p-3.5 pr-8 shadow-2xs transition-all card-hover-effect active:cursor-grabbing",
+                      colStyle.cardBorder,
+                      dragId === app.id && "opacity-40 scale-95"
                     )}
-                  </div>
-                </Link>
+                  >
+                    <p className="truncate text-sm font-semibold text-foreground">{app.company.name}</p>
+                    <p className="truncate text-xs text-muted-foreground mt-0.5">{app.position}</p>
+                    <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/40 pt-1.5">
+                      <span>{formatDate(app.applicationDate)}</span>
+                      {(app.source || app.jobPosting?.portalSource) && (
+                        <span className="truncate max-w-[100px] text-[10px] bg-surface-hover px-1.5 py-0.5 rounded font-medium">
+                          {app.source || app.jobPosting?.portalSource}
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                  <StatusMoveMenu app={app} onMove={(status, label) => handleMove(app, status, label)} />
+                </div>
               ))}
               {items.length === 0 && (
                 <p className="py-6 text-center text-xs text-muted-foreground/60">

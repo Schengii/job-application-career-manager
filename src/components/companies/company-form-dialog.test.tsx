@@ -69,6 +69,42 @@ describe("CompanyFormDialog", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it("fragt bei einer Duplikat-Warnung nach und legt bei Bestätigung mit forceCreate an", async () => {
+    mockedApiPost
+      .mockResolvedValueOnce({ duplicateWarning: true, candidates: [{ id: "1", name: "Acme GmbH" }] })
+      .mockResolvedValueOnce({ id: "2", name: "ACME" });
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
+    const onClose = vi.fn();
+    const user = userEvent.setup();
+    renderDialog({ open: true, onClose });
+
+    await user.type(screen.getByLabelText(/^name/i), "ACME");
+    await user.click(screen.getByRole("button", { name: "Unternehmen anlegen" }));
+
+    expect(await screen.findByText("Unternehmen wurde angelegt.")).toBeInTheDocument();
+    expect(confirmSpy).toHaveBeenCalledOnce();
+    expect(mockedApiPost).toHaveBeenNthCalledWith(1, "/api/companies", expect.objectContaining({ forceCreate: false }));
+    expect(mockedApiPost).toHaveBeenNthCalledWith(2, "/api/companies", expect.objectContaining({ forceCreate: true }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    confirmSpy.mockRestore();
+  });
+
+  it("legt bei einer Duplikat-Warnung NICHTS an, wenn der Nutzer die Rückfrage ablehnt", async () => {
+    mockedApiPost.mockResolvedValueOnce({ duplicateWarning: true, candidates: [{ id: "1", name: "Acme GmbH" }] });
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const onClose = vi.fn();
+    const user = userEvent.setup();
+    renderDialog({ open: true, onClose });
+
+    await user.type(screen.getByLabelText(/^name/i), "ACME");
+    await user.click(screen.getByRole("button", { name: "Unternehmen anlegen" }));
+
+    await vi.waitFor(() => expect(confirmSpy).toHaveBeenCalledOnce());
+    expect(mockedApiPost).toHaveBeenCalledOnce();
+    expect(onClose).not.toHaveBeenCalled();
+    confirmSpy.mockRestore();
+  });
+
   it("schließt den Dialog beim Klick auf Abbrechen, ohne einen Request zu senden", async () => {
     const onClose = vi.fn();
     const user = userEvent.setup();

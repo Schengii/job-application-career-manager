@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { companySchema } from "@/lib/validation";
 import { handleApiError, parsePagination, toPaginatedResult } from "@/lib/apiUtils";
+import { findCompanyDuplicates } from "@/lib/companyDuplicates";
 
 export async function GET(request: NextRequest) {
   const pagination = parsePagination(request.nextUrl.searchParams);
@@ -37,7 +38,22 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const data = companySchema.parse(body);
+    const { forceCreate, ...data } = companySchema.parse(body);
+
+    // Duplikat-Warnung statt harter Sperre: verschiedene Unternehmen können
+    // legitim ähnliche Namen tragen (z.B. Filialen), daher wird bei einem
+    // Treffer nur ein 200er mit den Kandidaten zurückgegeben — das Frontend
+    // fragt den Nutzer und schickt bei Bestätigung erneut mit
+    // `forceCreate: true`, um die Prüfung bewusst zu umgehen (siehe
+    // src/lib/companyDuplicates.ts, company-form-dialog.tsx).
+    if (!forceCreate) {
+      const existing = await prisma.company.findMany({ select: { id: true, name: true } });
+      const duplicates = findCompanyDuplicates(data.name, existing);
+      if (duplicates.length > 0) {
+        return NextResponse.json({ duplicateWarning: true, candidates: duplicates }, { status: 200 });
+      }
+    }
+
     const company = await prisma.company.create({ data });
     return NextResponse.json(company, { status: 201 });
   } catch (error) {

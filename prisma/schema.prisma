@@ -244,12 +244,42 @@ model Preferences {
   imapHost           String?
   imapPort           Int?
   imapUser           String?
+  // Verschlüsselt at-rest gespeichert (AES-256-GCM, siehe src/lib/secretCrypto.ts),
+  // exakt wie aiApiKey — nie im Klartext an den Client zurückgegeben und nie
+  // Teil eines Backup-Exports (src/lib/backup.ts).
+  imapPassword       String?
   imapFolder         String?  @default("INBOX")
   imapEnabled        Boolean  @default(false)
+  // Hintergrund-Scheduler (src/lib/scheduler.ts): läuft in-process, solange
+  // der Server läuft, synct bei aktiviertem IMAP periodisch neue E-Mails und
+  // verschickt fällige Push-Benachrichtigungen. Standardmäßig aktiv, hier
+  // abschaltbar (Einstellungen -> Automatisierung & Push).
+  backgroundSchedulerEnabled Boolean @default(true)
   updatedAt          DateTime @updatedAt
 
   educationEntries EducationEntry[]
   projectEntries   ProjectEntry[]
+}
+
+// ---------------------------------------------------------------------------
+// Web-Push-Benachrichtigungen (src/lib/pushNotifications.ts) — eine Zeile pro
+// abonnierendem Browser/Gerät.
+// ---------------------------------------------------------------------------
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+}
+
+// Verhindert doppelten Push-Versand derselben Benachrichtigung: `id` ist
+// dieselbe stabile ID wie AppNotification.id aus src/lib/notifications.ts
+// (z.B. "status-<eventId>", "overdue-<applicationId>").
+model SentPushNotification {
+  id     String   @id
+  sentAt DateTime @default(now())
 }
 
 // ---------------------------------------------------------------------------

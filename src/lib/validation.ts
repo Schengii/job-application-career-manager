@@ -29,6 +29,11 @@ export const companySchema = z.object({
   status: z.enum(COMPANY_STATUS_VALUES).optional(),
   letterTemplate: z.string().optional().nullable(),
   preferredTone: z.enum(COVER_LETTER_TONE_VALUES).optional().nullable(),
+  // Umgeht die Duplikat-Warnung in POST /api/companies (siehe
+  // src/lib/companyDuplicates.ts) — wird vor dem eigentlichen
+  // prisma.company.create() aus den Daten entfernt, ist also kein
+  // tatsächliches Datenbankfeld.
+  forceCreate: z.boolean().optional(),
 });
 export const companyUpdateSchema = companySchema.partial();
 
@@ -127,8 +132,10 @@ export const preferencesSchema = z.object({
   imapHost: z.string().optional().nullable(),
   imapPort: z.number().int().optional().nullable(),
   imapUser: z.string().optional().nullable(),
+  imapPassword: z.string().optional().nullable(),
   imapFolder: z.string().optional().nullable(),
   imapEnabled: z.boolean().optional(),
+  backgroundSchedulerEnabled: z.boolean().optional(),
 });
 
 export const jobLiveSearchSchema = z.object({
@@ -222,10 +229,12 @@ export const backupPreferencesSchema = z
     excludedTechStack: z.string().nullable().optional(),
     aiProvider: z.string().nullable().optional(),
     aiModel: z.string().nullable().optional(),
-    // aiApiKey wird von createFullBackup() absichtlich nicht exportiert (siehe
-    // src/lib/backup.ts) und daher hier auch nicht übernommen — selbst wenn
-    // eine ältere Backup-Datei das Feld noch enthält, wird es beim Restore
-    // stillschweigend ignoriert (kein Schema-Feld dafür).
+    backgroundSchedulerEnabled: z.boolean().optional(),
+    // aiApiKey und imapPassword werden von createFullBackup() absichtlich
+    // nicht exportiert (siehe src/lib/backup.ts) und daher hier auch nicht
+    // übernommen — selbst wenn eine ältere Backup-Datei eines der Felder noch
+    // enthält, wird es beim Restore stillschweigend ignoriert (kein
+    // Schema-Feld dafür).
   })
   .partial();
 
@@ -334,6 +343,23 @@ export const backupSchema = z.object({
   jobPostings: z.array(backupJobPostingSchema).optional(),
   applications: z.array(backupApplicationSchema).optional(),
   documents: z.array(backupDocumentSchema).optional(),
+});
+
+// -----------------------------------------------------------------------------
+// Web-Push (src/lib/pushNotifications.ts) — Registrieren/Abmelden einer
+// Browser-Subscription. Form entspricht `PushSubscription.toJSON()` aus der
+// Push-API des Browsers.
+// -----------------------------------------------------------------------------
+export const pushSubscribeSchema = z.object({
+  endpoint: z.string().url(),
+  keys: z.object({
+    p256dh: z.string().min(1),
+    auth: z.string().min(1),
+  }),
+});
+
+export const pushUnsubscribeSchema = z.object({
+  endpoint: z.string().url(),
 });
 
 export const aiRequestSchema = z.object({

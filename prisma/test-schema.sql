@@ -155,9 +155,27 @@ CREATE TABLE "Preferences" (
     "imapHost" TEXT,
     "imapPort" INTEGER,
     "imapUser" TEXT,
+    "imapPassword" TEXT,
     "imapFolder" TEXT DEFAULT 'INBOX',
     "imapEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "backgroundSchedulerEnabled" BOOLEAN NOT NULL DEFAULT true,
     "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "PushSubscription" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "endpoint" TEXT NOT NULL,
+    "p256dh" TEXT NOT NULL,
+    "auth" TEXT NOT NULL,
+    "userAgent" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "SentPushNotification" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "sentAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateTable
@@ -237,6 +255,9 @@ CREATE UNIQUE INDEX "CoverLetter_applicationId_key" ON "CoverLetter"("applicatio
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Preferences_portfolioShareToken_key" ON "Preferences"("portfolioShareToken");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PushSubscription_endpoint_key" ON "PushSubscription"("endpoint");
 
 -- CreateIndex
 CREATE INDEX "EducationEntry_preferencesId_idx" ON "EducationEntry"("preferencesId");

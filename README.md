@@ -92,20 +92,31 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 ---
 
 ### 10. 📬 E-Mail Auto-Sync & Smart IMAP Inbox (`/api/email-sync` & Einstellungen)
-- **Automatischer E-Mail-Abgleich für Bewerbungsrückmeldungen**:
-  - Synchronisiert eingehende E-Mails via IMAP, matched Absender mit Bewerbungen und schlägt automatisierte Statusübergänge vor.
+- **Echter automatischer E-Mail-Abgleich für Bewerbungsrückmeldungen** (`src/lib/imapClient.ts`, via `imapflow`/`mailparser`):
+  - Verbindet sich per IMAP/TLS mit dem konfigurierten Postfach, matched Absender/Betreff mit bestehenden Bewerbungen und schlägt Statusübergänge vor — der Statuswechsel selbst bleibt bewusst ein manueller 1-Klick-Schritt.
+  - IMAP-Passwort verschlüsselt at-rest (AES-256-GCM, wie der KI-API-Key), nie im Klartext an den Client zurückgegeben.
+  - Ohne hinterlegte Zugangsdaten (oder bei einem Verbindungsfehler) arbeitet die App transparent mit simulierten Beispiel-E-Mails weiter — nie ein Hard-Fail für den Nutzer.
 
 ---
 
-### 11. 🗂️ Bewerbungs- & Unternehmens-Management
+### 11. 🔔 Echte Web-Push-Benachrichtigungen & Hintergrund-Automatisierung (Einstellungen → „Automatisierung & Push")
+- **Browser-Push für Absagen, Zusagen, Interview-Einladungen und fällige Termine** (`src/lib/pushNotifications.ts`, Standard Web Push API + VAPID): Kommt auch an, wenn das Dashboard gerade nicht im Vordergrund ist, solange der Server läuft.
+- **In-Process Hintergrund-Scheduler** (`src/lib/scheduler.ts`, gestartet über `src/instrumentation.ts`): läuft alle 15 Minuten automatisch, solange der Server aktiv ist — synct bei aktiviertem IMAP neue E-Mails und verschickt fällige Push-Benachrichtigungen. Standardmäßig aktiv, in den Einstellungen abschaltbar.
+
+---
+
+### 12. 🗂️ Bewerbungs- & Unternehmens-Management
 - **Dashboard mit Live-Metriken & Wochenziel-Tracker**: KPI-Kacheln, tägliche Streak 🔥 und Meilensteine.
-- **Interaktive Excel-Tabelle (`/excel-view`)**: Inline-Editing im Tabellen-Grid mit Tastatur-Navigation und Batch-Speichern.
+- **Interaktive Excel-Tabelle (`/excel-view`)**: Inline-Editing im Tabellen-Grid mit Tastatur-Navigation, serverseitig paginiertem Nachladen und Batch-Speichern.
+- **Server-paginierte Tabellenansicht** (`/applications`): Kanban-Board bleibt bewusst vollständig geladen (Spalten-Übersicht), die Tabellen-/Excel-Ansicht lädt und filtert dagegen serverseitig seitenweise — bleibt auch bei vielen hundert Bewerbungen performant.
+- **Tastaturbedienbares Kanban-Board**: jede Karte hat einen fokussierbaren „Status ändern"-Button mit zugänglichem Menü (inkl. `aria-live`-Ankündigung) als vollwertige Alternative zum Maus-Drag&Drop.
+- **Unternehmens-Duplikat-Erkennung**: warnt beim Anlegen vor ähnlich benannten, bereits existierenden Unternehmen (normalisierter Namensvergleich inkl. Rechtsform-Suffixen), statt sie unbemerkt zu duplizieren.
 - **Stapelverarbeitung (Batch Action Bar)**: Mehrere Bewerbungen gleichzeitig selektieren, taggen, exportieren oder löschen.
 - **Live-Abonnierbarer Kalender-Feed (`/api/calendar/feed.ics`)**: Automatische iCal-Kalendersynchronisation für Apple/Google/Outlook mit Video-Meeting-Links.
 
 ---
 
-### 12. 🤖 Hybrid-KI-Anbindung (Anschreiben-Polishing & Interview-Feedback)
+### 13. 🤖 Hybrid-KI-Anbindung (Anschreiben-Polishing & Interview-Feedback)
 - **Vier wählbare Provider** (Einstellungen → KI-Provider, s. `src/lib/aiService.ts`): **OpenAI** (GPT-4o/-mini), **Anthropic** (Claude), **OpenRouter** (Universal-Router für zahlreiche Modelle) sowie **Ollama** für vollständig lokale, kostenlose Modelle auf `localhost:11434` — Ollama benötigt dabei bewusst keinen API-Key.
 - **100% Offline-Fallback**: Ohne konfigurierten Provider (oder bei einem fehlgeschlagenen Request) arbeitet die App transparent mit einer lokalen Heuristik weiter — nie ein Hard-Fail für den Nutzer.
 - **API-Key verschlüsselt at-rest** (`src/lib/secretCrypto.ts`, AES-256-GCM): Der Key wird nie im Klartext an den Client zurückgegeben und auch in der SQLite-Datei nicht im Klartext abgelegt.
@@ -120,9 +131,11 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 | Backend   | Next.js Route Handler (REST-API unter `/api/*`), Zod-Validierung          |
 | Datenbank | SQLite via Prisma 7 ORM (Adapter: `better-sqlite3`)                       |
 | State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
+| E-Mail    | `imapflow` + `mailparser` für echten IMAP/TLS-Postfachabruf (`src/lib/imapClient.ts`) |
+| Push      | Web Push API + VAPID (`web-push`, `src/lib/pushNotifications.ts`), Hintergrund-Scheduler via `src/instrumentation.ts` |
 | Audio     | Web Speech API (SpeechSynthesis für TTS & webkitSpeechRecognition für STT)|
 | Extension | Chrome/Edge Manifest V3 (Content Script, Popup UI, Background Worker)     |
-| Testing   | Vitest (236 automatisierte Tests: Unit-/API-Integrationstests, s. `vitest.global-setup.ts`, sowie Komponenten-Tests mit React Testing Library, s. `src/test/setupTests.ts`) + Playwright E2E-Tests gegen eine eigene SQLite-Testdatenbank (s. `playwright.config.mts`) |
+| Testing   | Vitest (322 automatisierte Tests: Unit-/API-Integrationstests, s. `vitest.global-setup.ts`, sowie Komponenten-Tests mit React Testing Library, s. `src/test/setupTests.ts`) + Playwright E2E-Tests gegen eine eigene SQLite-Testdatenbank (s. `playwright.config.mts`) |
 | CI/CD     | GitHub Actions (`.github/workflows/ci.yml`) für automatisierte Test- & Build-Pipelines |
 
 ---
@@ -208,7 +221,7 @@ Schutzmaßnahmen greifen dabei zusätzlich:
 | --- | --- |
 | URL-Scraper (`/jobs/scrape-url`) | SSRF-Schutz (`src/lib/ssrfGuard.ts`): DNS-Auflösung + IP-Prüfung gegen private/interne Netzwerke (inkl. Cloud-Metadaten-Endpunkte) für die Ziel-URL UND jeden Redirect-Hop, plus Content-Type-/Größen-Limit der Antwort. |
 | Datei-Upload (`/api/documents/upload`) | Allowlist statt Denylist für MIME-Type + Dateiendung (`src/lib/constants.ts`) — verhindert das Hochladen aktiver Inhalte (`.html`, `.svg`, `.js`, …), die unter `/uploads/` sonst als gespeichertes XSS ausführbar wären. |
-| KI-API-Key (Einstellungen) | At-Rest-Verschlüsselung (AES-256-GCM, `src/lib/secretCrypto.ts`) statt Klartext in der SQLite-Datei; wird zusätzlich nie im Klartext an den Client zurückgegeben und nie in Backup-Exporte mit aufgenommen. |
+| KI-API-Key & IMAP-Passwort (Einstellungen) | At-Rest-Verschlüsselung (AES-256-GCM, `src/lib/secretCrypto.ts`) statt Klartext in der SQLite-Datei; beide werden zusätzlich nie im Klartext an den Client zurückgegeben und nie in Backup-Exporte mit aufgenommen. |
 | Stapel-Löschung & Restore | Automatischer JSON-Snapshot vor jeder unwiderruflichen Aktion (`src/lib/serverBackupRotation.ts`, rotierend unter `./backups/`). |
 | Passwortabgleich (`middleware.ts`) | Konstante-Zeit-Vergleich (`timingSafeEqual`) gegen Timing-Angriffe. |
 | Brute-Force auf `APP_PASSWORD` (`middleware.ts`) | Rate-Limiting mit Lockout pro Client (`src/lib/rateLimiter.ts`): Nach 10 Fehlversuchen in 15 Minuten wird die IP für 15 Minuten mit `429 Too Many Requests` gesperrt, statt weitere Versuche zuzulassen. |

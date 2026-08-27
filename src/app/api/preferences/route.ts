@@ -6,7 +6,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { preferencesSchema } from "@/lib/validation";
 import { handleApiError } from "@/lib/apiUtils";
-import { getPreferencesWithProfile, toPublicPreferences, withDecryptedApiKey } from "@/lib/preferences";
+import {
+  getPreferencesWithProfile,
+  toPublicPreferences,
+  withDecryptedApiKey,
+  withDecryptedImapPassword,
+} from "@/lib/preferences";
 import { encryptSecret } from "@/lib/secretCrypto";
 
 export async function GET() {
@@ -19,19 +24,24 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const data = preferencesSchema.parse(body);
 
-    // Sicherheit: Der API-Key wird nur überschrieben, wenn das Feld explizit
-    // im Request-Body enthalten ist. Ein leerer String ("") entfernt den Key
-    // bewusst (z. B. über den "Key entfernen"-Button im Frontend); fehlt das
-    // Feld komplett, bleibt der zuvor gespeicherte Key unverändert, damit das
-    // Frontend den echten Key niemals zurückgeschickt bekommen und erneut
+    // Sicherheit: Secret-Felder (`aiApiKey`, `imapPassword`) werden nur
+    // überschrieben, wenn das jeweilige Feld explizit im Request-Body
+    // enthalten ist. Ein leerer String ("") entfernt den Wert bewusst (z. B.
+    // über den "Key/Passwort entfernen"-Button im Frontend); fehlt das Feld
+    // komplett, bleibt der zuvor gespeicherte Wert unverändert, damit das
+    // Frontend den echten Wert niemals zurückgeschickt bekommen und erneut
     // mitsenden muss (siehe `toPublicPreferences`).
     const updateData = { ...data };
     if ("aiApiKey" in updateData) {
       const trimmed = updateData.aiApiKey?.trim();
       // Verschlüsselung at-rest (siehe src/lib/secretCrypto.ts): der Klartext-
-      // Key verlässt diese Route ab hier nie wieder, nur der Chiffretext wird
+      // Wert verlässt diese Route ab hier nie wieder, nur der Chiffretext wird
       // in die DB geschrieben.
       updateData.aiApiKey = trimmed ? encryptSecret(trimmed) : null;
+    }
+    if ("imapPassword" in updateData) {
+      const trimmed = updateData.imapPassword?.trim();
+      updateData.imapPassword = trimmed ? encryptSecret(trimmed) : null;
     }
 
     const preferences = await prisma.preferences.upsert({
@@ -44,13 +54,16 @@ export async function PATCH(request: NextRequest) {
       },
     });
 
-    // `preferences.aiApiKey` ist an dieser Stelle der frisch verschlüsselte
-    // Chiffretext aus dem `upsert()` oben (Prisma gibt exakt das zurück, was
-    // geschrieben wurde). `toPublicPreferences()`/`maskApiKey()` erwarten
-    // Klartext, um z.B. die letzten 4 Zeichen als Vorschau anzuzeigen -> vor
-    // der Maskierung entschlüsseln, genau wie bei jedem anderen DB-Read
-    // (siehe `withDecryptedApiKey()` in src/lib/preferences.ts).
-    return NextResponse.json(toPublicPreferences(withDecryptedApiKey(preferences)));
+    // `preferences.aiApiKey`/`imapPassword` sind an dieser Stelle der frisch
+    // verschlüsselte Chiffretext aus dem `upsert()` oben (Prisma gibt exakt
+    // das zurück, was geschrieben wurde). `toPublicPreferences()`/
+    // `maskSecret()` erwarten Klartext, um z.B. die letzten 4 Zeichen als
+    // Vorschau anzuzeigen -> vor der Maskierung entschlüsseln, genau wie bei
+    // jedem anderen DB-Read (siehe `withDecryptedApiKey()`/
+    // `withDecryptedImapPassword()` in src/lib/preferences.ts).
+    return NextResponse.json(
+      toPublicPreferences(withDecryptedImapPassword(withDecryptedApiKey(preferences)))
+    );
   } catch (error) {
     return handleApiError(error);
   }

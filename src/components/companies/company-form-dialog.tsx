@@ -33,16 +33,34 @@ export function CompanyFormDialog({ open, onClose }: { open: boolean; onClose: (
     e.preventDefault();
     setSubmitting(true);
     try {
-      await apiPost<CompanyWithCounts>("/api/companies", form);
-      await mutate("/api/companies");
-      toast.success("Unternehmen wurde angelegt.");
-      setForm(EMPTY);
-      onClose();
+      await createCompany(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Anlegen fehlgeschlagen.");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  async function createCompany(forceCreate: boolean) {
+    const response = await apiPost<
+      CompanyWithCounts | { duplicateWarning: true; candidates: { id: string; name: string }[] }
+    >("/api/companies", { ...form, forceCreate });
+
+    if ("duplicateWarning" in response) {
+      const names = response.candidates.map((c) => c.name).join(", ");
+      const proceed = window.confirm(
+        `Ähnliches Unternehmen bereits vorhanden: ${names}. Trotzdem "${form.name}" neu anlegen?`
+      );
+      if (proceed) {
+        await createCompany(true);
+      }
+      return;
+    }
+
+    await mutate("/api/companies");
+    toast.success("Unternehmen wurde angelegt.");
+    setForm(EMPTY);
+    onClose();
   }
 
   return (

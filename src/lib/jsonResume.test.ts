@@ -34,6 +34,8 @@ describe("jsonResume", () => {
     imapUser: null,
     imapFolder: "INBOX",
     imapEnabled: false,
+    imapPassword: null,
+    backgroundSchedulerEnabled: true,
     minMatchScore: 0,
     updatedAt: new Date(),
     educationEntries: [

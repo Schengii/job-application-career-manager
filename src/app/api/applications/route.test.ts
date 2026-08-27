@@ -102,4 +102,55 @@ describe("/api/applications", () => {
     expect(body.totalPages).toBe(3);
     expect(body.data).toHaveLength(2);
   });
+
+  it("GET kombiniert im paginierten Modus Status-, Portal-, Tag-, Such- und Follow-up-Filter", async () => {
+    const company = await createTestCompany();
+    await prisma.application.create({
+      data: { position: "Frontend-Entwickler", status: "SENT", source: "LinkedIn", tags: "Prio1,Remote", companyId: company.id, nextStep: "Warten" },
+    });
+    await prisma.application.create({
+      data: { position: "Backend-Entwickler", status: "SENT", source: "StepStone", tags: "Prio2", companyId: company.id },
+    });
+    await prisma.application.create({
+      data: { position: "Frontend-Entwickler", status: "INTERVIEW", source: "LinkedIn", tags: "Prio1", companyId: company.id },
+    });
+
+    const response = await GET(
+      getRequest("?page=1&pageSize=25&status=SENT&portal=LinkedIn&tag=Prio1&search=Frontend&onlyFollowUps=true")
+    );
+    const body = await response.json();
+
+    expect(body.total).toBe(1);
+    expect(body.data[0].position).toBe("Frontend-Entwickler");
+    expect(body.data[0].status).toBe("SENT");
+  });
+
+  it("GET sortiert im paginierten Modus nach Unternehmen (A-Z), wenn sortBy=COMPANY_ASC gesetzt ist", async () => {
+    const companyB = await createTestCompany({ name: "Beta AG" });
+    const companyA = await createTestCompany({ name: "Acme GmbH" });
+    await prisma.application.create({ data: { position: "X", companyId: companyB.id } });
+    await prisma.application.create({ data: { position: "Y", companyId: companyA.id } });
+
+    const response = await GET(getRequest("?page=1&pageSize=25&sortBy=COMPANY_ASC"));
+    const body = await response.json();
+
+    expect(body.data.map((a: { company: { name: string } }) => a.company.name)).toEqual([
+      "Acme GmbH",
+      "Beta AG",
+    ]);
+  });
+
+  it("GET ignoriert Filter-Query-Parameter im unpaginierten Modus (nur ?status wird berücksichtigt)", async () => {
+    const company = await createTestCompany();
+    await prisma.application.create({ data: { position: "A", status: "SENT", tags: "Prio1", companyId: company.id } });
+    await prisma.application.create({ data: { position: "B", status: "SENT", tags: "Prio2", companyId: company.id } });
+
+    // Ohne ?page/?pageSize bleibt der Pfad unverändert: nur ?status filtert,
+    // ?tag wird hier bewusst ignoriert (Rückwärtskompatibilität für Kanban).
+    const response = await GET(getRequest("?status=SENT&tag=Prio1"));
+    const body = await response.json();
+
+    expect(Array.isArray(body)).toBe(true);
+    expect(body).toHaveLength(2);
+  });
 });

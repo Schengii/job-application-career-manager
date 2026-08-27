@@ -40,6 +40,17 @@ describe("createFullBackup", () => {
     expect((backup.preferences as { fullName?: string } | null)?.fullName).toBe("Max Mustermann");
   });
 
+  it("exportiert die Präferenzen ohne das imapPassword", async () => {
+    await prisma.preferences.create({
+      data: { id: "default", imapHost: "imap.example.com", imapPassword: "app-password-should-never-leave-the-server" },
+    });
+
+    const backup = await createFullBackup();
+
+    expect(backup.preferences).not.toHaveProperty("imapPassword");
+    expect(JSON.stringify(backup)).not.toContain("app-password-should-never-leave-the-server");
+  });
+
   it("liefert version: 1 und leere Arrays statt undefined für eine frische Datenbank", async () => {
     const backup = await createFullBackup();
     expect(backup.version).toBe(1);
@@ -117,5 +128,17 @@ describe("restoreFromBackup", () => {
     const stored = await prisma.preferences.findUnique({ where: { id: "default" } });
     expect(stored?.fullName).toBe("Neuer Name");
     expect(stored?.aiApiKey).toBe("sk-bleibt-erhalten");
+  });
+
+  it("restauriert Präferenzen ohne ein zuvor gespeichertes imapPassword zu löschen", async () => {
+    await prisma.preferences.create({
+      data: { id: "default", fullName: "Alter Name", imapPassword: "app-password-bleibt-erhalten" },
+    });
+
+    await restoreFromBackup({ version: 1, preferences: { fullName: "Neuer Name" } });
+
+    const stored = await prisma.preferences.findUnique({ where: { id: "default" } });
+    expect(stored?.fullName).toBe("Neuer Name");
+    expect(stored?.imapPassword).toBe("app-password-bleibt-erhalten");
   });
 });

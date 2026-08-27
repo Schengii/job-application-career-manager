@@ -19,9 +19,11 @@ import {
 } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem } from "@/types";
+import type { PaginatedResult } from "@/lib/apiUtils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/form";
+import { Pagination } from "@/components/ui/pagination";
 import { formatDate, cn } from "@/lib/utils";
 import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/constants";
 import { ApplicationFormDialog, quickUpdateStatus } from "@/components/applications/application-form-dialog";
@@ -33,6 +35,11 @@ import { ExcelGridTable } from "@/components/excel/excel-grid-table";
 import { ExcelImportModal } from "@/components/excel/excel-import-modal";
 import { BatchActionBar } from "@/components/applications/batch-action-bar";
 import { parseTags, getTagStyle } from "@/lib/tags";
+
+const TABLE_PAGE_SIZE = 25;
+// Verzögerung, bevor eine geänderte Volltextsuche einen neuen (paginierten)
+// Server-Request auslöst — verhindert einen Request pro Tastenanschlag.
+const SEARCH_DEBOUNCE_MS = 300;
 
 type ViewMode = "table" | "kanban" | "excel";
 type SortOption = "DATE_DESC" | "DATE_ASC" | "COMPANY_ASC" | "STATUS";
@@ -54,6 +61,52 @@ export default function ApplicationsPage() {
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [view, setView] = useState<ViewMode>("table");
+
+  // Server-seitige Pagination NUR für die Tabellenansicht (siehe
+  // src/lib/applicationQuery.ts) — Kanban bleibt bewusst bei der vollen,
+  // ungepaginierten Liste (`applications` oben), damit die Spalten weiterhin
+  // alle Bewerbungen zeigen, unabhängig von einer Seite.
+  const [tablePageNum, setTablePageNum] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Bei jeder Filteränderung zurück auf Seite 1 (sonst könnte man auf einer
+  // Seite landen, die es für den neuen Filter gar nicht mehr gibt). Bewusst
+  // NICHT als useEffect (das würde einen zusätzlichen Render-Durchlauf nach
+  // dem Commit erzwingen), sondern als "State während des Renderns anpassen"
+  // — das von React empfohlene Muster, wenn sich abgeleiteter State direkt
+  // aus einer Prop-/State-Änderung ergibt (siehe react-hooks/set-state-in-effect).
+  const filterSignature = `${statusFilter}|${portalFilter}|${tagFilter}|${debouncedSearch}|${onlyFollowUps}|${sortBy}`;
+  const [prevFilterSignature, setPrevFilterSignature] = useState(filterSignature);
+  if (filterSignature !== prevFilterSignature) {
+    setPrevFilterSignature(filterSignature);
+    setTablePageNum(1);
+  }
+
+  const tableQueryKey = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set("page", String(tablePageNum));
+    params.set("pageSize", String(TABLE_PAGE_SIZE));
+    if (statusFilter !== "ALL") params.set("status", statusFilter);
+    if (portalFilter !== "ALL") params.set("portal", portalFilter);
+    if (tagFilter !== "ALL") params.set("tag", tagFilter);
+    if (debouncedSearch.trim()) params.set("search", debouncedSearch.trim());
+    if (onlyFollowUps) params.set("onlyFollowUps", "true");
+    params.set("sortBy", sortBy);
+    return `/api/applications?${params.toString()}`;
+  }, [tablePageNum, statusFilter, portalFilter, tagFilter, debouncedSearch, onlyFollowUps, sortBy]);
+
+  // `null` als Key deaktiviert den Fetch, solange die Tabellenansicht nicht
+  // aktiv ist (SWR-Konvention für bedingtes Laden).
+  const { data: tablePage, isLoading: isTableLoading } = useSWR<PaginatedResult<ApplicationListItem>>(
+    view === "table" ? tableQueryKey : null,
+    fetcher
+  );
+  const tableRows = useMemo(() => tablePage?.data ?? [], [tablePage]);
 
   // Global listener for shortcut 'N'
   useEffect(() => {
@@ -159,10 +212,13 @@ export default function ApplicationsPage() {
   }
 
   function handleSelectAll() {
-    if (selectedIds.length === filtered.length) {
+    // Bezieht sich bewusst nur auf die aktuell sichtbare (Server-)Seite der
+    // Tabellenansicht, nicht auf alle Treffer über alle Seiten hinweg — sonst
+    // würde "Alle auswählen" Zeilen markieren, die gar nicht sichtbar sind.
+    if (selectedIds.length === tableRows.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(filtered.map((a) => a.id));
+      setSelectedIds(tableRows.map((a) => a.id));
     }
   }
 
@@ -177,6 +233,11 @@ export default function ApplicationsPage() {
       await quickUpdateStatus(id, status);
       await Promise.all([
         mutate("/api/applications"),
+        // Die Tabellenansicht liest aus einem eigenen, paginierten/gefilterten
+        // SWR-Key (s. tableQueryKey oben) — der muss nach einem Statuswechsel
+        // separat neu geladen werden, sonst zeigt die sichtbare Seite noch
+        // den alten Status.
+        mutate(tableQueryKey),
         mutate("/api/metrics"),
         mutate("/api/analytics"),
       ]);
@@ -184,6 +245,7 @@ export default function ApplicationsPage() {
     } catch {
       toast.error("Status konnte nicht aktualisiert werden.");
       mutate("/api/applications");
+      mutate(tableQueryKey);
     }
   }
 
@@ -370,6 +432,7 @@ export default function ApplicationsPage() {
           <KanbanBoard applications={filtered} onStatusChange={handleStatusChange} />
         )
       ) : (
+        <>
         <Card className="overflow-hidden">
           <div className="scroll-thin overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
@@ -378,7 +441,7 @@ export default function ApplicationsPage() {
                   <th className="w-10 px-4 py-3 text-center">
                     <input
                       type="checkbox"
-                      checked={filtered.length > 0 && selectedIds.length === filtered.length}
+                      checked={tableRows.length > 0 && selectedIds.length === tableRows.length}
                       onChange={handleSelectAll}
                       className="rounded border-border cursor-pointer"
                       title="Alle auswählen"
@@ -393,21 +456,21 @@ export default function ApplicationsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {isLoading && (
+                {isTableLoading && (
                   <tr>
                     <td colSpan={7} className="px-5 py-8 text-center text-muted-foreground">
                       Lade Bewerbungen …
                     </td>
                   </tr>
                 )}
-                {!isLoading && filtered.length === 0 && (
+                {!isTableLoading && tableRows.length === 0 && (
                   <tr>
                     <td colSpan={7} className="px-5 py-8 text-center text-muted-foreground">
                       Keine Bewerbungen für diesen Filter gefunden.
                     </td>
                   </tr>
                 )}
-                {filtered.map((app) => {
+                {tableRows.map((app) => {
                   const tags = parseTags(app.tags);
                   const isSelected = selectedIds.includes(app.id);
 
@@ -504,6 +567,15 @@ export default function ApplicationsPage() {
             </table>
           </div>
         </Card>
+        {tablePage && (
+          <Pagination
+            page={tablePage.page}
+            totalPages={tablePage.totalPages}
+            total={tablePage.total}
+            onPageChange={setTablePageNum}
+          />
+        )}
+        </>
       )}
 
       {/* Stapelverarbeitungs-Leiste */}

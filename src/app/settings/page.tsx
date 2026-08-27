@@ -14,12 +14,15 @@ import { MatchingWeightsCard } from "@/components/settings/matching-weights-card
 import { PortfolioShareCard } from "@/components/settings/portfolio-share-card";
 import { EmailSyncCard } from "@/components/settings/email-sync-card";
 import { BrowserExtensionCard } from "@/components/settings/browser-extension-card";
+import { PushNotificationsCard } from "@/components/settings/push-notifications-card";
+import { BackgroundSchedulerCard } from "@/components/settings/background-scheduler-card";
 
 const TABS = [
   { id: "preferences", label: "Profil & Präferenzen" },
   { id: "extension", label: "Browser-Erweiterung" },
   { id: "portfolio", label: "Recruiter-Portfolio" },
   { id: "emailsync", label: "E-Mail Auto-Sync" },
+  { id: "automation", label: "Automatisierung & Push" },
   { id: "education", label: "Ausbildung & Projekte" },
   { id: "documents", label: "Dokumente" },
   { id: "backup", label: "Backup & Daten" },
@@ -77,6 +80,12 @@ export default function SettingsPage() {
           {tab === "extension" && <BrowserExtensionCard />}
           {tab === "portfolio" && <PortfolioShareCard />}
           {tab === "emailsync" && <EmailSyncCard />}
+          {tab === "automation" && (
+            <div className="space-y-6">
+              <PushNotificationsCard />
+              <BackgroundSchedulerCard preferences={preferences} />
+            </div>
+          )}
           {tab === "education" && <EducationProjectsManager preferences={preferences} />}
           {tab === "documents" && <DocumentsManager />}
           {tab === "backup" && <BackupManager />}

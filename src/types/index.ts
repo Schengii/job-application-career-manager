@@ -13,6 +13,8 @@ import type {
   JobPostingModel,
   PreferencesModel,
   ProjectEntryModel,
+  PushSubscriptionModel,
+  SentPushNotificationModel,
 } from "@/generated/prisma/models";
 
 export type Application = ApplicationModel;
@@ -25,6 +27,8 @@ export type EducationEntry = EducationEntryModel;
 export type JobPosting = JobPostingModel;
 export type Preferences = PreferencesModel;
 export type ProjectEntry = ProjectEntryModel;
+export type PushSubscription = PushSubscriptionModel;
+export type SentPushNotification = SentPushNotificationModel;
 
 export type CompanyWithCounts = Company & {
   _count: { applications: number; jobPostings: number };
@@ -67,14 +71,19 @@ export type PreferencesWithProfile = Preferences & {
 
 /**
  * Form, in der `/api/preferences` die Präferenzen an den Client zurückgibt:
- * `aiApiKey` ist immer `null` (der echte Wert verlässt den Server nie), dafür
- * gibt es `hasAiApiKey`/`aiApiKeyPreview` um dem Nutzer zu zeigen, dass (und
- * mit welchem Suffix) bereits ein Key hinterlegt ist.
+ * `aiApiKey`/`imapPassword` sind immer `null` (die echten Werte verlassen den
+ * Server nie), dafür gibt es `hasAiApiKey`/`aiApiKeyPreview` bzw.
+ * `hasImapPassword`/`imapPasswordPreview`, um dem Nutzer zu zeigen, dass (und
+ * mit welchem Suffix) bereits ein Wert hinterlegt ist (siehe
+ * `toPublicPreferences()` in src/lib/preferences.ts).
  */
-export type PreferencesPublic = Omit<PreferencesWithProfile, "aiApiKey"> & {
+export type PreferencesPublic = Omit<PreferencesWithProfile, "aiApiKey" | "imapPassword"> & {
   aiApiKey: null;
   hasAiApiKey: boolean;
   aiApiKeyPreview: string | null;
+  imapPassword: null;
+  hasImapPassword: boolean;
+  imapPasswordPreview: string | null;
 };
 
 export type Metrics = {

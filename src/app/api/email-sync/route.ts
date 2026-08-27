@@ -6,7 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { handleApiError } from "@/lib/apiUtils";
 import { emailSyncRunSchema } from "@/lib/validation";
 import { processSyncedEmails, generateSampleInboxEmails } from "@/lib/emailImapSync";
-import { getOrCreatePreferences } from "@/lib/preferences";
+import { fetchInboxMessages } from "@/lib/imapClient";
+import { getOrCreatePreferences, maskSecret } from "@/lib/preferences";
+import { sendDueNotifications } from "@/lib/pushNotifications";
 import type { ApplicationListItem } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +22,10 @@ export async function GET() {
       imapPort: preferences.imapPort,
       imapUser: preferences.imapUser,
       imapFolder: preferences.imapFolder || "INBOX",
+      // Secret-Feld: niemals im Klartext, nur ob eines hinterlegt ist + eine
+      // Vorschau der letzten Zeichen (analog aiApiKey, siehe preferences.ts).
+      hasImapPassword: Boolean(preferences.imapPassword?.trim()),
+      imapPasswordPreview: maskSecret(preferences.imapPassword),
     });
   } catch (error) {
     return handleApiError(error);
@@ -29,12 +35,12 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    // Nur zur Eingabe-Validierung aufgerufen (wirft bei ungültiger Form
-    // einen ZodError) — die Felder selbst (host/port/user/password/simulate)
-    // werden aktuell nicht ausgewertet, da dieser Endpunkt immer mit
-    // simulierten Inbox-Daten arbeitet (siehe `generateSampleInboxEmails`
-    // unten, analog zu den anderen "Simulator"-Features der App).
-    emailSyncRunSchema.parse(body);
+    // `password` erlaubt einen Einmal-Test-Sync mit einem noch nicht
+    // gespeicherten Passwort (z.B. bevor der Nutzer in den Einstellungen auf
+    // "Speichern" klickt); `simulate: true` erzwingt weiterhin die
+    // Sample-Inbox, auch wenn echte Zugangsdaten hinterlegt sind (nützlich,
+    // um die Funktion ohne Postfachzugriff vorzuführen/zu testen).
+    const parsedBody = emailSyncRunSchema.parse(body);
 
     const preferences = await getOrCreatePreferences();
 
@@ -54,13 +60,31 @@ export async function POST(req: NextRequest) {
       orderBy: { updatedAt: "desc" },
     })) as unknown as ApplicationListItem[];
 
-    // Für den Live-Betrieb: Nutze Sample-Inbox oder generiere aus Anwendungsdaten
-    const inboxMessages = generateSampleInboxEmails(applications);
+    // Echter IMAP-Abruf, sobald genügend Zugangsdaten vorhanden sind (s.
+    // src/lib/imapClient.ts) — fällt bei fehlender Konfiguration oder einem
+    // Verbindungsfehler automatisch auf die Sample-Inbox zurück, nie ein
+    // Hard-Fail für den Nutzer.
+    const { messages: inboxMessages, usedRealImap } = parsedBody.simulate
+      ? { messages: generateSampleInboxEmails(applications), usedRealImap: false }
+      : await fetchInboxMessages(
+          {
+            imapEnabled: preferences.imapEnabled,
+            imapHost: preferences.imapHost,
+            imapPort: preferences.imapPort,
+            imapUser: preferences.imapUser,
+            // Ein im Request mitgegebenes Test-Passwort hat Vorrang vor dem
+            // gespeicherten (siehe Kommentar zu `emailSyncRunSchema` oben).
+            imapPassword: parsedBody.password || preferences.imapPassword,
+            imapFolder: preferences.imapFolder,
+          },
+          applications
+        );
     const syncResult = processSyncedEmails(inboxMessages, applications);
 
     return NextResponse.json({
       success: true,
       result: syncResult,
+      usedRealImap,
       connectedAccount: preferences.imapUser || "Demo / Offline Mode",
     });
   } catch (error) {
@@ -114,6 +138,9 @@ export async function PUT(req: NextRequest) {
         interactions: true,
       },
     });
+
+    // Fire-and-forget, siehe Kommentar in /api/applications/[id]/status/route.ts.
+    void sendDueNotifications();
 
     return NextResponse.json({
       success: true,

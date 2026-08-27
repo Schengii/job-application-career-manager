@@ -70,6 +70,29 @@ describe("/api/companies", () => {
     expect(body[0]._count).toEqual({ applications: 0, jobPostings: 0 });
   });
 
+  it("POST warnt bei einem ähnlichen bestehenden Namen statt sofort anzulegen", async () => {
+    await prisma.company.create({ data: { name: "Acme GmbH" } });
+
+    const response = await POST(postRequest({ name: "ACME" }));
+    expect(response.status).toBe(200);
+
+    const body = await response.json();
+    expect(body.duplicateWarning).toBe(true);
+    expect(body.candidates).toEqual([{ id: expect.any(String), name: "Acme GmbH" }]);
+
+    // Es wurde tatsächlich nichts angelegt.
+    expect(await prisma.company.count()).toBe(1);
+  });
+
+  it("POST legt trotz Ähnlichkeit an, wenn forceCreate gesetzt ist", async () => {
+    await prisma.company.create({ data: { name: "Acme GmbH" } });
+
+    const response = await POST(postRequest({ name: "ACME", forceCreate: true }));
+    expect(response.status).toBe(201);
+
+    expect(await prisma.company.count()).toBe(2);
+  });
+
   it("GET liefert mit ?page/?pageSize eine paginierte Antwort", async () => {
     for (let i = 0; i < 5; i++) {
       await prisma.company.create({ data: { name: `Firma ${i}` } });

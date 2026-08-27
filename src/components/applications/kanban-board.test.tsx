@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { KanbanBoard } from "./kanban-board";
 import { APPLICATION_STATUSES } from "@/lib/constants";
 import type { ApplicationListItem } from "@/types";
@@ -98,5 +99,63 @@ describe("KanbanBoard", () => {
 
     fireEvent.drop(interviewColumn, { dataTransfer: {} });
     expect(onStatusChange).not.toHaveBeenCalled();
+  });
+
+  describe("Tastatur-Bedienbarkeit (Status-Menü)", () => {
+    it("öffnet per Klick auf den Menü-Button ein Menü mit allen Zielspalten außer der aktuellen", async () => {
+      const user = userEvent.setup();
+      const apps = [makeApp({ id: "1", status: "SENT", position: "Rolle A", companyName: "Acme GmbH" })];
+      render(<KanbanBoard applications={apps} onStatusChange={vi.fn()} />);
+
+      await user.click(screen.getByRole("button", { name: "Status von Acme GmbH ändern" }));
+
+      const menu = screen.getByRole("menu");
+      const sentLabel = APPLICATION_STATUSES.find((s) => s.value === "SENT")!.label;
+      expect(within(menu).queryByText(new RegExp(sentLabel))).not.toBeInTheDocument();
+      for (const status of APPLICATION_STATUSES.filter((s) => s.value !== "SENT")) {
+        expect(within(menu).getByRole("menuitem", { name: new RegExp(status.label) })).toBeInTheDocument();
+      }
+    });
+
+    it("löst onStatusChange aus und schließt das Menü, wenn ein Menüpunkt gewählt wird", async () => {
+      const onStatusChange = vi.fn();
+      const user = userEvent.setup();
+      const apps = [makeApp({ id: "1", status: "SENT", position: "Rolle A", companyName: "Acme GmbH" })];
+      render(<KanbanBoard applications={apps} onStatusChange={onStatusChange} />);
+
+      await user.click(screen.getByRole("button", { name: "Status von Acme GmbH ändern" }));
+      const interviewLabel = APPLICATION_STATUSES.find((s) => s.value === "INTERVIEW")!.label;
+      await user.click(screen.getByRole("menuitem", { name: new RegExp(interviewLabel) }));
+
+      expect(onStatusChange).toHaveBeenCalledExactlyOnceWith("1", "INTERVIEW");
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    });
+
+    it("kündigt einen erfolgten Statuswechsel in der aria-live-Region an", async () => {
+      const user = userEvent.setup();
+      const apps = [makeApp({ id: "1", status: "SENT", position: "Rolle A", companyName: "Acme GmbH" })];
+      render(<KanbanBoard applications={apps} onStatusChange={vi.fn()} />);
+
+      await user.click(screen.getByRole("button", { name: "Status von Acme GmbH ändern" }));
+      const interviewLabel = APPLICATION_STATUSES.find((s) => s.value === "INTERVIEW")!.label;
+      await user.click(screen.getByRole("menuitem", { name: new RegExp(interviewLabel) }));
+
+      expect(screen.getByRole("status")).toHaveTextContent(`Acme GmbH nach „${interviewLabel}“ verschoben.`);
+    });
+
+    it("schließt das Menü bei Klick außerhalb, ohne onStatusChange auszulösen", async () => {
+      const onStatusChange = vi.fn();
+      const user = userEvent.setup();
+      const apps = [makeApp({ id: "1", status: "SENT", position: "Rolle A", companyName: "Acme GmbH" })];
+      render(<KanbanBoard applications={apps} onStatusChange={onStatusChange} />);
+
+      await user.click(screen.getByRole("button", { name: "Status von Acme GmbH ändern" }));
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+
+      await user.click(document.body);
+
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+      expect(onStatusChange).not.toHaveBeenCalled();
+    });
   });
 });

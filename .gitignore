@@ -39,6 +39,11 @@ yarn-error.log*
 # Siehe src/lib/secretCrypto.ts. Darf niemals versioniert werden.
 /.encryption-key
 
+# Lokal automatisch erzeugtes VAPID-Schlüsselpaar für Web-Push-Benachrichtigungen,
+# falls VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY nicht gesetzt sind. Siehe
+# src/lib/vapidKeys.ts. Darf niemals versioniert werden.
+/.vapid-keys.json
+
 # vercel
 .vercel
 
