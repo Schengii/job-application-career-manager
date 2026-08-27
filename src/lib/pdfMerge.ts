@@ -9,12 +9,22 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { PDFDocument, StandardFonts, PageSizes, type PDFFont } from "pdf-lib";
+import sharp from "sharp";
 
 const FONT_SIZE = 11;
 const LINE_HEIGHT = FONT_SIZE * 1.45;
 const PARAGRAPH_GAP = LINE_HEIGHT * 0.55;
 // ~20mm Rand (1mm ≈ 2.8346pt), analog zu den @page-Regeln in src/lib/pdfExport.ts
 const MARGIN = 56.7;
+// Zeugnis-Scans von Handy/Scanner liegen oft bei mehreren Megapixeln/mehreren
+// MB unkomprimiert (PNG) — für A4-Druck reicht eine deutlich kleinere
+// Auflösung völlig aus. 1600px auf der langen Seite entspricht bei A4-Breite
+// (210mm) noch ca. 195 DPI, mehr als ausreichend für einen gestochen scharfen
+// Ausdruck. Ohne diese Kompression würde das kombinierte PDF bei mehreren
+// angehängten Scans leicht zweistellige MB-Werte erreichen — über dem
+// Anhang-Limit mancher Jobportale (häufig 5-8 MB).
+const MAX_IMAGE_DIMENSION_PX = 1600;
+const IMAGE_JPEG_QUALITY = 82;
 
 /** Zerlegt eine Zeile in Teilzeilen, die jeweils innerhalb `maxWidth` passen. */
 function wrapLine(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
@@ -72,9 +82,33 @@ async function renderTextAsPdf(content: string): Promise<PDFDocument> {
   return pdfDoc;
 }
 
-/** Fügt ein Bild (z.B. ein gescanntes Zeugnis) als eigene, zentrierte A4-Seite ein. */
-async function appendImagePage(merged: PDFDocument, bytes: Buffer, kind: "png" | "jpg"): Promise<void> {
-  const image = kind === "png" ? await merged.embedPng(bytes) : await merged.embedJpg(bytes);
+/**
+ * Fügt ein Bild (z.B. ein gescanntes Zeugnis) als eigene, zentrierte A4-Seite
+ * ein — komprimiert/skaliert es vorher über `sharp` (siehe
+ * MAX_IMAGE_DIMENSION_PX/IMAGE_JPEG_QUALITY oben), unabhängig vom
+ * Quellformat (PNG/JPEG) einheitlich als JPEG eingebettet.
+ */
+async function appendImagePage(merged: PDFDocument, bytes: Buffer): Promise<void> {
+  const compressed = await sharp(bytes)
+    .rotate() // respektiert die EXIF-Ausrichtung von Handy-Fotos/-Scans
+    .resize({
+      width: MAX_IMAGE_DIMENSION_PX,
+      height: MAX_IMAGE_DIMENSION_PX,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .jpeg({ quality: IMAGE_JPEG_QUALITY })
+    .toBuffer();
+
+  // WICHTIG: `sharp().toBuffer()` liefert einen Buffer, der aus Node's
+  // internem Speicher-Pool geschnitten ist und daher einen (oft riesigen)
+  // `byteOffset` > 0 relativ zum zugrunde liegenden ArrayBuffer hat.
+  // pdf-lib's JpegEmbedder liest beim SOI-Marker-Check offenbar direkt vom
+  // ArrayBuffer statt `byteOffset`/`byteLength` zu respektieren und wirft
+  // dadurch fälschlich "SOI not found in JPEG" auf einem technisch validen
+  // JPEG. `Buffer.from()` kopiert die Bytes in einen frischen Buffer mit
+  // byteOffset 0 und behebt das zuverlässig (siehe pdfMerge.test.ts).
+  const image = await merged.embedJpg(Buffer.from(compressed));
   const [pageWidth, pageHeight] = PageSizes.A4;
   const maxW = pageWidth - MARGIN * 2;
   const maxH = pageHeight - MARGIN * 2;
@@ -141,10 +175,8 @@ export async function createApplicationPdfPackage(params: MergeApplicationPdfPar
         const srcDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
         const copiedPages = await merged.copyPages(srcDoc, srcDoc.getPageIndices());
         for (const p of copiedPages) merged.addPage(p);
-      } else if (ext === ".png") {
-        await appendImagePage(merged, bytes, "png");
-      } else if (ext === ".jpg" || ext === ".jpeg") {
-        await appendImagePage(merged, bytes, "jpg");
+      } else if (ext === ".png" || ext === ".jpg" || ext === ".jpeg") {
+        await appendImagePage(merged, bytes);
       }
       // Andere Endungen (z.B. .docx, .txt) bewusst übersprungen (s. Docblock oben).
     } catch (error) {

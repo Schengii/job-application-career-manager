@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { promises as fs } from "fs";
 import path from "path";
 import { PDFDocument, StandardFonts } from "pdf-lib";
+import sharp from "sharp";
 import { createApplicationPdfPackage } from "./pdfMerge";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
@@ -12,6 +13,7 @@ const TINY_PNG_BASE64 =
 
 let testPdfPath: string;
 let testPngPath: string;
+let largePngPath: string;
 let unsupportedPath: string;
 
 beforeAll(async () => {
@@ -32,13 +34,30 @@ beforeAll(async () => {
   testPngPath = path.join(UPLOAD_DIR, "test-pdfmerge-fixture.png");
   await fs.writeFile(testPngPath, Buffer.from(TINY_PNG_BASE64, "base64"));
 
+  // Ein größeres, unkomprimiertes PNG (simuliert einen Handy-/Scanner-Scan),
+  // um die tatsächliche Größenreduktion durch die sharp-Kompression zu
+  // verifizieren (die winzige 1x1-Fixture oben ist dafür nicht aussagekräftig).
+  largePngPath = path.join(UPLOAD_DIR, "test-pdfmerge-large.png");
+  const largePng = await sharp({
+    create: {
+      width: 2400,
+      height: 3200,
+      channels: 3,
+      background: { r: 255, g: 255, b: 255 },
+      noise: { type: "gaussian", mean: 128, sigma: 40 },
+    },
+  })
+    .png()
+    .toBuffer();
+  await fs.writeFile(largePngPath, largePng);
+
   unsupportedPath = path.join(UPLOAD_DIR, "test-pdfmerge-fixture.docx");
   await fs.writeFile(unsupportedPath, "kein echtes docx, nur zum Testen des Überspringens");
 });
 
 afterAll(async () => {
   await Promise.all(
-    [testPdfPath, testPngPath, unsupportedPath].map((p) => fs.rm(p, { force: true }).catch(() => {}))
+    [testPdfPath, testPngPath, largePngPath, unsupportedPath].map((p) => fs.rm(p, { force: true }).catch(() => {}))
   );
 });
 
@@ -105,6 +124,20 @@ describe("createApplicationPdfPackage", () => {
     });
     // Das .docx darf keine zusätzliche Seite erzeugen (wird komplett ignoriert).
     expect(await pageCount(bytesWithDocx)).toBe(await pageCount(bytesWithout));
+  });
+
+  it("komprimiert/skaliert ein großes Bild deutlich, statt es unverändert einzubetten (Anhang-Größe für Jobportale)", async () => {
+    const originalSize = (await fs.stat(largePngPath)).size;
+
+    const bytes = await createApplicationPdfPackage({
+      coverLetterContent: null,
+      documents: [{ name: "Großer Scan", fileUrl: "/uploads/test-pdfmerge-large.png" }],
+    });
+
+    expect(await pageCount(bytes)).toBe(1);
+    // Das PDF-Ergebnis (inkl. Container-Overhead) muss trotz eines mehrere
+    // MB großen Quellbilds deutlich kleiner als das Original ausfallen.
+    expect(bytes.length).toBeLessThan(originalSize * 0.5);
   });
 
   it("erzeugt bei langem Anschreiben-Text mehrere Seiten (automatischer Seitenumbruch)", async () => {
