@@ -30,6 +30,7 @@ import { SalaryNegotiationTrainer } from "@/components/interview/salary-negotiat
 import { TechQuizSimulator } from "@/components/interview/tech-quiz-simulator";
 import { CodingChallengeCanvas } from "@/components/interview/coding-challenge-canvas";
 import { QuestionNoteEditor } from "@/components/interview/question-note-editor";
+import { AudioInterviewRecorder } from "@/components/interview/audio-interview-recorder";
 import { generateInterviewCheatsheetHtml } from "@/lib/interviewCheatsheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -367,7 +368,10 @@ export default function InterviewPrepPage() {
                           ))}
                         </div>
 
-                        <QuestionNoteEditor questionId={q.id} />
+                        <div className="space-y-3 pt-1">
+                          <QuestionNoteEditor questionId={q.id} />
+                          <AudioInterviewRecorder questionTitle={q.question} />
+                        </div>
                       </div>
                     </CardContent>
                   )}

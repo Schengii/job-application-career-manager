@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { OfferNegotiationGenerator } from "@/components/interview/offer-negotiation-generator";
 import {
   SCENARIOS,
   NegotiationScenario,
@@ -25,6 +26,7 @@ import {
 } from "@/lib/salaryNegotiationEngine";
 
 export function SalaryNegotiationTrainer() {
+  const [activeSubTab, setActiveSubTab] = useState<"SIMULATION" | "EMAIL_GENERATOR">("SIMULATION");
   const [selectedScenario, setSelectedScenario] = useState<NegotiationScenario>(SCENARIOS[0]);
   const [messages, setMessages] = useState<NegotiationMessage[]>([]);
   const [userInput, setUserInput] = useState("");
@@ -138,33 +140,66 @@ export function SalaryNegotiationTrainer() {
 
   return (
     <div className="space-y-6">
-      {/* Szenario-Auswahl */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        {SCENARIOS.map((sc) => (
-          <button
-            key={sc.id}
-            type="button"
-            onClick={() => setSelectedScenario(sc)}
-            className={`rounded-xl border p-4 text-left transition-all ${
-              selectedScenario.id === sc.id
-                ? "border-primary bg-primary/10 shadow-sm"
-                : "border-border bg-surface hover:bg-surface-hover/60"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-primary">{sc.personaTitle}</span>
-              <Badge color="blue" className="text-[10px]">
-                Ziel: {sc.targetSalary.toLocaleString("de-DE")} €
-              </Badge>
-            </div>
-            <h4 className="mt-1.5 text-sm font-bold text-foreground">{sc.title}</h4>
-            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{sc.description}</p>
-          </button>
-        ))}
+      {/* Sub-Tab Umschalter */}
+      <div className="flex items-center gap-2 border-b border-border/80 pb-3">
+        <button
+          type="button"
+          onClick={() => setActiveSubTab("SIMULATION")}
+          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+            activeSubTab === "SIMULATION"
+              ? "bg-primary text-white shadow-xs"
+              : "bg-surface text-muted-foreground hover:text-foreground border border-border"
+          }`}
+        >
+          Live-Verhandlungssimulation (Chat & Voice) 🎙️
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveSubTab("EMAIL_GENERATOR")}
+          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+            activeSubTab === "EMAIL_GENERATOR"
+              ? "bg-primary text-white shadow-xs"
+              : "bg-surface text-muted-foreground hover:text-foreground border border-border"
+          }`}
+        >
+          E-Mail- & Gegenangebot-Generator ✉️
+        </button>
       </div>
 
-      {/* Haupt-Trainer Card */}
-      <Card className="border-border">
+      {activeSubTab === "EMAIL_GENERATOR" ? (
+        <OfferNegotiationGenerator
+          defaultTargetSalary={selectedScenario.targetSalary}
+          defaultOfferedSalary={selectedScenario.initialOffer}
+        />
+      ) : (
+        <>
+          {/* Szenario-Auswahl */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            {SCENARIOS.map((sc) => (
+              <button
+                key={sc.id}
+                type="button"
+                onClick={() => setSelectedScenario(sc)}
+                className={`rounded-xl border p-4 text-left transition-all ${
+                  selectedScenario.id === sc.id
+                    ? "border-primary bg-primary/10 shadow-sm"
+                    : "border-border bg-surface hover:bg-surface-hover/60"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-primary">{sc.personaTitle}</span>
+                  <Badge color="blue" className="text-[10px]">
+                    Ziel: {sc.targetSalary.toLocaleString("de-DE")} €
+                  </Badge>
+                </div>
+                <h4 className="mt-1.5 text-sm font-bold text-foreground">{sc.title}</h4>
+                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{sc.description}</p>
+              </button>
+            ))}
+          </div>
+
+          {/* Haupt-Trainer Card */}
+          <Card className="border-border">
         <CardHeader className="border-b border-border bg-surface/50 pb-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -322,6 +357,8 @@ export function SalaryNegotiationTrainer() {
           )}
         </CardContent>
       </Card>
+      </>
+      )}
     </div>
   );
 }

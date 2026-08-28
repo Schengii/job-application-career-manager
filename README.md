@@ -237,6 +237,27 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 - **1-Klick-Wiedervorlage (`FollowUpSnoozeButtons`)**:
   - Schnell-Verschieben des nächsten Handlungsschritts (`+3 Tage`, `+1 Woche`, `+2 Wochen`) mit sofortiger Historien-Protokollierung.
 
+---
+
+### 30. 🎙️ Interaktiver Mock-Interview Audio-Recorder & Waveform-Player
+- **Audio-Selbstcheck (`AudioInterviewRecorder`, `src/lib/audioRecorder.ts`)**:
+  - Audio-Aufnahme über das Mikrofon (MediaRecorder API) zur Selbstüberprüfung von Betonung und Antworttempo.
+  - Interaktiver Waveform-Player mit Fortschrittsbalken, Reset-Funktion und direktem Download (`.webm`).
+
+---
+
+### 31. ✉️ Gehaltsverhandlungs- & E-Mail-Generator (`src/lib/offerNegotiationGenerator.ts`)
+- **Professionelle Gegenangebote & Verhandlungsschreiben**:
+  - Generiert diplomatische und durchsetzungsstarke E-Mails für Fixgehalts-Anpassungen, Remote-Konditionen, Konkurrenzangebote und Sign-on-Boni.
+  - Enthält praxiserprobte Verhandlungstipps und 1-Klick-Kopierfunktion.
+
+---
+
+### 32. 🧭 Persönliche Skill-Roadmap & Lernziel-Tracker (`/analytics`)
+- **Meilenstein-Tracking (`SkillRoadmapTracker`, `src/lib/skillRoadmap.ts`)**:
+  - Strukturierte Lernziele für Fachinformatiker Anwendungsentwicklung (React 19, TypeScript, Testing, Cloud/DevOps).
+  - Fortschrittsberechnung in Prozent, Marktrelevanz-Indikatoren und Verknüpfung zu Coding-Challenges.
+
 ## 🛠️ Tech-Stack
 
 | Bereich   | Technologie                                                              |
