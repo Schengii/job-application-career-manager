@@ -194,16 +194,23 @@ describe("createApplicationPdfPackage", () => {
     expect(await pageCount(bytes)).toBe(1);
   });
 
-  it("erzeugt bei extrem langem Anschreiben-Text mehrere Seiten (Fallback, wenn selbst die kleinste Schriftgröße nicht mehr reicht)", async () => {
-    // Deutlich länger als jedes echte Anschreiben — die Auto-Fit-Logik
-    // (findFontSizeForOnePage()) schrumpft die Schrift bis zur konfigurierten
-    // Untergrenze, ab der bewusst wieder mehrseitig umgebrochen wird, statt
-    // unleserlich klein zu werden (siehe pdfMerge.ts).
-    const longParagraph = "Dies ist ein sehr langer Testsatz, der wiederholt wird. ".repeat(400);
+  it("erzeugt ein Deckblatt als erste Seite, wenn coverSheet übergeben wird", async () => {
     const bytes = await createApplicationPdfPackage({
-      coverLetterContent: longParagraph,
-      documents: [],
+      coverSheet: {
+        applicantName: "Max Mustermann",
+        applicantEmail: "max@example.com",
+        applicantPhone: "0123456789",
+        applicantCity: "Bonn",
+        position: "Frontend Entwickler",
+        companyName: "Acme GmbH",
+        documentTitles: ["Anschreiben", "Lebenslauf", "IHK-Zeugnis"],
+      },
+      coverLetterContent: "Sehr geehrte Damen und Herren,\n\nhiermit bewerbe ich mich.",
+      documents: [{ name: "Zeugnis", fileUrl: "/uploads/test-pdfmerge-fixture.pdf" }],
     });
-    expect(await pageCount(bytes)).toBeGreaterThan(1);
+
+    // 1 Deckblatt-Seite + 1 Anschreiben-Seite + 2 PDF-Seiten = 4
+    expect(await pageCount(bytes)).toBe(4);
   });
 });
+

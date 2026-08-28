@@ -123,6 +123,50 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ---
 
+### 14. 🗂️ Visuelle Bewerbungsmappen-Zusammenstellung & PDF-Merge (`/api/applications/[id]/pdf-package`)
+- **Interaktiver Bewerbungsmappen-Builder (`ApplicationPdfPackageModal`)**:
+  - Fasst Premium-Deckblatt, DIN 5008 Anschreiben, Lebenslauf und alle angehängten PDF-Zeugnisse oder hochauflösenden Scans zu **einer einzigen, versandfertigen Gesamt-PDF** zusammen.
+  - Dokument-Reihenfolge mit 1 Klick per Auf-/Ab-Buttons sortieren und Dokumente flexibel an- oder abwählen.
+  - **Live-Dateigrößen-Schätzung**: Überwacht den MB-Umfang mit automatischer `sharp`-Bildkompression und A4-Anpassung (< 5 MB für Portale wie Workday/Personio).
+
+---
+
+### 15. 🎯 KI Requirement-Matching & Pitch-Tailoring (`src/lib/requirementTailoring.ts`)
+- **Automatischer "Gap-to-Pitch"-Abgleich**:
+  - Scannt Stellenanzeigen auf geforderte Kern-Technologien und gleicht sie mit dem Bewerberprofil und realen Referenzprojekten ab.
+  - Hebt erfüllte Anforderungen mit konkreten Projektnachweisen hervor und identifiziert fehlende Kenntnisse.
+  - **1-Klick-Absatz-Generator**: Formuliert maßgeschneiderte Argumentations-Absätze und fügt sie direkt in das Anschreiben oder die Zwischenablage ein.
+
+---
+
+### 16. 📧 Smart Multi-Szenario Nachfass-Assistent (`src/lib/followUp.ts`)
+- **Vier spezialisierte Nachfass-Vorlagen**:
+  - *1. Freundliche Nachfrage* (7–14 Tage nach Versand ohne Rückmeldung).
+  - *2. Dankes-E-Mail & Re-Pitch* (24–48h nach Vorstellungsgespräch oder Screening).
+  - *3. Status-Check nach Coding Challenge* (4–7 Tage nach Aufgaben-Abgabe).
+  - *4. Wertschätzende Feedback-Anfrage* (1–3 Tage nach einer Absage).
+- **Historien-Integration**: Speichert die Nachfass-Aktion per 1-Klick direkt als Interaktions-Eintrag in der Bewerbungshistorie.
+
+---
+
+### 17. ⚡ Tech- & Coding-Challenge Quiz-Simulator (`/interview-prep`)
+- **Interaktiver Fachfragen-Trainer für moderne Web-Entwickler**:
+  - Praxisnahe Multiple-Choice-Fragen und Code-Snippets zu **React 19** (`useActionState`, RSC-Boundaries), **TypeScript 5+** (`satisfies`, Discriminated Unions, `never`-Checks) und **Web Performance / CSS** (Event Loop, INP Core Web Vital, Tailwind v4).
+  - Sofortige detaillierte Code-Erklärungen, Key-Takeaways für das Bewerbungsgespräch und Scorecards nach Fachbereich.
+
+---
+
+### 18. 📊 Funnel-Benchmarking & KI-Erfolgsdiagnose (`/analytics`)
+- **Bewerbungstrichter-Vergleich mit Marktdurchschnittswerten**:
+  - Vergleicht eigene Konversionsraten (*Gesendet ➔ Interview ➔ Angebot*) mit realen Branchen-Benchmarks für Frontend-Entwickler.
+  - **Automatisierte Pipeline-Diagnose**: Gibt datengestützte Tipps (z. B. bei schwacher Einladungsquote: CV ATS-Optimierung; bei schwachem Abschluss: Tech-Quiz & Interview-Training).
+
+---
+
+### 19. ⌨️ Command Palette Quick Actions & Modern Two-Column CV-Layout
+- **Schnellaktionen via `Strg+K / ⌘K`**: Sofortiges Anlegen neuer Bewerbungen, Starten des Tech-Quiz oder Voice-Simulators von überall in der App.
+- **Modern Two-Column Layout im CV-Designer**: Stilvolle zweispaltige Vorlage mit dunkler Tech-Sidebar und übersichtlicher Werdegangs-Timeline.
+
 ## 🛠️ Tech-Stack
 
 | Bereich   | Technologie                                                              |

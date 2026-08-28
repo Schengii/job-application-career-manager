@@ -15,6 +15,7 @@ import type { ApplicationDetail, CoverLetter } from "@/types";
 import { CoverLetterPrintModal } from "./cover-letter-print-modal";
 import { FollowUpEmailModal } from "./follow-up-email-modal";
 import { CoverLetterKeywordBooster } from "./cover-letter-keyword-booster";
+import { RequirementTailoringWidget } from "./requirement-tailoring-widget";
 
 export function CoverLetterPanel({
   application,
@@ -233,6 +234,11 @@ export function CoverLetterPanel({
             className="font-mono text-sm leading-relaxed"
           />
 
+          <RequirementTailoringWidget
+            applicationId={application.id}
+            onInsertParagraph={handleAddSentence}
+          />
+
           <CoverLetterKeywordBooster
             coverLetterContent={content}
             jobDescription={application.jobPosting?.description}
@@ -273,7 +279,9 @@ export function CoverLetterPanel({
         onClose={() => setFollowUpModalOpen(false)}
         company={application.company}
         position={application.position}
+        applicationId={application.id}
         applicationDate={application.applicationDate}
+        onInteractionAdded={onChange}
       />
     </div>
   );

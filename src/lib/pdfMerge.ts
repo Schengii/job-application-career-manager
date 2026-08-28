@@ -167,14 +167,15 @@ async function appendImagePage(merged: PDFDocument, bytes: Buffer): Promise<void
     .toBuffer();
 
   // WICHTIG: `sharp().toBuffer()` liefert einen Buffer, der aus Node's
-  // internem Speicher-Pool geschnitten ist und daher einen (oft riesigen)
-  // `byteOffset` > 0 relativ zum zugrunde liegenden ArrayBuffer hat.
-  // pdf-lib's JpegEmbedder liest beim SOI-Marker-Check offenbar direkt vom
-  // ArrayBuffer statt `byteOffset`/`byteLength` zu respektieren und wirft
-  // dadurch fälschlich "SOI not found in JPEG" auf einem technisch validen
-  // JPEG. `Buffer.from()` kopiert die Bytes in einen frischen Buffer mit
-  // byteOffset 0 und behebt das zuverlässig (siehe pdfMerge.test.ts).
-  const image = await merged.embedJpg(Buffer.from(compressed));
+  // internem Speicher-Pool geschnitten ist und daher einen `byteOffset` > 0
+  // relativ zum zugrunde liegenden ArrayBuffer haben kann.
+  // pdf-lib's JpegEmbedder greift intern auf .buffer zu und wirft
+  // dadurch "SOI not found in JPEG", falls der ArrayBuffer nicht bei 0 beginnt.
+  // Ein isolierter Slice des ArrayBuffers garantiert byteOffset 0.
+  const isolatedBytes = new Uint8Array(
+    compressed.buffer.slice(compressed.byteOffset, compressed.byteOffset + compressed.byteLength)
+  );
+  const image = await merged.embedJpg(isolatedBytes);
   const [pageWidth, pageHeight] = PageSizes.A4;
   const maxW = pageWidth - MARGIN * 2;
   const maxH = pageHeight - MARGIN * 2;
@@ -206,10 +207,145 @@ export type MergeDocumentInput = {
   category?: string | null;
 };
 
+export type CoverSheetOptions = {
+  applicantName?: string | null;
+  applicantEmail?: string | null;
+  applicantPhone?: string | null;
+  applicantCity?: string | null;
+  position: string;
+  companyName: string;
+  documentTitles?: string[];
+};
+
 export type MergeApplicationPdfParams = {
+  coverSheet?: CoverSheetOptions | null;
   coverLetterContent?: string | null;
   documents: MergeDocumentInput[];
 };
+
+/**
+ * Erstellt ein modernes, stilvolles DIN-A4-Deckblatt für die Bewerbungsmappe
+ * inkl. Akzentleiste, Positionsangabe, Unternehmensziel und Anlagenübersicht.
+ */
+async function renderCoverSheetPdf(sheet: CoverSheetOptions): Promise<PDFDocument> {
+  const pdfDoc = await PDFDocument.create();
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const [pageWidth, pageHeight] = PageSizes.A4;
+
+  const page = pdfDoc.addPage([pageWidth, pageHeight]);
+
+  // Design-Akzent: vertikaler Farbbalken links (Indigo #4f46e5 -> rgb 79/255, 70/255, 229/255)
+  page.drawRectangle({
+    x: 0,
+    y: 0,
+    width: 24,
+    height: pageHeight,
+    color: { type: "RGB", red: 79 / 255, green: 70 / 255, blue: 229 / 255 } as any,
+  });
+
+  const contentX = 72; // ca. 25mm Rand links vom Akzentbalken
+
+  // Subtitle / Label
+  page.drawText("BEWERBUNGSDOSSIER", {
+    x: contentX,
+    y: pageHeight - 120,
+    size: 11,
+    font: boldFont,
+    color: { type: "RGB", red: 99 / 255, green: 102 / 255, blue: 241 / 255 } as any,
+  });
+
+  // Haupttitel: Bewerbung als ...
+  const title = `Bewerbung als ${sheet.position}`;
+  page.drawText(title, {
+    x: contentX,
+    y: pageHeight - 155,
+    size: 20,
+    font: boldFont,
+    color: { type: "RGB", red: 15 / 255, green: 23 / 255, blue: 42 / 255 } as any,
+  });
+
+  // Zielunternehmen
+  page.drawText(`bei ${sheet.companyName}`, {
+    x: contentX,
+    y: pageHeight - 185,
+    size: 14,
+    font,
+    color: { type: "RGB", red: 71 / 255, green: 85 / 255, blue: 105 / 255 } as any,
+  });
+
+  // Trennlinie
+  page.drawLine({
+    start: { x: contentX, y: pageHeight - 220 },
+    end: { x: pageWidth - 60, y: pageHeight - 220 },
+    thickness: 1,
+    color: { type: "RGB", red: 226 / 255, green: 232 / 255, blue: 240 / 255 } as any,
+  });
+
+  // Bewerber-Kontaktdaten Block
+  let infoY = pageHeight - 260;
+  page.drawText("ANGABEN ZUR PERSON", {
+    x: contentX,
+    y: infoY,
+    size: 10,
+    font: boldFont,
+    color: { type: "RGB", red: 100 / 255, green: 116 / 255, blue: 139 / 255 } as any,
+  });
+
+  infoY -= 24;
+  if (sheet.applicantName) {
+    page.drawText(sheet.applicantName, { x: contentX, y: infoY, size: 13, font: boldFont });
+    infoY -= 18;
+  }
+  if (sheet.applicantEmail) {
+    page.drawText(`E-Mail: ${sheet.applicantEmail}`, { x: contentX, y: infoY, size: 10, font });
+    infoY -= 16;
+  }
+  if (sheet.applicantPhone) {
+    page.drawText(`Telefon: ${sheet.applicantPhone}`, { x: contentX, y: infoY, size: 10, font });
+    infoY -= 16;
+  }
+  if (sheet.applicantCity) {
+    page.drawText(`Wohnort: ${sheet.applicantCity}`, { x: contentX, y: infoY, size: 10, font });
+    infoY -= 16;
+  }
+
+  // Anlagenverzeichnis (Inhaltsübersicht)
+  if (sheet.documentTitles && sheet.documentTitles.length > 0) {
+    let anlagenY = pageHeight - 440;
+    page.drawText("INHALT DIESER BEWERBUNGSMAPPE", {
+      x: contentX,
+      y: anlagenY,
+      size: 10,
+      font: boldFont,
+      color: { type: "RGB", red: 100 / 255, green: 116 / 255, blue: 139 / 255 } as any,
+    });
+
+    anlagenY -= 22;
+    sheet.documentTitles.forEach((docTitle, idx) => {
+      page.drawText(`${idx + 1}.  ${docTitle}`, {
+        x: contentX + 8,
+        y: anlagenY,
+        size: 11,
+        font,
+        color: { type: "RGB", red: 30 / 255, green: 41 / 255, blue: 59 / 255 } as any,
+      });
+      anlagenY -= 20;
+    });
+  }
+
+  // Footer / Datum
+  const dateString = new Intl.DateTimeFormat("de-DE", { dateStyle: "long" }).format(new Date());
+  page.drawText(`Erstellt am ${dateString}`, {
+    x: contentX,
+    y: 50,
+    size: 9,
+    font,
+    color: { type: "RGB", red: 148 / 255, green: 163 / 255, blue: 184 / 255 } as any,
+  });
+
+  return pdfDoc;
+}
 
 /**
  * Sortiert die angehängten Dokumente für eine sinnvolle Lesereihenfolge:
@@ -236,6 +372,12 @@ function sortDocumentsForPackage(documents: MergeDocumentInput[]): MergeDocument
  */
 export async function createApplicationPdfPackage(params: MergeApplicationPdfParams): Promise<Uint8Array> {
   const merged = await PDFDocument.create();
+
+  if (params.coverSheet) {
+    const sheetDoc = await renderCoverSheetPdf(params.coverSheet);
+    const copiedPages = await merged.copyPages(sheetDoc, sheetDoc.getPageIndices());
+    for (const p of copiedPages) merged.addPage(p);
+  }
 
   if (params.coverLetterContent?.trim()) {
     const coverDoc = await renderTextAsPdf(params.coverLetterContent);

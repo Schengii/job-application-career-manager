@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------
 import type { PreferencesWithProfile } from "@/types";
 
-export type CvLayout = "MODERN" | "CLASSIC" | "COMPACT" | "ATS_MINIMAL";
+export type CvLayout = "MODERN" | "CLASSIC" | "COMPACT" | "ATS_MINIMAL" | "MODERN_TWO_COLUMN";
 
 export type CvOptions = {
   layout: CvLayout;
@@ -42,6 +42,100 @@ export function generateCvHtml(preferences: PreferencesWithProfile, options: CvO
     preferences.email ? `E-Mail: ${preferences.email}` : null,
     preferences.phone ? `Tel: ${preferences.phone}` : null,
   ].filter(Boolean);
+
+  if (layout === "MODERN_TWO_COLUMN") {
+    return `
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Lebenslauf - ${escapeHtml(preferences.fullName || "Bewerber")}</title>
+  <style>
+    @page { size: A4 portrait; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.5; font-size: 12px; background: #fff; display: flex; min-height: 100vh; }
+    .sidebar { width: 33%; background: #0f172a; color: #f8fafc; padding: 32px 20px; display: flex; flex-col; gap: 20px; }
+    .main-content { width: 67%; padding: 32px 28px; }
+    .name-title { font-size: 22px; font-weight: 800; color: #ffffff; line-height: 1.2; }
+    .role-title { font-size: 13px; color: #818cf8; font-weight: 600; margin-top: 4px; }
+    .side-section { margin-top: 24px; }
+    .side-title { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 1px; border-bottom: 1px solid #334155; padding-bottom: 4px; margin-bottom: 10px; }
+    .side-item { font-size: 11px; color: #cbd5e1; margin-bottom: 8px; line-height: 1.4; word-break: break-word; }
+    .side-skill-pill { display: inline-block; background: #1e293b; color: #e2e8f0; border: 1px solid #334155; border-radius: 4px; padding: 2px 6px; font-size: 10px; margin: 2px; }
+    .section-main { margin-bottom: 20px; }
+    .section-main-title { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #4f46e5; border-bottom: 2px solid #e0e7ff; padding-bottom: 4px; margin-bottom: 12px; letter-spacing: 0.5px; }
+    .entry-main { margin-bottom: 12px; }
+    .entry-header { display: flex; justify-content: space-between; font-weight: 600; color: #0f172a; font-size: 12.5px; }
+    .entry-inst { color: #4f46e5; font-size: 11.5px; font-weight: 500; }
+    .entry-desc { font-size: 11.5px; color: #475569; margin-top: 2px; line-height: 1.4; }
+    .profile-banner { font-size: 11.5px; color: #334155; margin-bottom: 18px; font-style: italic; background: #f8fafc; padding: 10px 14px; border-left: 3px solid #4f46e5; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div>
+      <div class="name-title">${escapeHtml(preferences.fullName || "Max Mustermann")}</div>
+      <div class="role-title">${escapeHtml(preferences.desiredRole)}</div>
+    </div>
+
+    <div class="side-section">
+      <div class="side-title">Kontaktdaten</div>
+      ${contactItems.map((c) => `<div class="side-item">${escapeHtml(c!)}</div>`).join("")}
+    </div>
+
+    <div class="side-section">
+      <div class="side-title">Tech-Stack & Skills</div>
+      <div>
+        ${skills.map((s) => `<span class="side-skill-pill">${escapeHtml(s)}</span>`).join("")}
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    ${preferences.profileSummary ? `<div class="profile-banner">${escapeHtml(preferences.profileSummary)}</div>` : ""}
+
+    <div class="section-main">
+      <div class="section-main-title">Beruflicher Werdegang & Ausbildung</div>
+      ${eduList
+        .map(
+          (e) => `
+        <div class="entry-main">
+          <div class="entry-header">
+            <span>${escapeHtml(e.title)}</span>
+            <span style="font-size: 10.5px; font-weight: normal; color: #64748b;">
+              ${formatMonthYear(e.startDate)} – ${formatMonthYear(e.endDate)}
+            </span>
+          </div>
+          ${e.institution ? `<div class="entry-inst">${escapeHtml(e.institution)}</div>` : ""}
+          ${e.description ? `<div class="entry-desc">${escapeHtml(e.description)}</div>` : ""}
+        </div>
+      `
+        )
+        .join("")}
+    </div>
+
+    <div class="section-main">
+      <div class="section-main-title">Praxisprojekte & Referenzen</div>
+      ${projList
+        .map(
+          (p) => `
+        <div class="entry-main">
+          <div class="entry-header">
+            <span>${escapeHtml(p.title)}</span>
+            ${p.role ? `<span style="font-size: 11px; font-weight: normal; color: #64748b;">${escapeHtml(p.role)}</span>` : ""}
+          </div>
+          ${p.description ? `<div class="entry-desc">${escapeHtml(p.description)}</div>` : ""}
+          ${p.techStack ? `<div style="font-size: 10.5px; color: #4f46e5; margin-top: 2px;">Tech-Stack: ${escapeHtml(p.techStack)}</div>` : ""}
+        </div>
+      `
+        )
+        .join("")}
+    </div>
+  </div>
+</body>
+</html>
+    `.trim();
+  }
 
   return `
 <!DOCTYPE html>

@@ -9,14 +9,26 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
-import { Briefcase, Building2, Search as SearchIcon, FileSearch } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  Search as SearchIcon,
+  FileSearch,
+  PlusCircle,
+  Zap,
+  Mic,
+  FileText,
+  TrendingUp,
+  Mail,
+  Share2,
+} from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem, CompanyWithCounts, JobPostingWithCompany } from "@/types";
 
 type ResultItem = {
   id: string;
-  group: "Bewerbungen" | "Unternehmen" | "Jobsuche";
-  icon: typeof Briefcase;
+  group: "Aktionen" | "Bewerbungen" | "Unternehmen" | "Jobsuche";
+  icon: any;
   title: string;
   subtitle: string;
   href: string;
@@ -36,9 +48,6 @@ export function CommandPalette() {
   const { data: jobs } = useSWR<JobPostingWithCompany[]>(open ? "/api/jobs" : null, fetcher);
 
   useEffect(() => {
-    // Reset von Suchbegriff/Auswahl passiert bewusst hier im Event-Handler
-    // (ausgelöst durch die tatsächliche Nutzer-Aktion "öffnen"), nicht in
-    // einem separaten Effekt, der bei jeder open-Änderung erneut feuern würde.
     function openPalette() {
       setQuery("");
       setActiveIndex(0);
@@ -55,8 +64,6 @@ export function CommandPalette() {
       }
       if (e.key === "Escape") setOpen(false);
     }
-    // Erlaubt einen sichtbaren Such-Button (z.B. in der Sidebar), die Palette
-    // ohne eigenen Shared-State über ein einfaches DOM-Event zu öffnen.
     window.addEventListener("keydown", handleKeydown);
     window.addEventListener("open-command-palette", openPalette);
     return () => {
@@ -65,8 +72,6 @@ export function CommandPalette() {
     };
   }, [open]);
 
-  // Reiner Seiteneffekt auf ein externes System (DOM-Fokus) – kein setState,
-  // daher unproblematisch für die react-hooks/set-state-in-effect-Regel.
   useEffect(() => {
     if (!open) return;
     const timer = setTimeout(() => inputRef.current?.focus(), 10);
@@ -74,6 +79,16 @@ export function CommandPalette() {
   }, [open]);
 
   const allResults: ResultItem[] = useMemo(() => {
+    const actionResults: ResultItem[] = [
+      { id: "act-new-app", group: "Aktionen", icon: PlusCircle, title: "Neue Bewerbung anlegen", subtitle: "Kanban & Trichter öffnen", href: "/applications" },
+      { id: "act-quiz", group: "Aktionen", icon: Zap, title: "Tech- & Coding-Quiz starten", subtitle: "React 19, TS & Web Performance trainieren", href: "/interview-prep" },
+      { id: "act-voice", group: "Aktionen", icon: Mic, title: "Voice-Interview Simulator", subtitle: "Gespräch mit Audio-Dialog üben", href: "/interview-prep" },
+      { id: "act-cv", group: "Aktionen", icon: FileText, title: "CV & ATS-Score prüfen", subtitle: "Lebenslauf optimieren & drucken", href: "/cv-designer" },
+      { id: "act-funnel", group: "Aktionen", icon: TrendingUp, title: "Funnel-Benchmark & ROI", subtitle: "Conversion-Statistiken einsehen", href: "/analytics" },
+      { id: "act-mail", group: "Aktionen", icon: Mail, title: "E-Mail IMAP-Sync", subtitle: "Posteingang abgleichen", href: "/settings" },
+      { id: "act-portfolio", group: "Aktionen", icon: Share2, title: "Recruiter-Portfolio verwalten", subtitle: "One-Pager Link konfigurieren", href: "/settings" },
+    ];
+
     const appResults: ResultItem[] = (applications ?? []).map((a) => ({
       id: `app-${a.id}`,
       group: "Bewerbungen",
@@ -109,7 +124,7 @@ export function CommandPalette() {
       { id: "page-analytics", group: "Bewerbungen", icon: Briefcase, title: "Auswertungen", subtitle: "Conversion Funnel & Analytics", href: "/analytics" },
     ];
 
-    return [...appResults, ...companyResults, ...jobResults, ...pageResults];
+    return [...actionResults, ...appResults, ...companyResults, ...jobResults, ...pageResults];
   }, [applications, companies, jobs]);
 
   const filtered = useMemo(() => {

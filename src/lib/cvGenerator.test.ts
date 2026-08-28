@@ -81,4 +81,12 @@ describe("cvGenerator", () => {
     expect(html).toContain("electroCheck-ai");
     expect(html).toContain("TypeScript");
   });
+
+  it("erzeugt das MODERN_TWO_COLUMN Layout mit Sidebar", () => {
+    const html = generateCvHtml(dummyPreferences, { layout: "MODERN_TWO_COLUMN" });
+    expect(html).toContain("sidebar");
+    expect(html).toContain("main-content");
+    expect(html).toContain("Max Mustermann");
+    expect(html).toContain("electroCheck-ai");
+  });
 });

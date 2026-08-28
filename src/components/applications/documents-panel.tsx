@@ -3,7 +3,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
-import { FileText, Trash2, Plus, Eye, Download, Star } from "lucide-react";
+import { FileText, Trash2, Plus, Eye, Download, Star, Layers } from "lucide-react";
 import { fetcher, apiPost, apiDelete } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Select } from "@/components/ui/form";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { DOCUMENT_CATEGORIES, findStatusMeta } from "@/lib/constants";
 import type { ApplicationDetail, Document } from "@/types";
 import { DocumentPreviewModal } from "@/components/documents/document-preview-modal";
+import { ApplicationPdfPackageModal } from "./application-pdf-package-modal";
 
 export function DocumentsPanel({
   application,
@@ -24,6 +25,7 @@ export function DocumentsPanel({
   const [selected, setSelected] = useState("");
   const [attaching, setAttaching] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
+  const [packageModalOpen, setPackageModalOpen] = useState(false);
 
   const attachedIds = new Set(application.documents.map((d) => d.documentId));
   const available = (library ?? []).filter((d) => !attachedIds.has(d.id));
@@ -60,11 +62,14 @@ export function DocumentsPanel({
           {application.documents.length} Dokument(e) zugeordnet
         </p>
         <div className="flex items-center gap-2">
-          <a href={`/api/applications/${application.id}/package/pdf`} download>
-            <Button variant="outline" size="sm" title="Anschreiben + alle angehängten PDFs/Scans als EIN zusammengeführtes PDF">
-              <Download className="h-4 w-4" /> Bewerbungspaket (PDF) herunterladen
-            </Button>
-          </a>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setPackageModalOpen(true)}
+            title="Anschreiben + Deckblatt + alle angehängten PDFs/Scans als konfigurierbares PDF zusammenstellen"
+          >
+            <Layers className="h-4 w-4" /> Mappe zusammenstellen (PDF)
+          </Button>
           <a href={`/api/applications/${application.id}/package`} download>
             <Button variant="ghost" size="sm" title="Anschreiben + Dokumente als einzelne Dateien in einem ZIP">
               <Download className="h-4 w-4" /> als ZIP
@@ -163,6 +168,24 @@ export function DocumentsPanel({
         open={Boolean(previewDoc)}
         onClose={() => setPreviewDoc(null)}
         document={previewDoc}
+      />
+
+      {/* Mappen-Builder Modal */}
+      <ApplicationPdfPackageModal
+        open={packageModalOpen}
+        onClose={() => setPackageModalOpen(false)}
+        applicationId={application.id}
+        companyName={application.company.name}
+        position={application.position}
+        hasCoverLetter={Boolean(application.coverLetter?.content)}
+        documents={application.documents.map((d) => ({
+          id: d.document.id,
+          name: d.document.name,
+          category: d.document.category,
+          fileUrl: d.document.fileUrl,
+          fileSize: d.document.fileSize,
+          mimeType: d.document.mimeType,
+        }))}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getFollowUpStatus, FOLLOW_UP_THRESHOLD_DAYS } from "./followUp";
+import { getFollowUpStatus, FOLLOW_UP_THRESHOLD_DAYS, generateScenarioFollowUpEmail } from "./followUp";
 
 describe("getFollowUpStatus", () => {
   it("schlägt Nachfassen vor, wenn eine versendete Bewerbung älter als 14 Tage ist", () => {
@@ -51,5 +51,26 @@ describe("getFollowUpStatus", () => {
     });
     expect(statusSoon.isDueSoon).toBe(true);
     expect(statusSoon.isOverdue).toBe(false);
+  });
+
+  it("generiert passende Vorlagen für verschiedene Nachfass-Szenarien", () => {
+    const afterInterview = generateScenarioFollowUpEmail({
+      scenario: "AFTER_INTERVIEW",
+      companyName: "Acme Tech",
+      contactName: "Dr. Müller",
+      position: "Frontend Entwickler",
+      applicantName: "Max Mustermann",
+    });
+    expect(afterInterview.subject).toContain("Vielen Dank");
+    expect(afterInterview.body).toContain("Sehr geehrte(r) Frau/Herr Dr. Müller");
+    expect(afterInterview.body).toContain("Max Mustermann");
+
+    const feedbackReq = generateScenarioFollowUpEmail({
+      scenario: "FEEDBACK_REQUEST",
+      companyName: "Beta Labs",
+      position: "React Specialist",
+    });
+    expect(feedbackReq.subject).toContain("Rückfrage");
+    expect(feedbackReq.body).toContain("kurzes, offenes Feedback");
   });
 });

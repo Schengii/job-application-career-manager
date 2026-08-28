@@ -118,6 +118,7 @@ export default function CvDesignerPage() {
               <div className="flex flex-col gap-2">
                 {[
                   { id: "MODERN", label: "Modern (Akzentfarbe Indigo)", desc: "Frisch, modern, ideal für Web & Frontend" },
+                  { id: "MODERN_TWO_COLUMN", label: "Modern Two-Column (Profil-Sidebar)", desc: "2-Spaltig mit dunkler Tech-Sidebar & kompakter Timeline" },
                   { id: "ATS_MINIMAL", label: "ATS Minimalist (100% Parser-sicher)", desc: "Textfokussiert, optimal für US & Großkonzern ATS-Scanner" },
                   { id: "CLASSIC", label: "Klassisch (Dezente Schiefer-Töne)", desc: "Zeitlos, formell für Behörden & Banken" },
                   { id: "COMPACT", label: "Kompakt (Platzsparend)", desc: "Optimiert für eine Seite" },
