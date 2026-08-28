@@ -195,6 +195,28 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 - **Service Worker V2 mit erweiterten Routen**:
   - Cacht `/interview-prep`, `/cv-designer`, `/applications` und `/companies` für unterbrechungsfreie Nutzung auch ohne Internetverbindung (z. B. im Zug vor einem Vor-Ort-Gespräch).
 
+---
+
+### 24. 🌍 Multi-Währungs- & Relocation-Rechner (`/analytics`)
+- **Kaufkraftparität & Währungsumrechnung (`src/lib/currencyRelocation.ts`)**:
+  - Berechnet für internationale oder überregionale Angebote (USD, CHF, GBP, EUR) das reale Kaufkraft-Äquivalent bezogen auf die Heimatregion Bonn/Köln.
+  - Berücksichtigt Lebenshaltungskosten-Indizes (z. B. Zürich +75%, London +45%, München +30%) und geschätzte Nettoquoten (z. B. Schweizer Quellensteuer ~20%, US W-8BEN Contractor, Steuerklasse 1).
+  - Gibt datengestützte KI-Empfehlungen zur tatsächlichen Rentabilität von Umzug oder US-Remote-Verträgen.
+
+---
+
+### 25. 📄 Intelligenter Dokumenten- & Zeugnis-Parser (`src/lib/documentParser.ts`)
+- **Automatische Zertifikats- & Noten-Analyse**:
+  - Analysiert hochgeladene PDF-Dokumente und schlägt automatisch passende Kategorien (`CERTIFICATE`, `REFERENCE`, `RESUME`) vor.
+  - Erkennt IHK-Abschlusszeugnisse, Weiterbildungs-Zertifikate, Ausbildungsnoten und extrahiert nachgewiesene Tech-Skills (z. B. React, TypeScript, SQL, Scrum).
+
+---
+
+### 26. 🏷️ Sub-Status- & Sub-Phasen-Badges im Kanban-Board
+- **Erweiterte Kanban-Visualisierung**:
+  - Zeigt Sub-Phasen (z. B. `#Tech-Challenge`, `#2. Interview`, `#Follow-Up`) direkt als kompakte Badges auf den Karten an.
+  - Hebt anstehende Fälligkeits- und Interview-Termine (`📅 DD.MM.YYYY`) farblich hervor.
+
 ## 🛠️ Tech-Stack
 
 | Bereich   | Technologie                                                              |

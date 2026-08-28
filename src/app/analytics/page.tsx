@@ -19,6 +19,7 @@ import { SkillSuccessRatesCard, type SkillSuccessRate } from "@/components/analy
 import { SkillGapCard } from "@/components/analytics/skill-gap-card";
 import { TotalCompensationCard } from "@/components/analytics/total-compensation-card";
 import { RoiTrackerCard } from "@/components/analytics/roi-tracker-card";
+import { CurrencyRelocationCalculator } from "@/components/analytics/currency-relocation-calculator";
 
 type Analytics = {
   statusDistribution: { status: string; label: string; color: string; count: number }[];
@@ -223,6 +224,11 @@ export default function AnalyticsPage() {
             {/* Bewerbungs-Aufwand & ROI-Tracker */}
             <div className="lg:col-span-2">
               <RoiTrackerCard />
+            </div>
+
+            {/* Multi-Währungs- & Relocation-Rechner */}
+            <div className="lg:col-span-2">
+              <CurrencyRelocationCalculator />
             </div>
 
             {/* Gehalts- & Benefit-Vergleichsmatrix */}

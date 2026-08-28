@@ -16,6 +16,7 @@ import {
   ALLOWED_DOCUMENT_UPLOADS,
   DOCUMENT_CATEGORY_VALUES,
 } from "@/lib/constants";
+import { analyzeDocumentContent } from "@/lib/documentParser";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -79,11 +80,13 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     await fs.writeFile(path.join(UPLOAD_DIR, uniqueName), buffer);
 
+    const insights = analyzeDocumentContent(file.name, description);
+
     const document = await prisma.document.create({
       data: {
         name,
         category,
-        description,
+        description: description || insights.summary,
         fileName: file.name,
         fileUrl: `/uploads/${uniqueName}`,
         mimeType: file.type || null,
@@ -91,7 +94,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(document, { status: 201 });
+    return NextResponse.json({ ...document, insights }, { status: 201 });
   } catch (error) {
     return handleApiError(error);
   }

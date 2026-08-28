@@ -200,12 +200,33 @@ export function KanbanBoard({
                   >
                     <p className="truncate text-sm font-semibold text-foreground">{app.company.name}</p>
                     <p className="truncate text-xs text-muted-foreground mt-0.5">{app.position}</p>
+
+                    {/* Sub-Status / Phase Badges */}
+                    {app.tags && (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {app.tags.split(",").slice(0, 2).map((t) => (
+                          <span
+                            key={t}
+                            className="rounded bg-primary/10 px-1.5 py-0.5 text-[9.5px] font-semibold text-primary"
+                          >
+                            #{t.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/40 pt-1.5">
                       <span>{formatDate(app.applicationDate)}</span>
-                      {(app.source || app.jobPosting?.portalSource) && (
-                        <span className="truncate max-w-[100px] text-[10px] bg-surface-hover px-1.5 py-0.5 rounded font-medium">
-                          {app.source || app.jobPosting?.portalSource}
+                      {app.nextStepDate ? (
+                        <span className="truncate max-w-[110px] text-[10px] text-primary font-bold">
+                          📅 {formatDate(app.nextStepDate)}
                         </span>
+                      ) : (
+                        (app.source || app.jobPosting?.portalSource) && (
+                          <span className="truncate max-w-[100px] text-[10px] bg-surface-hover px-1.5 py-0.5 rounded font-medium">
+                            {app.source || app.jobPosting?.portalSource}
+                          </span>
+                        )
                       )}
                     </div>
                   </Link>

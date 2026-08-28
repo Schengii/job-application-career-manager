@@ -59,6 +59,8 @@ describe("POST /api/documents/upload", () => {
     expect(res.status).toBe(201);
     const body = await res.json();
     expect(body.fileUrl).toMatch(/^\/uploads\/.+\.pdf$/);
+    expect(body.insights).toBeDefined();
+    expect(body.insights.suggestedCategory).toBe("LEBENSLAUF");
 
     createdFiles.push(path.join(UPLOAD_DIR, path.basename(body.fileUrl)));
   });
