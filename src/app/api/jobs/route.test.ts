@@ -62,6 +62,24 @@ describe("/api/jobs", () => {
     expect(companyCount).toBe(1);
   });
 
+  it("POST speichert Ansprechpartner und Recruiter-E-Mail auf dem verknüpften Unternehmen", async () => {
+    const response = await POST(
+      postRequest({
+        title: "Senior React Engineer",
+        description: "TypeScript & Next.js",
+        portalSource: "LINKEDIN",
+        companyName: "Tech Recruiters Inc",
+        contactName: "Frau Müller",
+        contactEmail: "recruiting@techrecruiters.com",
+      }),
+    );
+    expect(response.status).toBe(201);
+
+    const company = await prisma.company.findFirst({ where: { name: "Tech Recruiters Inc" } });
+    expect(company?.contactName).toBe("Frau Müller");
+    expect(company?.contactEmail).toBe("recruiting@techrecruiters.com");
+  });
+
   it("GET liefert ohne Pagination ein nach Match-Score sortiertes Array", async () => {
     const company = await createTestCompany();
     await prisma.jobPosting.create({

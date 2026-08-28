@@ -11,6 +11,8 @@ import {
   Building2,
   MessageSquare,
   Mic,
+  Printer,
+  FileText,
 } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import { ApplicationListItem } from "@/types";
@@ -26,6 +28,8 @@ import { MockInterviewModal } from "@/components/interview/mock-interview-modal"
 import { VoiceInterviewRunner } from "@/components/interview/voice-interview-runner";
 import { SalaryNegotiationTrainer } from "@/components/interview/salary-negotiation-trainer";
 import { TechQuizSimulator } from "@/components/interview/tech-quiz-simulator";
+import { QuestionNoteEditor } from "@/components/interview/question-note-editor";
+import { generateInterviewCheatsheetHtml } from "@/lib/interviewCheatsheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const TABS = [
@@ -109,6 +113,33 @@ export default function InterviewPrepPage() {
       ? Math.round((checkedQuestions.size / INTERVIEW_QUESTIONS.length) * 100)
       : 0;
 
+  function handlePrintCheatsheet() {
+    const personalNotes: Record<string, string> = {};
+    for (const q of relevantQuestions) {
+      try {
+        const saved = localStorage.getItem(`career_prep_note_${q.id}`);
+        if (saved) personalNotes[q.id] = saved;
+      } catch {}
+    }
+
+    const html = generateInterviewCheatsheetHtml({
+      candidateName: "Max Mustermann",
+      companyName: selectedApp?.company.name,
+      position: selectedApp?.position,
+      questions: checkedQuestions.size > 0
+        ? relevantQuestions.filter((q) => checkedQuestions.has(q.id))
+        : relevantQuestions.slice(0, 10),
+      personalNotes,
+    });
+
+    const printWin = window.open("", "_blank");
+    if (!printWin) return;
+    printWin.document.write(html);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(() => printWin.print(), 250);
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -119,6 +150,14 @@ export default function InterviewPrepPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handlePrintCheatsheet}
+            title="Druckfertiges 2-Seiten Cheatsheet mit deinen Notizen erzeugen"
+          >
+            <Printer className="h-4 w-4 mr-1.5 text-primary" /> Spickzettel drucken
+          </Button>
           <Button
             size="sm"
             variant="primary"
@@ -323,6 +362,8 @@ export default function InterviewPrepPage() {
                             </span>
                           ))}
                         </div>
+
+                        <QuestionNoteEditor questionId={q.id} />
                       </div>
                     </CardContent>
                   )}

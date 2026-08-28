@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const companyInput = document.getElementById("company-name");
   const locationInput = document.getElementById("location");
   const remoteInput = document.getElementById("remote");
+  const contactNameInput = document.getElementById("contact-name");
+  const contactEmailInput = document.getElementById("contact-email");
   const techStackInput = document.getElementById("tech-stack");
   const saveBtn = document.getElementById("save-btn");
   const statusDiv = document.getElementById("status");
@@ -31,6 +33,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         companyInput.value = response.companyName || "";
         locationInput.value = response.location || "";
         remoteInput.value = response.remote ? "Ja (Remote/Hybrid)" : "Vor Ort";
+        contactNameInput.value = response.contactName || "";
+        contactEmailInput.value = response.contactEmail || "";
         techStackInput.value = response.techStack || "";
         currentDescription = response.description || "";
       });
@@ -51,6 +55,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       companyName: companyInput.value.trim() || "Unbekanntes Unternehmen",
       location: locationInput.value.trim() || "Bonn",
       remote: remoteInput.value.toLowerCase().includes("ja") || remoteInput.value.toLowerCase().includes("remote"),
+      contactName: contactNameInput.value.trim() || undefined,
+      contactEmail: contactEmailInput.value.trim() || undefined,
       techStack: techStackInput.value.trim() || "TypeScript, React, Next.js",
       description: currentDescription || `Erfasst via Browser-Extension von ${currentSourceUrl}`,
       portalSource: "OTHER",

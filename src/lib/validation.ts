@@ -49,11 +49,16 @@ export const jobPostingSchema = z.object({
   salaryInfo: z.string().optional().nullable(),
   companyId: z.string().optional().nullable(),
   companyName: z.string().optional(), // Für "Bewerben"-Flow: legt Company an, falls nötig
+  contactName: z.string().optional().nullable(),
+  contactEmail: z.string().optional().nullable(),
+  contactPhone: z.string().optional().nullable(),
   isDismissed: z.boolean().optional(),
   dismissReason: z.string().optional().nullable(),
   dismissedAt: z.string().datetime().optional().nullable().or(z.literal("")),
 });
-export const jobPostingUpdateSchema = jobPostingSchema.omit({ companyName: true }).partial();
+export const jobPostingUpdateSchema = jobPostingSchema
+  .omit({ companyName: true, contactName: true, contactEmail: true, contactPhone: true })
+  .partial();
 
 export const jobDismissSchema = z.object({
   reason: z.string().optional().nullable(),

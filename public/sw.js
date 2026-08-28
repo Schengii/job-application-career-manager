@@ -1,8 +1,15 @@
 // -----------------------------------------------------------------------------
 // Service Worker für Offline-Caching und PWA-Installation
 // -----------------------------------------------------------------------------
-const CACHE_NAME = "career-manager-v1";
-const STATIC_ASSETS = ["/", "/icon.svg"];
+const CACHE_NAME = "career-manager-v2";
+const STATIC_ASSETS = [
+  "/",
+  "/interview-prep",
+  "/cv-designer",
+  "/applications",
+  "/companies",
+  "/icon.svg"
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

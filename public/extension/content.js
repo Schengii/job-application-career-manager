@@ -87,6 +87,23 @@ function extractJobFromPage() {
     remote = textLower.includes("remote") || textLower.includes("home-office") || textLower.includes("homeoffice");
   }
 
+  // 6. Ansprechpartner & Recruiter-Erkennung
+  let contactName = "";
+  let contactEmail = "";
+
+  const contactMatch = fullText.match(/(?:Ansprechpartner(?:in)?|Kontakt(?:person)?|Recruiter(?:in)?|Hiring Manager|Ihre Ansprechpartner):\s*([A-ZÄÖÜ][a-zäöüß]+(?:\s+[A-ZÄÖÜ][a-zäöüß]+){1,2})/i);
+  if (contactMatch) {
+    contactName = contactMatch[1].trim();
+  }
+
+  const mailMatch = fullText.match(/\b([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b/);
+  if (mailMatch) {
+    const candidate = mailMatch[1].toLowerCase();
+    if (!candidate.endsWith(".png") && !candidate.endsWith(".jpg") && !candidate.includes("sentry")) {
+      contactEmail = candidate;
+    }
+  }
+
   return {
     title: title || "Frontend Entwickler (React/TypeScript)",
     companyName: companyName || "IT-Unternehmen",
@@ -95,6 +112,8 @@ function extractJobFromPage() {
     description: description.slice(0, 1000) || `Stellenangebot via Browser-Clipper erfasst (${url}).`,
     techStack: techStack.join(", "),
     salaryInfo: salaryInfo || undefined,
+    contactName: contactName || undefined,
+    contactEmail: contactEmail || undefined,
     sourceUrl: url,
   };
 }

@@ -167,6 +167,34 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 - **Schnellaktionen via `Strg+K / ⌘K`**: Sofortiges Anlegen neuer Bewerbungen, Starten des Tech-Quiz oder Voice-Simulators von überall in der App.
 - **Modern Two-Column Layout im CV-Designer**: Stilvolle zweispaltige Vorlage mit dunkler Tech-Sidebar und übersichtlicher Werdegangs-Timeline.
 
+---
+
+### 20. 🎙️ Persönliche Interview-Notizen & Sprach-Diktat (`/interview-prep`)
+- **Individuelle Formulierungen pro Fachfrage (`QuestionNoteEditor`)**:
+  - Speichert eigene Formulierungen und Anekdoten zu Projekten (z. B. *electroCheck-ai*) direkt an jeder Fachfrage.
+  - **Echtzeit-Sprachdiktat (Speech-to-Text)**: Mit einem Klick auf *„Diktieren 🎙️“* die eigene Antwort frei einsprechen (Web Speech API).
+  - Lokale Auto-Save-Persistierung mit visueller Speicherbestätigung.
+
+---
+
+### 21. 📋 Druckbarer 2-Seiten-Interview-Vorbereitungs-Spickzettel (`src/lib/interviewCheatsheet.ts`)
+- **Kompakter DIN A4 Spickzettel**:
+  - Fasst 2-Minuten-Selbstpräsentations-Pitch, vorbereitete Fachfragen inkl. persönlicher Notizen und 3 strategische Gegenfragen an das Entwickler-Team zusammen.
+  - Mit 1 Klick über *„Spickzettel drucken“* als optimierte DIN A4 PDF ausdrucken oder auf dem Smartphone/Tablet mitnehmen.
+
+---
+
+### 22. 🔍 Smart Recruiter- & Ansprechpartner-Erkennung im Career Manager Clipper
+- **Automatische Extraktion von Kontaktdaten (`public/extension/content.js`)**:
+  - Erkennt Personaler, Talent Acquisition Manager, Recruiting-E-Mails und Telefonnummern direkt im DOM von Stellenanzeigen.
+  - Überträgt Ansprechpartner und Recruiter-E-Mail automatisch in die Unternehmensdatenbank beim 1-Klick-Import.
+
+---
+
+### 23. 📱 PWA Offline-First Caching-Upgrade (`public/sw.js`)
+- **Service Worker V2 mit erweiterten Routen**:
+  - Cacht `/interview-prep`, `/cv-designer`, `/applications` und `/companies` für unterbrechungsfreie Nutzung auch ohne Internetverbindung (z. B. im Zug vor einem Vor-Ort-Gespräch).
+
 ## 🛠️ Tech-Stack
 
 | Bereich   | Technologie                                                              |

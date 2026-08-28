@@ -56,16 +56,26 @@
       </div>
     </div>
 
-    <div class="field">
-      <label for="tech-stack">Tech-Stack</label>
-      <input type="text" id="tech-stack" placeholder="TypeScript, React, Next.js" />
+    <div class="row">
+      <div class="field">
+        <label for="contact-name">Ansprechpartner</label>
+        <input type="text" id="contact-name" placeholder="z.B. Hr. Schmidt" />
+      </div>
+      <div class="field">
+        <label for="contact-email">Recruiter E-Mail</label>
+        <input type="text" id="contact-email" placeholder="jobs@..." />
+      </div>
     </div>
 
-    <button id="save-btn" class="btn">✨ Im Dashboard speichern</button>
-    <div id="status" class="status"></div>
-  </div>
+    <div class="field">
+      <label for="tech-stack">Tech-Stack</label>
+      <input type="text" id="tech-stack" placeholder="React, TypeScript, CSS" />
+    </div>
 
-  <a href="http://localhost:3000/jobs" target="_blank" class="quick-open">Dashboard öffnen &rarr;</a>
+    <button id="save-btn" class="btn">Im Dashboard speichern ⚡</button>
+    <div id="status" class="status"></div>
+    <a href="http://localhost:3000/jobs" target="_blank" class="quick-open">Zum Dashboard wechseln →</a>
+  </div>
 
   <script src="popup.js"></script>
 </body>

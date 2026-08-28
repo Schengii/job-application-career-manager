@@ -58,13 +58,35 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { companyName, ...rest } = jobPostingSchema.parse(body);
+    const { companyName, contactName, contactEmail, contactPhone, ...rest } = jobPostingSchema.parse(body);
 
     let companyId = rest.companyId ?? null;
     if (!companyId && companyName) {
       const existing = await prisma.company.findFirst({ where: { name: companyName } });
-      const company = existing ?? (await prisma.company.create({ data: { name: companyName } }));
-      companyId = company.id;
+      if (existing) {
+        // Falls neue Kontaktdaten vorliegen, aktualisieren
+        if (contactName || contactEmail || contactPhone) {
+          await prisma.company.update({
+            where: { id: existing.id },
+            data: {
+              contactName: contactName || existing.contactName,
+              contactEmail: contactEmail || existing.contactEmail,
+              contactPhone: contactPhone || existing.contactPhone,
+            },
+          });
+        }
+        companyId = existing.id;
+      } else {
+        const company = await prisma.company.create({
+          data: {
+            name: companyName,
+            contactName: contactName || null,
+            contactEmail: contactEmail || null,
+            contactPhone: contactPhone || null,
+          },
+        });
+        companyId = company.id;
+      }
     }
 
     const job = await prisma.jobPosting.create({
