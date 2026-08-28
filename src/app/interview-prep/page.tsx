@@ -28,6 +28,7 @@ import { MockInterviewModal } from "@/components/interview/mock-interview-modal"
 import { VoiceInterviewRunner } from "@/components/interview/voice-interview-runner";
 import { SalaryNegotiationTrainer } from "@/components/interview/salary-negotiation-trainer";
 import { TechQuizSimulator } from "@/components/interview/tech-quiz-simulator";
+import { CodingChallengeCanvas } from "@/components/interview/coding-challenge-canvas";
 import { QuestionNoteEditor } from "@/components/interview/question-note-editor";
 import { generateInterviewCheatsheetHtml } from "@/lib/interviewCheatsheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -35,6 +36,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 const TABS = [
   { id: "questions", label: "Fachfragen-Katalog & Leitfaden" },
   { id: "tech_quiz", label: "Tech- & Coding-Quiz ⚡ (React 19 / TS)" },
+  { id: "coding_canvas", label: "Live-Coding Challenges 💻" },
   { id: "negotiation", label: "Gehaltsverhandlungs-Coach (Roleplay)" },
 ] as const;
 
@@ -196,6 +198,8 @@ export default function InterviewPrepPage() {
         <SalaryNegotiationTrainer />
       ) : activeTab === "tech_quiz" ? (
         <TechQuizSimulator />
+      ) : activeTab === "coding_canvas" ? (
+        <CodingChallengeCanvas />
       ) : (
         <>
           {/* Bewerbungs-Filter / Kontexterkennung */}

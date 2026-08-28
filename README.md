@@ -217,6 +217,26 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
   - Zeigt Sub-Phasen (z. B. `#Tech-Challenge`, `#2. Interview`, `#Follow-Up`) direkt als kompakte Badges auf den Karten an.
   - Hebt anstehende Fälligkeits- und Interview-Termine (`📅 DD.MM.YYYY`) farblich hervor.
 
+---
+
+### 27. 💻 Interaktiver Coding-Challenge Canvas & Sandbox (`/interview-prep`)
+- **Live-Code-Editor & Test-Runner (`src/lib/codingChallenges.ts`)**:
+  - Praxisnahe Frontend-Coding-Aufgaben (Debounce-Hooks, GroupBy-Transformationen, Gehalts-Formatierer, Virtual-List-Windowing).
+  - Sichere Sandbox-Ausführung im Browser mit Test-Case-Validierung, Diff-Ausgabe, Tipps und Musterlösungen.
+
+---
+
+### 28. 🕸️ Firmen- & Recruiter-Netzwerk-Graph (`/companies`)
+- **Interaktiver Standort- & Beziehungs-Graph (`CompanyNetworkGraph`)**:
+  - Visualisiert Unternehmens-Cluster nach Regionen (Rheinland, Ruhrgebiet, Remote/Tech-Zentren).
+  - Hebt Firmen mit bekannten Ansprechpartnern, offenen Vorstellungsgesprächen und aktiven Bewerbungen hervor.
+
+---
+
+### 29. ⏰ Smart Follow-Up Snooze & Schnelle Wiedervorlage (`/api/applications/[id]/snooze`)
+- **1-Klick-Wiedervorlage (`FollowUpSnoozeButtons`)**:
+  - Schnell-Verschieben des nächsten Handlungsschritts (`+3 Tage`, `+1 Woche`, `+2 Wochen`) mit sofortiger Historien-Protokollierung.
+
 ## 🛠️ Tech-Stack
 
 | Bereich   | Technologie                                                              |

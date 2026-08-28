@@ -25,6 +25,7 @@ import { CoverLetterPanel } from "@/components/applications/cover-letter-panel";
 import { VoiceMemoPanel } from "@/components/applications/voice-memo-panel";
 import { InterviewNotesEditor } from "@/components/applications/interview-notes-editor";
 import { InterviewDossierModal } from "@/components/applications/interview-dossier-modal";
+import { FollowUpSnoozeButtons } from "@/components/applications/follow-up-snooze-buttons";
 import { ApplicationStatusBadge } from "@/components/status-badge";
 import { parseTags, getTagStyle } from "@/lib/tags";
 import { apiPut } from "@/lib/api";
@@ -148,6 +149,14 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
               ))}
             </div>
           )}
+
+          <div className="pt-2 border-t border-border/60">
+            <FollowUpSnoozeButtons
+              applicationId={application.id}
+              currentNextStepDate={application.nextStepDate}
+              onSnoozed={refresh}
+            />
+          </div>
         </div>
       </header>
 
