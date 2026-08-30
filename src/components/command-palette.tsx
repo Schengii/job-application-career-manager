@@ -33,7 +33,7 @@ import type { ApplicationListItem, CompanyWithCounts, JobPostingWithCompany } fr
 type ResultItem = {
   id: string;
   group: "Aktionen" | "Bewerbungen" | "Unternehmen" | "Jobsuche";
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   title: string;
   subtitle: string;
   href: string;

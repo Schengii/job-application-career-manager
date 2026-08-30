@@ -7,14 +7,11 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Network,
-  Building2,
   Users,
   MapPin,
   Mail,
-  Phone,
   Briefcase,
   ExternalLink,
-  Filter,
 } from "lucide-react";
 import type { CompanyWithCounts } from "@/types";
 import { CompanyStatusBadge } from "@/components/status-badge";
@@ -28,7 +25,6 @@ type HubGroup = {
 
 export function CompanyNetworkGraph({ companies }: { companies: CompanyWithCounts[] }) {
   const [filterWithRecruiterOnly, setFilterWithRecruiterOnly] = useState(false);
-  const [selectedHub, setSelectedHub] = useState<string>("ALL");
 
   const hubs = useMemo<HubGroup[]>(() => {
     const list = filterWithRecruiterOnly

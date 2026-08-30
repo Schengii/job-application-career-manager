@@ -4,7 +4,7 @@
 // Interaktiver Mock-Interview Audio-Recorder & Waveform-Player
 // -----------------------------------------------------------------------------
 import { useState, useRef, useEffect } from "react";
-import { Mic, Square, Play, Pause, RotateCcw, Download, Volume2, Sparkles } from "lucide-react";
+import { Mic, Square, Play, Pause, RotateCcw, Download, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatAudioDuration, generateMockWaveformBars } from "@/lib/audioRecorder";
 
@@ -191,7 +191,11 @@ export function AudioInterviewRecorder({
               </Button>
               <a
                 href={audioUrl}
-                download={`interview-antwort-${Date.now()}.webm`}
+                download={
+                  questionTitle
+                    ? `interview-${questionTitle.slice(0, 30).replace(/[^a-zA-Z0-9_-]/g, "_")}.webm`
+                    : "interview-antwort.webm"
+                }
                 className="inline-flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-xs font-semibold text-foreground hover:bg-surface-hover transition-colors"
               >
                 <Download className="h-3 w-3" /> Audio speichern

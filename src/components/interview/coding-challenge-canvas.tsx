@@ -3,7 +3,7 @@
 // -----------------------------------------------------------------------------
 // Live Coding-Challenge Canvas & Sandbox für Frontend-Interviews
 // -----------------------------------------------------------------------------
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Code,
   Play,
@@ -31,12 +31,13 @@ export function CodingChallengeCanvas() {
   const [showSolution, setShowSolution] = useState(false);
   const [solvedIds, setSolvedIds] = useState<string[]>([]);
 
-  useEffect(() => {
-    setCode(selectedChallenge.starterCode);
+  function handleSelectChallenge(c: CodingChallenge) {
+    setSelectedChallenge(c);
+    setCode(c.starterCode);
     setResult(null);
     setShowHint(false);
     setShowSolution(false);
-  }, [selectedChallenge]);
+  }
 
   function handleRun() {
     const res = executeChallengeCode(selectedChallenge, code);
@@ -73,7 +74,7 @@ export function CodingChallengeCanvas() {
               <button
                 key={c.id}
                 type="button"
-                onClick={() => setSelectedChallenge(c)}
+                onClick={() => handleSelectChallenge(c)}
                 className={`w-full text-left rounded-xl border p-3 transition-all flex items-start justify-between gap-2 ${
                   isSelected
                     ? "border-primary bg-primary-soft/40 shadow-xs ring-1 ring-primary/30"

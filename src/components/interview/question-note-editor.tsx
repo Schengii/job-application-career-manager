@@ -3,10 +3,32 @@
 // -----------------------------------------------------------------------------
 // Persönliche Antwort-Notizen & Sprach-Diktat (STT) für Leitfaden-Fragen
 // -----------------------------------------------------------------------------
-import { useState, useEffect, useRef } from "react";
-import { Mic, MicOff, Save, CheckCircle2, Edit3 } from "lucide-react";
+import { useState, useRef } from "react";
+import { Mic, MicOff, CheckCircle2, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
+
+type BrowserSpeechRecognition = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type SpeechRecognitionEvent = {
+  resultIndex: number;
+  results: {
+    length: number;
+    [index: number]: {
+      isFinal: boolean;
+      [index: number]: { transcript: string };
+    };
+  };
+};
 
 export function QuestionNoteEditor({
   questionId,
@@ -18,21 +40,30 @@ export function QuestionNoteEditor({
   const toast = useToast();
   const storageKey = `career_prep_note_${questionId}`;
 
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(() => {
+    if (typeof window === "undefined") return "";
+    try {
+      return localStorage.getItem(`career_prep_note_${questionId}`) || "";
+    } catch {
+      return "";
+    }
+  });
   const [isListening, setIsListening] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
 
-  // Load from local storage
-  useEffect(() => {
+  const [prevStorageKey, setPrevStorageKey] = useState(storageKey);
+  if (storageKey !== prevStorageKey) {
+    setPrevStorageKey(storageKey);
+    let saved = "";
     try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        setNote(saved);
-        if (onNoteChange) onNoteChange(saved);
-      }
+      saved = (typeof window !== "undefined" ? localStorage.getItem(storageKey) : null) || "";
     } catch {}
-  }, [storageKey]);
+    setNote(saved);
+    if (onNoteChange && saved) {
+      onNoteChange(saved);
+    }
+  }
 
   function handleSave(textToSave: string) {
     try {
@@ -55,21 +86,25 @@ export function QuestionNoteEditor({
       return;
     }
 
-    const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const windowWithSpeech = window as unknown as {
+      SpeechRecognition?: new () => BrowserSpeechRecognition;
+      webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
+    };
+    const SpeechRecognitionClass =
+      windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
+    if (!SpeechRecognitionClass) {
       toast.error("Spracherkennung wird in diesem Browser leider nicht unterstützt (Empfehlung: Chrome/Edge).");
       return;
     }
 
     try {
-      const recognition = new SpeechRecognition();
+      const recognition = new SpeechRecognitionClass();
       recognition.lang = "de-DE";
       recognition.continuous = true;
       recognition.interimResults = true;
 
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
         let transcript = "";
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {

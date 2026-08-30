@@ -10,9 +10,6 @@ import {
   Check,
   Sparkles,
   TrendingUp,
-  Building2,
-  ShieldAlert,
-  ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -56,10 +53,10 @@ export function OfferNegotiationGenerator({
   defaultTargetSalary?: number;
 }) {
   const [scenario, setScenario] = useState<NegotiationScenario>("HIGHER_BASE_SALARY");
-  const [candidateName, setCandidateName] = useState("Max Mustermann");
+  const candidateName = "Max Mustermann";
   const [recruiterName, setRecruiterName] = useState("Frau Müller");
   const [companyName, setCompanyName] = useState(defaultCompany);
-  const [position, setPosition] = useState(defaultPosition);
+  const position = defaultPosition;
   const [offeredSalary, setOfferedSalary] = useState(defaultOfferedSalary);
   const [targetSalary, setTargetSalary] = useState(defaultTargetSalary);
   const [competingSalary, setCompetingSalary] = useState(defaultTargetSalary + 3000);

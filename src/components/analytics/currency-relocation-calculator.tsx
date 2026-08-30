@@ -4,7 +4,7 @@
 // Multi-Währungs- & Relocation-Rechner (Kaufkraft & International Remote)
 // -----------------------------------------------------------------------------
 import { useState, useMemo } from "react";
-import { Globe, DollarSign, ArrowRightLeft, Sparkles, TrendingUp, Info } from "lucide-react";
+import { Globe, Sparkles, Info } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   CurrencyCode,

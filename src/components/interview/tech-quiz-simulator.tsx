@@ -8,7 +8,6 @@ import {
   Code2,
   CheckCircle2,
   XCircle,
-  HelpCircle,
   RotateCcw,
   Sparkles,
   Award,
@@ -36,7 +35,6 @@ export function TechQuizSimulator() {
   const [selectedCategory, setSelectedCategory] = useState<"ALL" | TechQuizCategory>("ALL");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [showExplanation, setShowExplanation] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
 
   const filteredQuestions = useMemo(() => {
@@ -51,11 +49,9 @@ export function TechQuizSimulator() {
   function handleSelectOption(optionIndex: number) {
     if (hasAnsweredCurrent || !currentQ) return;
     setAnswers((prev) => ({ ...prev, [currentQ.id]: optionIndex }));
-    setShowExplanation(true);
   }
 
   function handleNext() {
-    setShowExplanation(false);
     if (currentIndex + 1 < filteredQuestions.length) {
       setCurrentIndex(currentIndex + 1);
     } else {
@@ -66,7 +62,6 @@ export function TechQuizSimulator() {
   function handleRestart() {
     setAnswers({});
     setCurrentIndex(0);
-    setShowExplanation(false);
     setIsFinished(false);
   }
 
@@ -156,7 +151,6 @@ export function TechQuizSimulator() {
                 setSelectedCategory(cat.id);
                 setAnswers({});
                 setCurrentIndex(0);
-                setShowExplanation(false);
                 setIsFinished(false);
               }}
               className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${

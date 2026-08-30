@@ -3,7 +3,7 @@
 // -----------------------------------------------------------------------------
 // Bewerbungsmappen-Builder Modal: Zusammenstellung & Download des PDF-Pakets
 // -----------------------------------------------------------------------------
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   FileText,
   Download,
@@ -52,17 +52,18 @@ export function ApplicationPdfPackageModal({
 
   const [includeCoverSheet, setIncludeCoverSheet] = useState(true);
   const [includeCoverLetter, setIncludeCoverLetter] = useState(hasCoverLetter);
+  const [prevDocuments, setPrevDocuments] = useState(documents);
   const [docList, setDocList] = useState<ApplicationDocumentItem[]>(documents);
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(
     new Set(documents.map((d) => d.id))
   );
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Sync if documents prop changes
-  useMemo(() => {
+  if (documents !== prevDocuments) {
+    setPrevDocuments(documents);
     setDocList(documents);
     setSelectedDocIds(new Set(documents.map((d) => d.id)));
-  }, [documents]);
+  }
 
   if (!open) return null;
 
@@ -122,8 +123,8 @@ export function ApplicationPdfPackageModal({
 
       toast.success("Bewerbungsmappe erfolgreich heruntergeladen!");
       onClose();
-    } catch (err: any) {
-      toast.error(err.message || "Download fehlgeschlagen");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Download fehlgeschlagen");
     } finally {
       setIsDownloading(false);
     }

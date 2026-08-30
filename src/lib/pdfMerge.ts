@@ -8,7 +8,7 @@
 // -----------------------------------------------------------------------------
 import { promises as fs } from "fs";
 import path from "path";
-import { PDFDocument, StandardFonts, PageSizes, type PDFFont } from "pdf-lib";
+import { PDFDocument, StandardFonts, PageSizes, type PDFFont, rgb } from "pdf-lib";
 import sharp from "sharp";
 
 // Ein Anschreiben soll IMMER auf eine einzige DIN-A4-Seite passen (gängige
@@ -241,7 +241,7 @@ async function renderCoverSheetPdf(sheet: CoverSheetOptions): Promise<PDFDocumen
     y: 0,
     width: 24,
     height: pageHeight,
-    color: { type: "RGB", red: 79 / 255, green: 70 / 255, blue: 229 / 255 } as any,
+    color: rgb(79 / 255, 70 / 255, 229 / 255),
   });
 
   const contentX = 72; // ca. 25mm Rand links vom Akzentbalken
@@ -252,7 +252,7 @@ async function renderCoverSheetPdf(sheet: CoverSheetOptions): Promise<PDFDocumen
     y: pageHeight - 120,
     size: 11,
     font: boldFont,
-    color: { type: "RGB", red: 99 / 255, green: 102 / 255, blue: 241 / 255 } as any,
+    color: rgb(99 / 255, 102 / 255, 241 / 255),
   });
 
   // Haupttitel: Bewerbung als ...
@@ -262,7 +262,7 @@ async function renderCoverSheetPdf(sheet: CoverSheetOptions): Promise<PDFDocumen
     y: pageHeight - 155,
     size: 20,
     font: boldFont,
-    color: { type: "RGB", red: 15 / 255, green: 23 / 255, blue: 42 / 255 } as any,
+    color: rgb(15 / 255, 23 / 255, 42 / 255),
   });
 
   // Zielunternehmen
@@ -271,7 +271,7 @@ async function renderCoverSheetPdf(sheet: CoverSheetOptions): Promise<PDFDocumen
     y: pageHeight - 185,
     size: 14,
     font,
-    color: { type: "RGB", red: 71 / 255, green: 85 / 255, blue: 105 / 255 } as any,
+    color: rgb(71 / 255, 85 / 255, 105 / 255),
   });
 
   // Trennlinie
@@ -279,7 +279,7 @@ async function renderCoverSheetPdf(sheet: CoverSheetOptions): Promise<PDFDocumen
     start: { x: contentX, y: pageHeight - 220 },
     end: { x: pageWidth - 60, y: pageHeight - 220 },
     thickness: 1,
-    color: { type: "RGB", red: 226 / 255, green: 232 / 255, blue: 240 / 255 } as any,
+    color: rgb(226 / 255, 232 / 255, 240 / 255),
   });
 
   // Bewerber-Kontaktdaten Block
@@ -289,7 +289,7 @@ async function renderCoverSheetPdf(sheet: CoverSheetOptions): Promise<PDFDocumen
     y: infoY,
     size: 10,
     font: boldFont,
-    color: { type: "RGB", red: 100 / 255, green: 116 / 255, blue: 139 / 255 } as any,
+    color: rgb(100 / 255, 116 / 255, 139 / 255),
   });
 
   infoY -= 24;
@@ -318,7 +318,7 @@ async function renderCoverSheetPdf(sheet: CoverSheetOptions): Promise<PDFDocumen
       y: anlagenY,
       size: 10,
       font: boldFont,
-      color: { type: "RGB", red: 100 / 255, green: 116 / 255, blue: 139 / 255 } as any,
+      color: rgb(100 / 255, 116 / 255, 139 / 255),
     });
 
     anlagenY -= 22;
@@ -328,7 +328,7 @@ async function renderCoverSheetPdf(sheet: CoverSheetOptions): Promise<PDFDocumen
         y: anlagenY,
         size: 11,
         font,
-        color: { type: "RGB", red: 30 / 255, green: 41 / 255, blue: 59 / 255 } as any,
+        color: rgb(30 / 255, 41 / 255, 59 / 255),
       });
       anlagenY -= 20;
     });
@@ -341,7 +341,7 @@ async function renderCoverSheetPdf(sheet: CoverSheetOptions): Promise<PDFDocumen
     y: 50,
     size: 9,
     font,
-    color: { type: "RGB", red: 148 / 255, green: 163 / 255, blue: 184 / 255 } as any,
+    color: rgb(148 / 255, 163 / 255, 184 / 255),
   });
 
   return pdfDoc;

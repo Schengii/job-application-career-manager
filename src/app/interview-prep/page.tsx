@@ -12,7 +12,6 @@ import {
   MessageSquare,
   Mic,
   Printer,
-  FileText,
 } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import { ApplicationListItem } from "@/types";

@@ -4,14 +4,13 @@
 // Quick-Snooze & Wiedervorlage-Buttons (+3 Tage, +1 Woche, +2 Wochen)
 // -----------------------------------------------------------------------------
 import { useState } from "react";
-import { Clock, Calendar, CheckCircle2 } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { apiPost } from "@/lib/api";
 
 export function FollowUpSnoozeButtons({
   applicationId,
-  currentNextStepDate,
   onSnoozed,
 }: {
   applicationId: string;

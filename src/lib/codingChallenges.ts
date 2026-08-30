@@ -10,8 +10,8 @@ export type ChallengeDifficulty = "Junior" | "Mid" | "Senior";
 
 export type TestCase = {
   description: string;
-  args: any[];
-  expected: any;
+  args: unknown[];
+  expected: unknown;
 };
 
 export type CodingChallenge = {
@@ -93,7 +93,7 @@ export const CODING_CHALLENGES: CodingChallenge[] = [
             { id: "2", status: "INTERVIEW" },
             { id: "3", status: "SENT" },
           ],
-          (item: any) => item.status,
+          (item: Record<string, unknown>) => item.status,
         ],
         expected: {
           SENT: [{ id: "1", status: "SENT" }, { id: "3", status: "SENT" }],
@@ -213,7 +213,7 @@ export function executeChallengeCode(
     `
     );
 
-    const testResults: { tc: TestCase; actual?: any; error?: string; success: boolean }[] = runner(
+    const testResults: { tc: TestCase; actual?: unknown; error?: string; success: boolean }[] = runner(
       challenge.testCases
     );
 
@@ -237,13 +237,14 @@ export function executeChallengeCode(
       totalTests: challenge.testCases.length,
       logs,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
     return {
       success: false,
       passedTests: 0,
       totalTests: challenge.testCases.length,
-      logs: [`Kompilier-/Laufzeitfehler: ${err.message || String(err)}`],
-      error: err.message || String(err),
+      logs: [`Kompilier-/Laufzeitfehler: ${errorMsg}`],
+      error: errorMsg,
     };
   }
 }

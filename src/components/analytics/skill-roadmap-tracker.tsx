@@ -11,9 +11,7 @@ import {
   Circle,
   Plus,
   Flame,
-  Award,
   ArrowUpRight,
-  Sparkles,
   Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +23,15 @@ import {
   calculateSkillGoalProgress,
   calculateTotalRoadmapProgress,
 } from "@/lib/skillRoadmap";
+
+function createCustomMilestone(title: string): Milestone {
+  return {
+    id: `m-custom-${Math.random().toString(36).slice(2, 9)}`,
+    title,
+    category: "Frontend",
+    completed: false,
+  };
+}
 
 export function SkillRoadmapTracker() {
   const [goals, setGoals] = useState<SkillGoal[]>(DEFAULT_SKILL_GOALS);
@@ -49,12 +56,7 @@ export function SkillRoadmapTracker() {
 
   function handleAddMilestone(goalId: string) {
     if (!newMilestoneText.trim()) return;
-    const newM: Milestone = {
-      id: `m-custom-${Date.now()}`,
-      title: newMilestoneText.trim(),
-      category: "Frontend",
-      completed: false,
-    };
+    const newM = createCustomMilestone(newMilestoneText.trim());
     setGoals((prev) =>
       prev.map((g) => (g.id === goalId ? { ...g, milestones: [...g.milestones, newM] } : g))
     );
