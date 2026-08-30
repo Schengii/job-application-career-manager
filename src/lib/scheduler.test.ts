@@ -9,8 +9,12 @@ vi.mock("./preferences", () => ({
 }));
 
 const mockFindMany = vi.fn().mockResolvedValue([]);
+const mockPreferencesUpdate = vi.fn().mockResolvedValue(undefined);
 vi.mock("./prisma", () => ({
-  prisma: { application: { findMany: (...args: unknown[]) => mockFindMany(...args) } },
+  prisma: {
+    application: { findMany: (...args: unknown[]) => mockFindMany(...args) },
+    preferences: { update: (...args: unknown[]) => mockPreferencesUpdate(...args) },
+  },
 }));
 
 const mockFetchInboxMessages = vi.fn();
@@ -43,6 +47,7 @@ describe("runSchedulerTick", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockFindMany.mockResolvedValue([]);
+    mockPreferencesUpdate.mockResolvedValue(undefined);
     mockSendDueNotifications.mockResolvedValue({ sent: 0, skipped: 0 });
     mockSendEmailMatchNotifications.mockResolvedValue({ sent: 0, skipped: 0 });
     mockFetchInboxMessages.mockResolvedValue({ messages: [], usedRealImap: true });
@@ -113,6 +118,44 @@ describe("runSchedulerTick", () => {
     mockSendDueNotifications.mockRejectedValue(new Error("Push-Dienst nicht erreichbar"));
 
     await expect(runSchedulerTick()).resolves.toBeUndefined();
+  });
+
+  it("persistiert einen fehlgeschlagenen Push-Versand in Preferences.lastSchedulerError*, statt ihn nur zu loggen", async () => {
+    mockGetOrCreatePreferences.mockResolvedValue(basePreferences());
+    mockSendDueNotifications.mockRejectedValue(new Error("Push-Dienst nicht erreichbar"));
+
+    await runSchedulerTick();
+
+    expect(mockPreferencesUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "default" },
+        data: expect.objectContaining({
+          lastSchedulerErrorSource: "push",
+          lastSchedulerErrorMessage: "Push-Dienst nicht erreichbar",
+        }),
+      })
+    );
+  });
+
+  it("setzt einen zuvor gespeicherten Scheduler-Fehler zurück, sobald ein Tick wieder komplett fehlerfrei läuft", async () => {
+    mockGetOrCreatePreferences.mockResolvedValue(basePreferences({ lastSchedulerErrorMessage: "vorheriger Fehler" } as never));
+
+    await runSchedulerTick();
+
+    expect(mockPreferencesUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "default" },
+        data: { lastSchedulerErrorSource: null, lastSchedulerErrorMessage: null, lastSchedulerErrorAt: null },
+      })
+    );
+  });
+
+  it("überschreibt Preferences nicht unnötig, wenn weder ein Fehler vorliegt noch zuvor einer gespeichert war", async () => {
+    mockGetOrCreatePreferences.mockResolvedValue(basePreferences());
+
+    await runSchedulerTick();
+
+    expect(mockPreferencesUpdate).not.toHaveBeenCalled();
   });
 });
 

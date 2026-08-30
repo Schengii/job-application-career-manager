@@ -58,20 +58,71 @@ async function runBackgroundEmailSync(): Promise<void> {
   await sendEmailMatchNotifications(syncResult.matchedActions);
 }
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * Persistiert den zuletzt fehlgeschlagenen Hintergrund-Schritt in
+ * `Preferences.lastSchedulerError*`, damit er im UI sichtbar wird (siehe
+ * `background-scheduler-card.tsx`) statt nur im Server-Log zu verschwinden
+ * (das war bislang der Fall — Fehler bei IMAP-Sync, Push-Versand oder Backup
+ * blieben für den Nutzer komplett unsichtbar, solange die App selbst weiter
+ * normal funktionierte).
+ */
+async function recordSchedulerError(source: "email_sync" | "push" | "backup", error: unknown): Promise<void> {
+  console.error(`scheduler: ${source} fehlgeschlagen.`, error);
+  try {
+    await prisma.preferences.update({
+      where: { id: "default" },
+      data: {
+        lastSchedulerErrorSource: source,
+        lastSchedulerErrorMessage: errorMessage(error).slice(0, 500),
+        lastSchedulerErrorAt: new Date(),
+      },
+    });
+  } catch (persistError) {
+    // Best effort — falls sogar diese Schreiboperation fehlschlägt, bleibt es
+    // beim reinen Server-Log-Eintrag oben.
+    console.error("scheduler: Konnte Fehlerstatus nicht persistieren.", persistError);
+  }
+}
+
+/** Setzt einen zuvor gespeicherten Scheduler-Fehler zurück, sobald ein Tick wieder ohne Fehler durchläuft. */
+async function clearSchedulerError(): Promise<void> {
+  await prisma.preferences
+    .update({
+      where: { id: "default" },
+      data: { lastSchedulerErrorSource: null, lastSchedulerErrorMessage: null, lastSchedulerErrorAt: null },
+    })
+    .catch(() => {
+      // Best effort, siehe recordSchedulerError().
+    });
+}
+
 export async function runSchedulerTick(): Promise<void> {
   try {
     const preferences = await getOrCreatePreferences();
     if (preferences.backgroundSchedulerEnabled === false) return;
 
+    let hadError = false;
+
     await runBackgroundEmailSync().catch((error) => {
-      console.error("scheduler: Hintergrund-E-Mail-Sync fehlgeschlagen.", error);
+      hadError = true;
+      return recordSchedulerError("email_sync", error);
     });
     await sendDueNotifications().catch((error) => {
-      console.error("scheduler: Push-Versand fehlgeschlagen.", error);
+      hadError = true;
+      return recordSchedulerError("push", error);
     });
     await createPeriodicSnapshotIfDue().catch((error) => {
-      console.error("scheduler: Periodisches Backup fehlgeschlagen.", error);
+      hadError = true;
+      return recordSchedulerError("backup", error);
     });
+
+    if (!hadError && preferences.lastSchedulerErrorMessage) {
+      await clearSchedulerError();
+    }
   } catch (error) {
     console.error("scheduler: Tick fehlgeschlagen.", error);
   }

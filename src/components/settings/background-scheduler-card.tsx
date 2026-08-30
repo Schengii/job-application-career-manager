@@ -7,11 +7,17 @@
 // -----------------------------------------------------------------------------
 import { useState } from "react";
 import { useSWRConfig } from "swr";
-import { Clock, Loader2 } from "lucide-react";
+import { Clock, Loader2, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { apiPatch } from "@/lib/api";
 import type { PreferencesPublic } from "@/types";
+
+const ERROR_SOURCE_LABELS: Record<string, string> = {
+  email_sync: "E-Mail-Sync (IMAP)",
+  push: "Push-Benachrichtigungen",
+  backup: "automatisches Backup",
+};
 
 export function BackgroundSchedulerCard({ preferences }: { preferences: PreferencesPublic }) {
   const { mutate } = useSWRConfig();
@@ -60,6 +66,26 @@ export function BackgroundSchedulerCard({ preferences }: { preferences: Preferen
           </label>
           {saving && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
         </div>
+
+        {preferences.lastSchedulerErrorMessage && (
+          <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-700 dark:text-amber-400">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div className="min-w-0">
+              <p className="font-semibold">
+                Letzter Hintergrundlauf fehlgeschlagen:{" "}
+                {ERROR_SOURCE_LABELS[preferences.lastSchedulerErrorSource ?? ""] ?? preferences.lastSchedulerErrorSource}
+              </p>
+              <p className="mt-0.5 break-words text-amber-700/80 dark:text-amber-400/80">
+                {preferences.lastSchedulerErrorMessage}
+              </p>
+              {preferences.lastSchedulerErrorAt && (
+                <p className="mt-0.5 text-[11px] text-amber-700/60 dark:text-amber-400/60">
+                  {new Date(preferences.lastSchedulerErrorAt).toLocaleString("de-DE")}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

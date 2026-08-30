@@ -21,6 +21,11 @@ import {
   TrendingUp,
   Mail,
   Share2,
+  Code2,
+  HandCoins,
+  GraduationCap,
+  Globe2,
+  Network,
 } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem, CompanyWithCounts, JobPostingWithCompany } from "@/types";
@@ -87,6 +92,11 @@ export function CommandPalette() {
       { id: "act-funnel", group: "Aktionen", icon: TrendingUp, title: "Funnel-Benchmark & ROI", subtitle: "Conversion-Statistiken einsehen", href: "/analytics" },
       { id: "act-mail", group: "Aktionen", icon: Mail, title: "E-Mail IMAP-Sync", subtitle: "Posteingang abgleichen", href: "/settings" },
       { id: "act-portfolio", group: "Aktionen", icon: Share2, title: "Recruiter-Portfolio verwalten", subtitle: "One-Pager Link konfigurieren", href: "/settings" },
+      { id: "act-coding", group: "Aktionen", icon: Code2, title: "Live-Coding Challenges", subtitle: "Coding-Interviews auf virtueller Tafel üben", href: "/interview-prep" },
+      { id: "act-negotiation", group: "Aktionen", icon: HandCoins, title: "Gehaltsverhandlungs-Coach", subtitle: "Roleplay & Angebots-Verhandlung trainieren", href: "/interview-prep" },
+      { id: "act-skillroadmap", group: "Aktionen", icon: GraduationCap, title: "Skill-Roadmap Tracker", subtitle: "Lernfortschritt zu Ziel-Skills verfolgen", href: "/analytics" },
+      { id: "act-currency", group: "Aktionen", icon: Globe2, title: "Gehalts- & Umzugsrechner", subtitle: "Kaufkraft & Relocation-Kosten vergleichen", href: "/analytics" },
+      { id: "act-network", group: "Aktionen", icon: Network, title: "Unternehmens-Netzwerk-Graph", subtitle: "Verbindungen zwischen Firmen visualisieren", href: "/companies" },
     ];
 
     const appResults: ResultItem[] = (applications ?? []).map((a) => ({

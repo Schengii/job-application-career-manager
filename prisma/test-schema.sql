@@ -161,6 +161,9 @@ CREATE TABLE "Preferences" (
     "imapFolder" TEXT DEFAULT 'INBOX',
     "imapEnabled" BOOLEAN NOT NULL DEFAULT false,
     "backgroundSchedulerEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "lastSchedulerErrorSource" TEXT,
+    "lastSchedulerErrorMessage" TEXT,
+    "lastSchedulerErrorAt" DATETIME,
     "updatedAt" DATETIME NOT NULL
 );
 

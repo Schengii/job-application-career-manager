@@ -262,6 +262,14 @@ model Preferences {
   // verschickt fällige Push-Benachrichtigungen. Standardmäßig aktiv, hier
   // abschaltbar (Einstellungen -> Automatisierung & Push).
   backgroundSchedulerEnabled Boolean @default(true)
+  // Letzter fehlgeschlagener Hintergrund-Tick (siehe runSchedulerTick() in
+  // src/lib/scheduler.ts) — bislang landeten IMAP-/Push-/Backup-Fehler nur im
+  // Server-Log und blieben für den Nutzer unsichtbar (background-scheduler-card.tsx
+  // zeigt sie jetzt als Warnhinweis an). Wird bei jedem Tick ohne Fehler
+  // wieder auf null zurückgesetzt.
+  lastSchedulerErrorSource  String?   // "email_sync" | "push" | "backup"
+  lastSchedulerErrorMessage String?
+  lastSchedulerErrorAt      DateTime?
   updatedAt          DateTime @updatedAt
 
   educationEntries EducationEntry[]

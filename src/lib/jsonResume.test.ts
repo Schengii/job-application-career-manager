@@ -38,6 +38,9 @@ describe("jsonResume", () => {
     imapEnabled: false,
     imapPassword: null,
     backgroundSchedulerEnabled: true,
+    lastSchedulerErrorSource: null,
+    lastSchedulerErrorMessage: null,
+    lastSchedulerErrorAt: null,
     minMatchScore: 0,
     updatedAt: new Date(),
     educationEntries: [
