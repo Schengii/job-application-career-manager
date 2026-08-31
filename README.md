@@ -116,6 +116,18 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ---
 
+### 17. 🔔 Wöchentlicher Erinnerungs-Digest & Anschreiben-Textbaustein-Bibliothek
+- **Wöchentlicher Erinnerungs-Digest** (`src/lib/digest.ts`, Einstellungen → Automatisierung & Push): fasst überfällige
+  Termine, anstehende Gespräche, empfohlene Nachfassaktionen und neue Status-Rückmeldungen zu EINER zusammenfassenden
+  Push-Benachrichtigung pro Woche zusammen — ergänzend zu den sofortigen Einzelbenachrichtigungen. Läuft im 15-Minuten-
+  Scheduler-Tick mit, verschickt aber dank `Preferences.lastDigestSentAt` höchstens einmal alle 7 Tage; einzeln abschaltbar.
+- **Anschreiben-Textbaustein-Bibliothek** (`/api/snippets`, Einstellungen → Profil & Präferenzen): frei benennbare,
+  unternehmensunabhängige Absätze (z. B. „Remote-Absatz“, „Standard-Schlussabsatz“), die im Anschreiben-Panel jeder
+  Bewerbung per 1-Klick eingefügt werden können — ergänzt `Company.letterTemplate` (auf genau einen Einleitungssatz
+  PRO Unternehmen beschränkt) um mehrfach wiederverwendbare Bausteine für beliebige Stellen im Anschreiben.
+
+---
+
 ### 13. 🤖 Hybrid-KI-Anbindung (Anschreiben-Polishing & Interview-Feedback)
 - **Vier wählbare Provider** (Einstellungen → KI-Provider, s. `src/lib/aiService.ts`): **OpenAI** (GPT-4o/-mini), **Anthropic** (Claude), **OpenRouter** (Universal-Router für zahlreiche Modelle) sowie **Ollama** für vollständig lokale, kostenlose Modelle auf `localhost:11434` — Ollama benötigt dabei bewusst keinen API-Key.
 - **100% Offline-Fallback**: Ohne konfigurierten Provider (oder bei einem fehlgeschlagenen Request) arbeitet die App transparent mit einer lokalen Heuristik weiter — nie ein Hard-Fail für den Nutzer.

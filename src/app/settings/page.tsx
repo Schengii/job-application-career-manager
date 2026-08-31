@@ -16,6 +16,7 @@ import { EmailSyncCard } from "@/components/settings/email-sync-card";
 import { BrowserExtensionCard } from "@/components/settings/browser-extension-card";
 import { PushNotificationsCard } from "@/components/settings/push-notifications-card";
 import { BackgroundSchedulerCard } from "@/components/settings/background-scheduler-card";
+import { CoverLetterSnippetsCard } from "@/components/settings/cover-letter-snippets-card";
 
 const TABS = [
   { id: "preferences", label: "Profil & Präferenzen" },
@@ -75,6 +76,7 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
               <MatchingWeightsCard />
+              <CoverLetterSnippetsCard />
             </div>
           )}
           {tab === "extension" && <BrowserExtensionCard />}

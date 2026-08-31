@@ -13,6 +13,10 @@
 //      src/lib/serverBackupRotation.ts) — unabhängig von destruktiven
 //      Aktionen, damit auch bei reiner Nutzung ohne Löschen/Restore
 //      regelmäßig ein aktueller Snapshot existiert.
+//   4. Höchstens einmal pro Woche einen zusammenfassenden Erinnerungs-Digest
+//      per Push verschicken (siehe src/lib/digest.ts,
+//      pushNotifications.ts::sendWeeklyDigestIfDue()) — ergänzt die
+//      Einzelbenachrichtigungen aus Schritt 2 um einen Gesamtüberblick.
 // Über die Einstellungen (Preferences.backgroundSchedulerEnabled, Default
 // true) abschaltbar.
 // -----------------------------------------------------------------------------
@@ -20,7 +24,7 @@ import { prisma } from "./prisma";
 import { getOrCreatePreferences } from "./preferences";
 import { fetchInboxMessages } from "./imapClient";
 import { processSyncedEmails } from "./emailImapSync";
-import { sendDueNotifications, sendEmailMatchNotifications } from "./pushNotifications";
+import { sendDueNotifications, sendEmailMatchNotifications, sendWeeklyDigestIfDue } from "./pushNotifications";
 import { createPeriodicSnapshotIfDue } from "./serverBackupRotation";
 import type { ApplicationListItem } from "@/types";
 
@@ -70,7 +74,7 @@ function errorMessage(error: unknown): string {
  * blieben für den Nutzer komplett unsichtbar, solange die App selbst weiter
  * normal funktionierte).
  */
-async function recordSchedulerError(source: "email_sync" | "push" | "backup", error: unknown): Promise<void> {
+async function recordSchedulerError(source: "email_sync" | "push" | "backup" | "digest", error: unknown): Promise<void> {
   console.error(`scheduler: ${source} fehlgeschlagen.`, error);
   try {
     await prisma.preferences.update({
@@ -118,6 +122,10 @@ export async function runSchedulerTick(): Promise<void> {
     await createPeriodicSnapshotIfDue().catch((error) => {
       hadError = true;
       return recordSchedulerError("backup", error);
+    });
+    await sendWeeklyDigestIfDue().catch((error) => {
+      hadError = true;
+      return recordSchedulerError("digest", error);
     });
 
     if (!hadError && preferences.lastSchedulerErrorMessage) {

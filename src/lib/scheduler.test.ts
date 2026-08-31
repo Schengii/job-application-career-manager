@@ -29,9 +29,11 @@ vi.mock("./emailImapSync", () => ({
 
 const mockSendDueNotifications = vi.fn();
 const mockSendEmailMatchNotifications = vi.fn();
+const mockSendWeeklyDigestIfDue = vi.fn().mockResolvedValue({ sent: false, sentCount: 0 });
 vi.mock("./pushNotifications", () => ({
   sendDueNotifications: () => mockSendDueNotifications(),
   sendEmailMatchNotifications: (...args: unknown[]) => mockSendEmailMatchNotifications(...args),
+  sendWeeklyDigestIfDue: () => mockSendWeeklyDigestIfDue(),
 }));
 
 const mockCreatePeriodicSnapshotIfDue = vi.fn();

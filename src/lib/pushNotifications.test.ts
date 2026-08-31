@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { sendDueNotifications, sendEmailMatchNotifications, sendPushToSubscription } from "./pushNotifications";
+import { sendDueNotifications, sendEmailMatchNotifications, sendPushToSubscription, sendWeeklyDigestIfDue } from "./pushNotifications";
 import { resetDb, createTestCompany } from "@/test/dbTestUtils";
 import { prisma } from "@/lib/prisma";
 import type { MatchedEmailAction } from "./emailImapSync";
@@ -180,6 +180,76 @@ describe("sendEmailMatchNotifications", () => {
     mockSendNotification.mockClear();
     const second = await sendEmailMatchNotifications(actions);
     expect(second).toEqual({ sent: 0, skipped: 1 });
+    expect(mockSendNotification).not.toHaveBeenCalled();
+  });
+});
+
+describe("sendWeeklyDigestIfDue", () => {
+  beforeEach(async () => {
+    await resetDb();
+    mockSendNotification.mockReset();
+    mockSendNotification.mockResolvedValue({ statusCode: 201 });
+  });
+
+  it("verschickt nichts und setzt lastDigestSentAt nicht, wenn in den Einstellungen deaktiviert", async () => {
+    await createSubscription();
+    await prisma.preferences.create({ data: { id: "default", digestEnabled: false } });
+
+    const result = await sendWeeklyDigestIfDue();
+    expect(result).toEqual({ sent: false, sentCount: 0 });
+    expect(mockSendNotification).not.toHaveBeenCalled();
+
+    const preferences = await prisma.preferences.findUnique({ where: { id: "default" } });
+    expect(preferences?.lastDigestSentAt).toBeNull();
+  });
+
+  it("markiert den Digest als verschickt, verschickt aber keinen Push bei leerem Trichter", async () => {
+    await createSubscription();
+    await prisma.preferences.create({ data: { id: "default" } }); // digestEnabled: true (Default)
+
+    const result = await sendWeeklyDigestIfDue();
+    expect(result).toEqual({ sent: false, sentCount: 0 });
+    expect(mockSendNotification).not.toHaveBeenCalled();
+
+    const preferences = await prisma.preferences.findUnique({ where: { id: "default" } });
+    expect(preferences?.lastDigestSentAt).not.toBeNull();
+  });
+
+  it("verschickt eine zusammenfassende Push-Benachrichtigung an alle Subscriptions", async () => {
+    await createSubscription("https://push.example.com/device-1");
+    await createSubscription("https://push.example.com/device-2");
+    await prisma.preferences.create({ data: { id: "default" } });
+
+    const company = await createTestCompany();
+    await prisma.application.create({
+      data: { position: "Frontend-Entwickler", status: "OFFER", companyId: company.id },
+    });
+    await prisma.applicationStatusEvent.create({
+      // applicationId wird über die zuvor angelegte Application referenziert
+      data: {
+        applicationId: (await prisma.application.findFirstOrThrow()).id,
+        status: "OFFER",
+      },
+    });
+
+    const result = await sendWeeklyDigestIfDue();
+    expect(result.sent).toBe(true);
+    expect(result.sentCount).toBe(2);
+    expect(mockSendNotification).toHaveBeenCalledTimes(2);
+  });
+
+  it("verschickt nichts, wenn der letzte Digest vor weniger als 7 Tagen verschickt wurde", async () => {
+    await createSubscription();
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    await prisma.preferences.create({ data: { id: "default", lastDigestSentAt: twoDaysAgo } });
+
+    const company = await createTestCompany();
+    await prisma.application.create({
+      data: { position: "Frontend-Entwickler", status: "OFFER", companyId: company.id },
+    });
+
+    const result = await sendWeeklyDigestIfDue();
+    expect(result).toEqual({ sent: false, sentCount: 0 });
     expect(mockSendNotification).not.toHaveBeenCalled();
   });
 });

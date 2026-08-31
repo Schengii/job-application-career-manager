@@ -8,6 +8,7 @@ import type {
   ApplicationStatusEventModel,
   CompanyModel,
   CoverLetterModel,
+  CoverLetterSnippetModel,
   DocumentModel,
   EducationEntryModel,
   JobPostingModel,
@@ -22,6 +23,7 @@ export type ApplicationStatusEvent = ApplicationStatusEventModel;
 export type ApplicationInteraction = ApplicationInteractionModel;
 export type Company = CompanyModel;
 export type CoverLetter = CoverLetterModel;
+export type CoverLetterSnippet = CoverLetterSnippetModel;
 export type Document = DocumentModel;
 export type EducationEntry = EducationEntryModel;
 export type JobPosting = JobPostingModel;

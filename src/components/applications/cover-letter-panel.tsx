@@ -16,6 +16,7 @@ import { CoverLetterPrintModal } from "./cover-letter-print-modal";
 import { FollowUpEmailModal } from "./follow-up-email-modal";
 import { CoverLetterKeywordBooster } from "./cover-letter-keyword-booster";
 import { RequirementTailoringWidget } from "./requirement-tailoring-widget";
+import { CoverLetterSnippetPicker } from "./cover-letter-snippet-picker";
 
 export function CoverLetterPanel({
   application,
@@ -238,6 +239,8 @@ export function CoverLetterPanel({
             applicationId={application.id}
             onInsertParagraph={handleAddSentence}
           />
+
+          <CoverLetterSnippetPicker onInsert={handleAddSentence} />
 
           <CoverLetterKeywordBooster
             coverLetterContent={content}

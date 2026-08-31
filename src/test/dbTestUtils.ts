@@ -24,6 +24,7 @@ export async function resetDb() {
   await prisma.preferences.deleteMany();
   await prisma.pushSubscription.deleteMany();
   await prisma.sentPushNotification.deleteMany();
+  await prisma.coverLetterSnippet.deleteMany();
 }
 
 /** Legt ein minimales Unternehmen für Tests an, die eine `companyId` benötigen. */

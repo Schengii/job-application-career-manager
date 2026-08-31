@@ -164,6 +164,17 @@ CREATE TABLE "Preferences" (
     "lastSchedulerErrorSource" TEXT,
     "lastSchedulerErrorMessage" TEXT,
     "lastSchedulerErrorAt" DATETIME,
+    "digestEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "lastDigestSentAt" DATETIME,
+    "updatedAt" DATETIME NOT NULL
+);
+
+-- CreateTable
+CREATE TABLE "CoverLetterSnippet" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "title" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
 
@@ -260,6 +271,9 @@ CREATE UNIQUE INDEX "CoverLetter_applicationId_key" ON "CoverLetter"("applicatio
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Preferences_portfolioShareToken_key" ON "Preferences"("portfolioShareToken");
+
+-- CreateIndex
+CREATE INDEX "CoverLetterSnippet_title_idx" ON "CoverLetterSnippet"("title");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "PushSubscription_endpoint_key" ON "PushSubscription"("endpoint");

@@ -270,10 +270,37 @@ model Preferences {
   lastSchedulerErrorSource  String?   // "email_sync" | "push" | "backup"
   lastSchedulerErrorMessage String?
   lastSchedulerErrorAt      DateTime?
+  // Wöchentlicher Erinnerungs-Digest (src/lib/digest.ts, per Push versendet
+  // über src/lib/pushNotifications.ts::sendWeeklyDigestIfDue()): fasst
+  // Bewerbungen ohne Rückmeldung seit X Tagen sowie anstehende Termine der
+  // nächsten 7 Tage in EINER Push-Benachrichtigung zusammen, statt für jede
+  // einzelne Bewerbung separat zu benachrichtigen. Läuft im selben
+  // 15-Minuten-Scheduler-Tick mit, verschickt aber höchstens einmal pro
+  // Woche (siehe lastDigestSentAt unten).
+  digestEnabled      Boolean   @default(true)
+  lastDigestSentAt   DateTime?
   updatedAt          DateTime @updatedAt
 
   educationEntries EducationEntry[]
   projectEntries   ProjectEntry[]
+}
+
+// ---------------------------------------------------------------------------
+// Anschreiben-Textbaustein-Bibliothek — wiederverwendbare, unternehmens-
+// unabhängige Absätze (z.B. "Standard-Schlussabsatz", "Remote-Absatz"), die
+// im Anschreiben-Panel per 1-Klick eingefügt werden können. Ergänzt
+// Company.letterTemplate (das ist auf GENAU EINEN Einleitungssatz pro
+// Unternehmen beschränkt) um frei benennbare, mehrfach verwendbare Bausteine
+// für beliebige Stellen im Anschreiben.
+// ---------------------------------------------------------------------------
+model CoverLetterSnippet {
+  id        String   @id @default(cuid())
+  title     String // z.B. "Remote-Absatz", "Standard-Schlussabsatz"
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([title])
 }
 
 // ---------------------------------------------------------------------------

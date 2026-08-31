@@ -147,6 +147,7 @@ export const preferencesSchema = z.object({
   imapFolder: z.string().optional().nullable(),
   imapEnabled: z.boolean().optional(),
   backgroundSchedulerEnabled: z.boolean().optional(),
+  digestEnabled: z.boolean().optional(),
 });
 
 export const jobLiveSearchSchema = z.object({
@@ -199,6 +200,15 @@ export const coverLetterUpdateSchema = z.object({
   content: z.string().optional(),
   status: z.enum(COVER_LETTER_STATUS_VALUES).optional(),
 });
+
+// -----------------------------------------------------------------------------
+// Anschreiben-Textbaustein-Bibliothek (src/app/api/snippets, prisma.CoverLetterSnippet)
+// -----------------------------------------------------------------------------
+export const coverLetterSnippetSchema = z.object({
+  title: z.string().min(1, "Titel ist erforderlich"),
+  content: z.string().min(1, "Inhalt ist erforderlich"),
+});
+export const coverLetterSnippetUpdateSchema = coverLetterSnippetSchema.partial();
 
 export const batchActionSchema = z.object({
   action: z.enum(["SET_STATUS", "DELETE", "ADD_TAG", "REMOVE_TAG", "APPLY_STANDARD_PACKAGE"]),

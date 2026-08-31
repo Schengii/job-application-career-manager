@@ -38,6 +38,8 @@ describe("cvGenerator", () => {
     imapEnabled: false,
     imapPassword: null,
     backgroundSchedulerEnabled: true,
+    digestEnabled: true,
+    lastDigestSentAt: null,
     lastSchedulerErrorSource: null,
     lastSchedulerErrorMessage: null,
     lastSchedulerErrorAt: null,

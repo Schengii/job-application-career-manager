@@ -17,6 +17,7 @@ const ERROR_SOURCE_LABELS: Record<string, string> = {
   email_sync: "E-Mail-Sync (IMAP)",
   push: "Push-Benachrichtigungen",
   backup: "automatisches Backup",
+  digest: "Wöchentlicher Erinnerungs-Digest",
 };
 
 export function BackgroundSchedulerCard({ preferences }: { preferences: PreferencesPublic }) {
@@ -24,6 +25,8 @@ export function BackgroundSchedulerCard({ preferences }: { preferences: Preferen
   const toast = useToast();
   const [saving, setSaving] = useState(false);
   const [enabled, setEnabled] = useState(preferences.backgroundSchedulerEnabled ?? true);
+  const [digestSaving, setDigestSaving] = useState(false);
+  const [digestEnabled, setDigestEnabled] = useState(preferences.digestEnabled ?? true);
 
   async function handleToggle(checked: boolean) {
     setEnabled(checked);
@@ -37,6 +40,21 @@ export function BackgroundSchedulerCard({ preferences }: { preferences: Preferen
       toast.error("Konnte Einstellung nicht speichern.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDigestToggle(checked: boolean) {
+    setDigestEnabled(checked);
+    setDigestSaving(true);
+    try {
+      await apiPatch("/api/preferences", { digestEnabled: checked });
+      await mutate("/api/preferences");
+      toast.success(checked ? "Wöchentlicher Digest aktiviert." : "Wöchentlicher Digest deaktiviert.");
+    } catch {
+      setDigestEnabled(!checked);
+      toast.error("Konnte Einstellung nicht speichern.");
+    } finally {
+      setDigestSaving(false);
     }
   }
 
@@ -66,6 +84,25 @@ export function BackgroundSchedulerCard({ preferences }: { preferences: Preferen
           </label>
           {saving && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
         </div>
+
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="digest-enabled"
+            checked={digestEnabled}
+            onChange={(e) => handleDigestToggle(e.target.checked)}
+            disabled={digestSaving}
+            className="h-4 w-4 rounded border-border text-primary"
+          />
+          <label htmlFor="digest-enabled" className="text-sm font-semibold text-foreground cursor-pointer">
+            Wöchentlichen Erinnerungs-Digest per Push senden
+          </label>
+          {digestSaving && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Eine einzelne, zusammenfassende Push-Benachrichtigung pro Woche über überfällige Termine, anstehende
+          Gespräche und empfohlene Nachfassaktionen — ergänzend zu den sofortigen Einzelbenachrichtigungen.
+        </p>
 
         {preferences.lastSchedulerErrorMessage && (
           <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-xs text-amber-700 dark:text-amber-400">

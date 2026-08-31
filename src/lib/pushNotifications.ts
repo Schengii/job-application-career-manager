@@ -12,6 +12,7 @@ import webpush from "web-push";
 import { prisma } from "./prisma";
 import { getVapidKeys } from "./vapidKeys";
 import { getNotificationsFromApplications, type AppNotification } from "./notifications";
+import { buildWeeklyDigest, isWeeklyDigestDue } from "./digest";
 import type { MatchedEmailAction } from "./emailImapSync";
 import type { PushSubscription } from "@/types";
 
@@ -162,6 +163,73 @@ export async function sendDueNotifications(): Promise<SendDueNotificationsResult
   } catch (error) {
     console.error("pushNotifications: sendDueNotifications() fehlgeschlagen.", error);
     return { sent: 0, skipped: 0 };
+  }
+}
+
+export type SendWeeklyDigestResult = { sent: boolean; summary?: string; sentCount: number };
+
+/**
+ * Verschickt höchstens einmal pro Woche (siehe isWeeklyDigestDue() in
+ * src/lib/digest.ts) EINE zusammenfassende Push-Benachrichtigung über alle
+ * aktuell offenen Benachrichtigungen, statt sie nur einzeln (s.
+ * sendDueNotifications() oben) zu verschicken. Wird von
+ * src/lib/scheduler.ts bei jedem Tick aufgerufen — der Fälligkeits-Check
+ * innerhalb dieser Funktion sorgt dafür, dass tatsächlich nur einmal pro
+ * Woche etwas verschickt wird.
+ */
+export async function sendWeeklyDigestIfDue(): Promise<SendWeeklyDigestResult> {
+  try {
+    const preferences = await prisma.preferences.findUnique({ where: { id: "default" } });
+    if (!preferences || !isWeeklyDigestDue(preferences)) return { sent: false, sentCount: 0 };
+
+    const applications = await prisma.application.findMany({
+      select: {
+        id: true,
+        status: true,
+        position: true,
+        applicationDate: true,
+        nextStepDate: true,
+        nextStep: true,
+        company: { select: { name: true } },
+        statusEvents: {
+          orderBy: { changedAt: "desc" },
+          take: 3,
+          select: { id: true, status: true, changedAt: true },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+
+    const digest = buildWeeklyDigest(applications);
+
+    // Der Fälligkeitszeitpunkt wird in JEDEM Fall aktualisiert (auch ohne
+    // etwas zu berichten) — sonst würde bei einem leeren Trichter jeder
+    // künftige Tick erneut prüfen, statt erst wieder in 7 Tagen.
+    await prisma.preferences.update({
+      where: { id: "default" },
+      data: { lastDigestSentAt: new Date() },
+    });
+
+    if (!digest) return { sent: false, sentCount: 0 };
+
+    const subscriptions = await prisma.pushSubscription.findMany();
+    const payload: PushPayload = {
+      title: digest.title,
+      body: digest.body,
+      url: "/",
+      tag: `weekly-digest-${new Date().toISOString().slice(0, 10)}`,
+    };
+
+    let sentCount = 0;
+    for (const subscription of subscriptions) {
+      const ok = await sendPushToSubscription(subscription, payload);
+      if (ok) sentCount++;
+    }
+
+    return { sent: true, summary: digest.body, sentCount };
+  } catch (error) {
+    console.error("pushNotifications: sendWeeklyDigestIfDue() fehlgeschlagen.", error);
+    return { sent: false, sentCount: 0 };
   }
 }
 
