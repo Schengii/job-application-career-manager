@@ -34,6 +34,8 @@ import { EmailResponseModal } from "@/components/applications/email-response-mod
 import { ExcelGridTable } from "@/components/excel/excel-grid-table";
 import { ExcelImportModal } from "@/components/excel/excel-import-modal";
 import { BatchActionBar } from "@/components/applications/batch-action-bar";
+import { SavedFiltersBar } from "@/components/applications/saved-filters-bar";
+import type { SavedFilterValues } from "@/lib/savedFilters";
 import { parseTags, getTagStyle } from "@/lib/tags";
 
 const TABLE_PAGE_SIZE = 25;
@@ -203,6 +205,15 @@ export default function ApplicationsPage() {
     setTagFilter("ALL");
     setSearchQuery("");
     setOnlyFollowUps(false);
+  }
+
+  function handleApplyFilterPreset(preset: SavedFilterValues) {
+    setStatusFilter(preset.status);
+    setPortalFilter(preset.portal);
+    setTagFilter(preset.tag ?? "ALL");
+    setSearchQuery(preset.search);
+    setOnlyFollowUps(preset.onlyFollowUps);
+    setSortBy(preset.sortBy as SortOption);
   }
 
   function handleToggleSelect(id: string) {
@@ -420,6 +431,24 @@ export default function ApplicationsPage() {
               {s.label} ({applications?.filter((a) => a.status === s.value).length ?? 0})
             </FilterChip>
           ))}
+        </div>
+
+        {/* Gespeicherte Filter/Ansichten */}
+        <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-2.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Ansichten
+          </span>
+          <SavedFiltersBar
+            currentFilters={{
+              status: statusFilter,
+              portal: portalFilter,
+              tag: tagFilter,
+              search: searchQuery,
+              onlyFollowUps,
+              sortBy,
+            }}
+            onApply={handleApplyFilterPreset}
+          />
         </div>
       </div>
 

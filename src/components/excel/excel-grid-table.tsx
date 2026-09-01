@@ -32,6 +32,8 @@ import type { ApplicationStatusCounts } from "@/lib/applicationQuery";
 import { applicationsToCsv, downloadCsv } from "@/lib/csv";
 import { cn } from "@/lib/utils";
 import { ExcelImportModal } from "@/components/excel/excel-import-modal";
+import { SavedFiltersBar } from "@/components/applications/saved-filters-bar";
+import type { SavedFilterValues } from "@/lib/savedFilters";
 
 // Seitengröße für den initialen Ladevorgang & jedes weitere "Weitere laden"
 // (siehe applyPage()/handleLoadMore unten). Begrenzt die anfänglich geladene
@@ -411,6 +413,24 @@ function ExcelGridContent({
     setSearchQuery("");
     setOnlyFollowUps(false);
     commitFilterChange({ status: "ALL", portal: "ALL", search: "", onlyFollowUps: false });
+  }
+
+  // Die Excel-Ansicht kennt (anders als die klassische Tabellenansicht) keinen
+  // Tag-Filter — ein angewendetes Preset mit gesetztem `tag` lässt diesen
+  // Bestandteil hier also bewusst unberücksichtigt.
+  function handleApplyFilterPreset(preset: SavedFilterValues) {
+    setStatusFilter(preset.status);
+    setPortalFilter(preset.portal);
+    setSearchQuery(preset.search);
+    setOnlyFollowUps(preset.onlyFollowUps);
+    setSortBy(preset.sortBy as SortOption);
+    commitFilterChange({
+      status: preset.status,
+      portal: preset.portal,
+      search: preset.search,
+      onlyFollowUps: preset.onlyFollowUps,
+      sortBy: preset.sortBy as SortOption,
+    });
   }
 
   function handleCellChange(id: string, field: keyof ExcelRow, value: string) {
@@ -832,6 +852,23 @@ function ExcelGridContent({
             {rows.length} geladene Zeile{rows.length === 1 ? "" : "n"}
             {hasMoreRows && ` (insgesamt ${total} Treffer)`}
           </span>
+        </div>
+
+        {/* Gespeicherte Filter/Ansichten */}
+        <div className="flex flex-wrap items-center gap-2 border-t border-border/60 pt-2.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Ansichten
+          </span>
+          <SavedFiltersBar
+            currentFilters={{
+              status: statusFilter,
+              portal: portalFilter,
+              search: searchQuery,
+              onlyFollowUps,
+              sortBy,
+            }}
+            onApply={handleApplyFilterPreset}
+          />
         </div>
       </div>
 
