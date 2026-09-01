@@ -61,7 +61,18 @@ export function ApplicationFormDialog({
         companyId: finalCompanyId,
       });
 
-      await Promise.all([mutate("/api/applications"), mutate("/api/metrics"), mutate("/api/companies")]);
+      await Promise.all([
+        mutate("/api/applications"),
+        // Die Tabellenansicht (src/app/applications/page.tsx) liest über einen
+        // eigenen, paginierten/gefilterten SWR-Key (`/api/applications?...`,
+        // s. tableQueryKey dort) statt aus dem unpaginierten "/api/applications" —
+        // der muss hier per Key-Matcher separat revalidiert werden, sonst taucht
+        // eine gerade angelegte Bewerbung dort erst nach einem Reload auf (wie
+        // beim Statuswechsel in handleStatusChange, s. Kommentar dort).
+        mutate((key) => typeof key === "string" && key.startsWith("/api/applications?")),
+        mutate("/api/metrics"),
+        mutate("/api/companies"),
+      ]);
       toast.success("Bewerbung wurde angelegt.");
       reset();
       onClose();
