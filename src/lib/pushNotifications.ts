@@ -216,7 +216,7 @@ export async function sendWeeklyDigestIfDue(): Promise<SendWeeklyDigestResult> {
     const payload: PushPayload = {
       title: digest.title,
       body: digest.body,
-      url: "/",
+      url: digest.url,
       tag: `weekly-digest-${new Date().toISOString().slice(0, 10)}`,
     };
 
@@ -276,7 +276,10 @@ export async function sendEmailMatchNotifications(
       const payload: PushPayload = {
         title: "Neue E-Mail erkannt",
         body: `${action.application.company.name}: ${action.email.subject} — Statusvorschlag prüfen.`,
-        url: `/applications/${action.application.id}`,
+        // Verlinkt auf die konsolidierte Inbox (statt der einzelnen
+        // Bewerbung) — dort lässt sich der Vorschlag direkt annehmen/
+        // ablehnen, siehe src/app/inbox/page.tsx.
+        url: "/inbox",
         tag: id,
       };
       for (const subscription of subscriptions) {

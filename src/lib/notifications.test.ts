@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getNotificationsFromApplications } from "./notifications";
+import { getNotificationsFromApplications, getEmailSuggestionNotifications, type PendingEmailSuggestion } from "./notifications";
 import type { ApplicationListItem } from "@/types";
 
 describe("notifications", () => {
@@ -143,5 +143,31 @@ describe("notifications", () => {
     const notifs = getNotificationsFromApplications([app], ["status-evt-4"]);
 
     expect(notifs.some((n) => n.type === "OFFER")).toBe(false);
+  });
+});
+
+describe("getEmailSuggestionNotifications", () => {
+  const dummySuggestion = (overrides: Partial<PendingEmailSuggestion> = {}): PendingEmailSuggestion => ({
+    id: "sugg-1",
+    applicationId: "app-1",
+    statusLabel: "Einladung zum Vorstellungsgespräch",
+    emailDate: new Date(),
+    application: { position: "Frontend Entwickler", company: { name: "Tech Corp" } },
+    ...overrides,
+  });
+
+  it("erzeugt eine EMAIL_SUGGESTION-Benachrichtigung für einen offenen Vorschlag", () => {
+    const notifs = getEmailSuggestionNotifications([dummySuggestion()]);
+
+    expect(notifs.length).toBe(1);
+    expect(notifs[0].type).toBe("EMAIL_SUGGESTION");
+    expect(notifs[0].id).toBe("email-suggestion-sugg-1");
+    expect(notifs[0].companyName).toBe("Tech Corp");
+  });
+
+  it("filtert bereits verworfene Vorschlags-Benachrichtigungen (dismissedIds) heraus", () => {
+    const notifs = getEmailSuggestionNotifications([dummySuggestion()], ["email-suggestion-sugg-1"]);
+
+    expect(notifs.length).toBe(0);
   });
 });

@@ -11,6 +11,7 @@ import type {
   CoverLetterSnippetModel,
   DocumentModel,
   EducationEntryModel,
+  EmailSuggestionModel,
   JobPostingModel,
   PreferencesModel,
   ProjectEntryModel,
@@ -31,6 +32,11 @@ export type Preferences = PreferencesModel;
 export type ProjectEntry = ProjectEntryModel;
 export type PushSubscription = PushSubscriptionModel;
 export type SentPushNotification = SentPushNotificationModel;
+export type EmailSuggestion = EmailSuggestionModel;
+
+export type EmailSuggestionWithApplication = EmailSuggestion & {
+  application: Application & { company: Company; jobPosting: JobPosting | null };
+};
 
 export type CompanyWithCounts = Company & {
   _count: { applications: number; jobPostings: number };

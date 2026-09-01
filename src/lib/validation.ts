@@ -171,6 +171,14 @@ export const emailSyncRunSchema = z.object({
   simulate: z.boolean().optional().default(false),
 });
 
+// -----------------------------------------------------------------------------
+// E-Mail-Antworten-Inbox (src/app/api/email-sync/pending, prisma.EmailSuggestion)
+// -----------------------------------------------------------------------------
+export const emailSuggestionActionSchema = z.object({
+  suggestionId: z.string().min(1),
+  action: z.enum(["ACCEPT", "REJECT"]),
+});
+
 export const educationEntrySchema = z.object({
   type: z.enum(EDUCATION_TYPE_VALUES),
   title: z.string().min(1),

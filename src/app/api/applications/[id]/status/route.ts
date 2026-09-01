@@ -6,10 +6,9 @@
 // Transaktion, damit das Dashboard sofort konsistente Daten sieht.
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { statusEventSchema } from "@/lib/validation";
 import { handleApiError } from "@/lib/apiUtils";
-import { sendDueNotifications } from "@/lib/pushNotifications";
+import { applyApplicationStatusChange } from "@/lib/applicationStatus";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -19,21 +18,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     const body = await request.json();
     const { status, note } = statusEventSchema.parse(body);
 
-    const application = await prisma.application.update({
-      where: { id },
-      data: {
-        status,
-        statusEvents: { create: { status, note: note ?? null } },
-      },
-      include: { company: true, jobPosting: true, statusEvents: { orderBy: { changedAt: "desc" } } },
-    });
-
-    // Fire-and-forget: verschickt u.a. Web-Push für Absage/Zusage/Interview
-    // (siehe src/lib/pushNotifications.ts). Bewusst NICHT awaited — ein
-    // langsamer oder fehlschlagender Push-Versand darf die Response dieser
-    // Route weder verzögern noch die erfolgreiche Statusänderung selbst zum
-    // Scheitern bringen (sendDueNotifications() ist ohnehin nie werfend).
-    void sendDueNotifications();
+    const application = await applyApplicationStatusChange(id, status, note);
 
     return NextResponse.json(application);
   } catch (error) {

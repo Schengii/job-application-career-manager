@@ -6,23 +6,36 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import useSWR from "swr";
 import Link from "next/link";
-import { Bell, AlertCircle, Calendar, MailQuestion, Check, X, XCircle, PartyPopper, Users } from "lucide-react";
+import { Bell, AlertCircle, Calendar, MailQuestion, Check, X, XCircle, PartyPopper, Users, Sparkles } from "lucide-react";
 import { fetcher } from "@/lib/api";
-import type { ApplicationListItem } from "@/types";
-import { getNotificationsFromApplications } from "@/lib/notifications";
+import type { ApplicationListItem, EmailSuggestionWithApplication } from "@/types";
+import { getNotificationsFromApplications, getEmailSuggestionNotifications } from "@/lib/notifications";
 import { useDismissedNotifications } from "@/lib/useDismissedNotifications";
 import { cn } from "@/lib/utils";
 
 export function NotificationBell() {
   const { data: applications } = useSWR<ApplicationListItem[]>("/api/applications", fetcher);
+  // Offene, per E-Mail-Sync erkannte Status-Vorschläge (s. /inbox) — werden
+  // unten als eigener Notification-Typ ("EMAIL_SUGGESTION") eingeblendet, der
+  // (anders als die übrigen Typen) auf /inbox statt auf die Bewerbung verlinkt.
+  const { data: pendingSuggestions } = useSWR<EmailSuggestionWithApplication[]>(
+    "/api/email-sync/pending",
+    fetcher
+  );
   const [open, setOpen] = useState(false);
   const { dismissedIds, dismiss, dismissMany } = useDismissedNotifications();
   const popoverRef = useRef<HTMLDivElement>(null);
 
   const notifications = useMemo(() => {
-    if (!applications) return [];
-    return getNotificationsFromApplications(applications, dismissedIds);
-  }, [applications, dismissedIds]);
+    const fromApplications = applications ? getNotificationsFromApplications(applications, dismissedIds) : [];
+    const fromEmailSuggestions = pendingSuggestions
+      ? getEmailSuggestionNotifications(pendingSuggestions, dismissedIds)
+      : [];
+    const priorityWeight: Record<string, number> = { high: 3, medium: 2, low: 1 };
+    return [...fromEmailSuggestions, ...fromApplications].sort(
+      (a, b) => priorityWeight[b.priority] - priorityWeight[a.priority]
+    );
+  }, [applications, pendingSuggestions, dismissedIds]);
 
   // Click-Outside Listener
   useEffect(() => {
@@ -107,7 +120,8 @@ export function NotificationBell() {
                   notif.type === "FOLLOW_UP" && "border-l-4 border-l-orange-500 bg-orange-500/5",
                   notif.type === "REJECTED" && "border-l-4 border-l-slate-400 bg-slate-400/5",
                   notif.type === "OFFER" && "border-l-4 border-l-emerald-500 bg-emerald-500/5",
-                  notif.type === "INTERVIEW" && "border-l-4 border-l-violet-500 bg-violet-500/5"
+                  notif.type === "INTERVIEW" && "border-l-4 border-l-violet-500 bg-violet-500/5",
+                  notif.type === "EMAIL_SUGGESTION" && "border-l-4 border-l-primary bg-primary-soft/40"
                 )}
               >
                 <div className="mt-0.5 shrink-0">
@@ -117,11 +131,12 @@ export function NotificationBell() {
                   {notif.type === "REJECTED" && <XCircle className="h-4 w-4 text-slate-400" />}
                   {notif.type === "OFFER" && <PartyPopper className="h-4 w-4 text-emerald-500" />}
                   {notif.type === "INTERVIEW" && <Users className="h-4 w-4 text-violet-500" />}
+                  {notif.type === "EMAIL_SUGGESTION" && <Sparkles className="h-4 w-4 text-primary" />}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <Link
-                    href={`/applications/${notif.applicationId}`}
+                    href={notif.type === "EMAIL_SUGGESTION" ? "/inbox" : `/applications/${notif.applicationId}`}
                     onClick={() => setOpen(false)}
                     className="block"
                   >

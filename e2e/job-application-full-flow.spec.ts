@@ -43,8 +43,12 @@ test("Job synchronisieren, bewerben, automatisches Anschreiben prüfen und Statu
   await statusSelect.selectOption({ label: "Vorstellungsgespräch" });
   await expect(page.getByText("Status aktualisiert.")).toBeVisible();
 
+  // Die "Heute"-Karte fasst u.a. neue Rückmeldungen zusammen (siehe
+  // today-overview-card.tsx) — der Positionstitel taucht auf dem Dashboard
+  // bewusst zusätzlich in "Neueste Bewerbungen" auf, daher hier gezielt auf
+  // die Heute-Karte scopen statt global auf den Text zu prüfen.
   await page.goto("/");
-  const responsesCard = page.getByText(/Neue Rückmeldungen/);
-  await expect(responsesCard).toBeVisible();
-  await expect(page.getByText(position, { exact: true })).toBeVisible();
+  const todayCard = page.getByTestId("today-overview-card");
+  await todayCard.getByRole("button", { name: /Neue Rückmeldungen/ }).click();
+  await expect(todayCard.getByText(position, { exact: true })).toBeVisible();
 });

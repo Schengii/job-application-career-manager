@@ -81,6 +81,42 @@ export async function POST(req: NextRequest) {
         );
     const syncResult = processSyncedEmails(inboxMessages, applications);
 
+    // Persistiert alle Vorschläge mit einem konkreten Status-Vorschlag, damit
+    // sie in der zentralen Antworten-Inbox (GET /api/email-sync/pending)
+    // über alle Bewerbungen hinweg auftauchen, statt nur beim erneuten
+    // Öffnen dieser Sync-Route sichtbar zu sein. Ein erneuter Sync derselben
+    // E-Mail legt dank @@unique([applicationId, emailId]) keinen Duplikat-
+    // Eintrag an (bereits angenommene/abgelehnte Vorschläge bleiben also
+    // unverändert bestehen).
+    for (const action of syncResult.matchedActions) {
+      if (!action.suggestedStatus) continue;
+      try {
+        await prisma.emailSuggestion.create({
+          data: {
+            emailId: action.email.id,
+            emailFrom: action.email.from,
+            emailSubject: action.email.subject,
+            emailSnippet: action.email.snippet,
+            emailDate: new Date(action.email.date),
+            detectedStatus: action.parsed.detectedStatus,
+            suggestedStatus: action.suggestedStatus,
+            statusLabel: action.parsed.statusLabel,
+            reasoning: action.parsed.reasoning,
+            confidence: action.confidenceScore,
+            extractedDate: action.parsed.extractedDate ?? null,
+            extractedTime: action.parsed.extractedTime ?? null,
+            applicationId: action.application.id,
+          },
+        });
+      } catch (error) {
+        // P2002 = Vorschlag existiert bereits (identische E-Mail/Bewerbung) —
+        // erwartet bei wiederholten Syncs, kein Fehlerfall.
+        if (!(typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "P2002")) {
+          throw error;
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       result: syncResult,

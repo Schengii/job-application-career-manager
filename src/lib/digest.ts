@@ -21,6 +21,14 @@ export type WeeklyDigestSummary = {
   totalCount: number;
   title: string;
   body: string;
+  // Ziel-URL für den Klick auf die Push-Benachrichtigung (s.
+  // sendWeeklyDigestIfDue() in pushNotifications.ts). Enthält der Digest
+  // neue Status-Rückmeldungen, führt der Klick in die konsolidierte
+  // E-Mail-Antworten-Inbox (/inbox) statt (wie zuvor) nur aufs Dashboard —
+  // dort lassen sich ggf. noch offene Vorschläge direkt annehmen/ablehnen.
+  // Andernfalls (nur Termine/Nachfassen) bleibt es beim Dashboard, da es
+  // keine EINZELNE Bewerbung gibt, auf die sinnvoll verlinkt werden könnte.
+  url: string;
 };
 
 /**
@@ -52,6 +60,7 @@ export function buildWeeklyDigest(applications: NotificationSourceApplication[])
     totalCount: notifications.length,
     title: "Wochenüberblick Bewerbungen",
     body: parts.join(" · "),
+    url: responseCount > 0 ? "/inbox" : "/",
   };
 }
 

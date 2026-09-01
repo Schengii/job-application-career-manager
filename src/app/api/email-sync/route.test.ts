@@ -121,4 +121,58 @@ describe("/api/email-sync", () => {
     expect(body.application.status).toBe("INTERVIEW");
     expect(mockSendDueNotifications).toHaveBeenCalledOnce();
   });
+
+  it("POST persistiert erkannte Status-Vorschläge als EmailSuggestion (für die Antworten-Inbox)", async () => {
+    const company = await prisma.company.create({ data: { name: "adesso SE" } });
+    const app = await prisma.application.create({
+      data: { position: "Frontend Entwickler", status: "SENT", companyId: company.id },
+    });
+
+    mockFetchInboxMessages.mockResolvedValueOnce({
+      messages: [
+        {
+          id: "msg-1",
+          from: "recruiting@adessose.de",
+          subject: `Einladung zum Vorstellungsgespräch: ${app.position}`,
+          date: new Date().toISOString(),
+          snippet: "Wir laden Sie ein ...",
+          fullBody: `Sehr geehrter Bewerber, wir möchten Sie zum Vorstellungsgespräch bei ${company.name} einladen.`,
+        },
+      ],
+      usedRealImap: false,
+    });
+
+    await POST(postRequest({}));
+
+    const suggestions = await prisma.emailSuggestion.findMany({ where: { applicationId: app.id } });
+    expect(suggestions).toHaveLength(1);
+    expect(suggestions[0]).toMatchObject({
+      emailId: "msg-1",
+      suggestedStatus: "INTERVIEW",
+      status: "PENDING",
+    });
+  });
+
+  it("POST legt bei erneutem Sync derselben E-Mail keinen doppelten Vorschlag an", async () => {
+    const company = await prisma.company.create({ data: { name: "adesso SE" } });
+    const app = await prisma.application.create({
+      data: { position: "Frontend Entwickler", status: "SENT", companyId: company.id },
+    });
+
+    const sampleMessage = {
+      id: "msg-1",
+      from: "recruiting@adessose.de",
+      subject: `Einladung zum Vorstellungsgespräch: ${app.position}`,
+      date: new Date().toISOString(),
+      snippet: "Wir laden Sie ein ...",
+      fullBody: `Sehr geehrter Bewerber, wir möchten Sie zum Vorstellungsgespräch bei ${company.name} einladen.`,
+    };
+    mockFetchInboxMessages.mockResolvedValue({ messages: [sampleMessage], usedRealImap: false });
+
+    await POST(postRequest({}));
+    await POST(postRequest({}));
+
+    const suggestions = await prisma.emailSuggestion.findMany({ where: { applicationId: app.id } });
+    expect(suggestions).toHaveLength(1);
+  });
 });

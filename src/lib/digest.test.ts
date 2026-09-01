@@ -48,6 +48,23 @@ describe("buildWeeklyDigest", () => {
     expect(digest?.responseCount).toBe(1);
     expect(digest?.totalCount).toBe(2);
   });
+
+  it("verlinkt auf /inbox, wenn der Digest neue Status-Rückmeldungen enthält", () => {
+    const digest = buildWeeklyDigest([
+      baseApp({ status: "OFFER", statusEvents: [{ id: "ev-1", status: "OFFER", changedAt: new Date() }] }),
+    ]);
+
+    expect(digest?.url).toBe("/inbox");
+  });
+
+  it("verlinkt auf das Dashboard, wenn der Digest keine Status-Rückmeldungen enthält", () => {
+    const overdueDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    const digest = buildWeeklyDigest([
+      baseApp({ nextStep: "Rückmeldung abwarten", nextStepDate: overdueDate }),
+    ]);
+
+    expect(digest?.url).toBe("/");
+  });
 });
 
 describe("isWeeklyDigestDue", () => {

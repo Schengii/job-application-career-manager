@@ -221,6 +221,28 @@ CREATE TABLE "ProjectEntry" (
     CONSTRAINT "ProjectEntry_preferencesId_fkey" FOREIGN KEY ("preferencesId") REFERENCES "Preferences" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+-- CreateTable
+CREATE TABLE "EmailSuggestion" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "emailId" TEXT NOT NULL,
+    "emailFrom" TEXT NOT NULL,
+    "emailSubject" TEXT NOT NULL,
+    "emailSnippet" TEXT NOT NULL,
+    "emailDate" DATETIME NOT NULL,
+    "detectedStatus" TEXT NOT NULL,
+    "suggestedStatus" TEXT,
+    "statusLabel" TEXT NOT NULL,
+    "reasoning" TEXT NOT NULL,
+    "confidence" INTEGER NOT NULL,
+    "extractedDate" TEXT,
+    "extractedTime" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "resolvedAt" DATETIME,
+    "applicationId" TEXT NOT NULL,
+    CONSTRAINT "EmailSuggestion_applicationId_fkey" FOREIGN KEY ("applicationId") REFERENCES "Application" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 -- CreateIndex
 CREATE INDEX "Company_status_idx" ON "Company"("status");
 
@@ -283,4 +305,13 @@ CREATE INDEX "EducationEntry_preferencesId_idx" ON "EducationEntry"("preferences
 
 -- CreateIndex
 CREATE INDEX "ProjectEntry_preferencesId_idx" ON "ProjectEntry"("preferencesId");
+
+-- CreateIndex
+CREATE INDEX "EmailSuggestion_status_idx" ON "EmailSuggestion"("status");
+
+-- CreateIndex
+CREATE INDEX "EmailSuggestion_applicationId_idx" ON "EmailSuggestion"("applicationId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "EmailSuggestion_applicationId_emailId_key" ON "EmailSuggestion"("applicationId", "emailId");
 

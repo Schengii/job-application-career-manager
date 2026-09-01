@@ -26,6 +26,7 @@ import {
   GraduationCap,
   Globe2,
   Network,
+  Inbox,
 } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem, CompanyWithCounts, JobPostingWithCompany } from "@/types";
@@ -132,6 +133,7 @@ export function CommandPalette() {
       { id: "page-prep", group: "Jobsuche", icon: FileSearch, title: "Interview-Vorbereitungsleitfaden", subtitle: "Fachfragen & Cheatsheet", href: "/interview-prep" },
       { id: "page-cv", group: "Bewerbungen", icon: Briefcase, title: "Lebenslauf-Generator (CV-Designer)", subtitle: "PDF-Vorschau & Druck", href: "/cv-designer" },
       { id: "page-analytics", group: "Bewerbungen", icon: Briefcase, title: "Auswertungen", subtitle: "Conversion Funnel & Analytics", href: "/analytics" },
+      { id: "page-inbox", group: "Bewerbungen", icon: Inbox, title: "E-Mail-Antworten-Inbox", subtitle: "Erkannte Status-Vorschläge annehmen/ablehnen", href: "/inbox" },
     ];
 
     return [...actionResults, ...appResults, ...companyResults, ...jobResults, ...pageResults];

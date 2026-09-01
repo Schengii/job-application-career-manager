@@ -24,7 +24,7 @@ export type NotificationSourceApplication = Pick<
 export type AppNotification = {
   id: string;
   applicationId: string;
-  type: "OVERDUE" | "DUE_SOON" | "FOLLOW_UP" | "REJECTED" | "OFFER" | "INTERVIEW";
+  type: "OVERDUE" | "DUE_SOON" | "FOLLOW_UP" | "REJECTED" | "OFFER" | "INTERVIEW" | "EMAIL_SUGGESTION";
   title: string;
   message: string;
   companyName: string;
@@ -32,6 +32,61 @@ export type AppNotification = {
   date?: string | null;
   priority: "high" | "medium" | "low";
 };
+
+// Minimaler Ausschnitt eines EmailSuggestion-Datensatzes (s.
+// prisma/schema.prisma, `EmailSuggestionWithApplication` in
+// src/types/index.ts), den getEmailSuggestionNotifications() unten benötigt.
+// Anders als die Statuswechsel-Benachrichtigungen oben (die einen bereits
+// ÜBERNOMMENEN Status widerspiegeln) betrifft dies einen noch UNBEARBEITETEN
+// (PENDING) Vorschlag aus /inbox — daher eine eigene Notification-Quelle statt
+// eines weiteren Zweigs in getNotificationsFromApplications().
+export type PendingEmailSuggestion = {
+  id: string;
+  applicationId: string;
+  statusLabel: string;
+  emailDate: Date | string;
+  application: { position: string; company: { name: string } };
+};
+
+/**
+ * Baut Benachrichtigungen für noch offene (PENDING), per E-Mail-Sync
+ * erkannte Status-Vorschläge (siehe /api/email-sync/pending, src/app/inbox).
+ * Anders als die Benachrichtigungen aus getNotificationsFromApplications()
+ * verlinkt der Aufrufer (NotificationBell) diese bewusst auf `/inbox` statt
+ * auf die einzelne Bewerbung — dort lässt sich der Vorschlag direkt
+ * annehmen/ablehnen, statt ihn nur read-only auf der Bewerbungsseite zu sehen.
+ */
+export function getEmailSuggestionNotifications(
+  suggestions: PendingEmailSuggestion[],
+  dismissedIds: string[] = []
+): AppNotification[] {
+  const notifications: AppNotification[] = [];
+
+  for (const suggestion of suggestions) {
+    // Defensiv: bei unerwartet geformten Daten (z. B. eine fehlgeschlagene
+    // Fetch-Response, die nicht dem erwarteten Shape entspricht) lieber den
+    // einzelnen Eintrag überspringen als die gesamte Benachrichtigungsliste
+    // (und damit die App) mit einem Laufzeitfehler abstürzen zu lassen.
+    if (!suggestion?.application?.company) continue;
+
+    const notifId = `email-suggestion-${suggestion.id}`;
+    if (dismissedIds.includes(notifId)) continue;
+
+    notifications.push({
+      id: notifId,
+      applicationId: suggestion.applicationId,
+      type: "EMAIL_SUGGESTION",
+      title: "Neue E-Mail-Rückmeldung erkannt",
+      message: `${suggestion.statusLabel} — Vorschlag in der Inbox prüfen.`,
+      companyName: suggestion.application.company.name,
+      position: suggestion.application.position,
+      date: suggestion.emailDate ? new Date(suggestion.emailDate).toISOString() : null,
+      priority: "high",
+    });
+  }
+
+  return notifications;
+}
 
 // Beschreibt, wie ein Statuswechsel (Application.status === Ziel-Status der
 // jeweils letzten ApplicationStatusEvent) als Benachrichtigung dargestellt

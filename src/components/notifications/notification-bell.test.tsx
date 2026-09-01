@@ -34,7 +34,17 @@ function makeOverdueApp(overrides: { id: string; companyName: string; position: 
 }
 
 function mockApplications(applications: ApplicationListItem[]) {
-  const fetchMock = vi.fn(async () => new Response(JSON.stringify(applications), { status: 200 }));
+  // Routet je nach angefragter URL — NotificationBell ruft sowohl
+  // /api/applications als auch /api/email-sync/pending ab; ohne diese
+  // Unterscheidung würde Letzteres fälschlich das Bewerbungs-Array erhalten
+  // (Response-Form passt nicht zu EmailSuggestionWithApplication[]).
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (url.includes("/api/email-sync/pending")) {
+      return new Response(JSON.stringify([]), { status: 200 });
+    }
+    return new Response(JSON.stringify(applications), { status: 200 });
+  });
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 }

@@ -20,30 +20,30 @@ datasource db {
 // Unternehmen — jede Firma, bei der man sich beworben hat oder bewerben könnte
 // ---------------------------------------------------------------------------
 model Company {
-  id            String   @id @default(cuid())
-  name          String
-  street        String?
-  postalCode    String?
-  city          String?
-  country       String   @default("Deutschland")
-  website       String?
-  contactName   String? // Ansprechpartner
-  contactEmail  String?
-  contactPhone  String?
-  notes         String? // Freitext-Notizen zum Unternehmen
-  tags          String? // kommasepariert, z.B. "Startup,Remote,Prio1"
-  status        String   @default("LEAD") // LEAD | CONTACTED | IN_PROGRESS | PARTNER | REJECTED | ARCHIVED
+  id             String   @id @default(cuid())
+  name           String
+  street         String?
+  postalCode     String?
+  city           String?
+  country        String   @default("Deutschland")
+  website        String?
+  contactName    String? // Ansprechpartner
+  contactEmail   String?
+  contactPhone   String?
+  notes          String? // Freitext-Notizen zum Unternehmen
+  tags           String? // kommasepariert, z.B. "Startup,Remote,Prio1"
+  status         String   @default("LEAD") // LEAD | CONTACTED | IN_PROGRESS | PARTNER | REJECTED | ARCHIVED
   // Eigener Standard-Einstiegsabsatz für Anschreiben an dieses Unternehmen —
   // überschreibt (falls gesetzt) den automatisch generierten Intro-Absatz in
   // src/lib/coverLetterGenerator.ts, der Rest des Anschreibens (Werdegang,
   // Projekt, Abschluss) wird weiterhin automatisch erzeugt.
   letterTemplate String?
   preferredTone  String? // Bevorzugte Anschreiben-Tonalität für dieses Unternehmen: MODERN | CLASSIC | STARTUP | DETAILED
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  jobPostings   JobPosting[]
-  applications  Application[]
+  jobPostings  JobPosting[]
+  applications Application[]
 
   @@index([status])
   @@index([name])
@@ -53,26 +53,26 @@ model Company {
 // Stellenangebote — gecrawlte / simulierte Jobs von den Jobportalen
 // ---------------------------------------------------------------------------
 model JobPosting {
-  id                  String   @id @default(cuid())
+  id                  String    @id @default(cuid())
   title               String
   description         String
   portalSource        String // STEPSTONE | INDEED | GETINIT | ARBEITSAGENTUR | OTHER
   sourceUrl           String?
-  location             String?
-  remote              Boolean  @default(false)
+  location            String?
+  remote              Boolean   @default(false)
   requirementsProfile String? // Freitext Anforderungsprofil
   techStack           String? // kommasepariert, z.B. "TypeScript,React,CSS"
   salaryInfo          String?
   matchScore          Int? // zuletzt berechneter Match-Score in % (0-100)
-  isDismissed         Boolean  @default(false)
-  dismissReason       String?  // z.B. "UNWANTED_COMPANY" | "TECH_MISMATCH" | "LOCATION_MISMATCH" | "SENIORITY_MISMATCH" | "SALARY_TOO_LOW" | "OTHER"
+  isDismissed         Boolean   @default(false)
+  dismissReason       String? // z.B. "UNWANTED_COMPANY" | "TECH_MISMATCH" | "LOCATION_MISMATCH" | "SENIORITY_MISMATCH" | "SALARY_TOO_LOW" | "OTHER"
   dismissedAt         DateTime?
-  postedAt            DateTime @default(now())
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  postedAt            DateTime  @default(now())
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  companyId    String?
-  company      Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
 
   applications Application[]
 
@@ -85,32 +85,33 @@ model JobPosting {
 // Bewerbungen — Kernentität: verknüpft Unternehmen, Stelle, Status & Dokumente
 // ---------------------------------------------------------------------------
 model Application {
-  id              String    @id @default(cuid())
-  position        String // Job-Titel (denormalisiert, falls kein JobPosting verknüpft ist)
-  status          String    @default("DRAFT") // DRAFT | SENT | INTERVIEW | OFFER | REJECTED | WITHDRAWN
-  applicationDate DateTime? // Datum, an dem die Bewerbung abgeschickt wurde
-  nextStep        String? // z.B. "Rückmeldung abwarten", "Vorstellungsgespräch am ..."
-  nextStepDate    DateTime?
-  meetingUrl      String? // z.B. Teams, Zoom, Google Meet Link oder Tel
-  rejectionReason String? // z.B. "Zu wenig Berufserfahrung", "Gehaltserwartung", "Stelle gestrichen"
-  interviewStage  String? // SCREENING | CODING_CHALLENGE | TECH_INTERVIEW | FINAL_ROUND | OFFER_STAGE
-  timeSpentMinutes Int?   @default(0) // Aufwand in Minuten (Recherche, Anschreiben, Vorbereitung)
-  tags            String? // kommasepariert, z.B. "Prio1,Frontend,Empfehlung"
-  notes           String?
-  source          String? // z.B. "Stepstone", "Initiativbewerbung"
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  position         String // Job-Titel (denormalisiert, falls kein JobPosting verknüpft ist)
+  status           String    @default("DRAFT") // DRAFT | SENT | INTERVIEW | OFFER | REJECTED | WITHDRAWN
+  applicationDate  DateTime? // Datum, an dem die Bewerbung abgeschickt wurde
+  nextStep         String? // z.B. "Rückmeldung abwarten", "Vorstellungsgespräch am ..."
+  nextStepDate     DateTime?
+  meetingUrl       String? // z.B. Teams, Zoom, Google Meet Link oder Tel
+  rejectionReason  String? // z.B. "Zu wenig Berufserfahrung", "Gehaltserwartung", "Stelle gestrichen"
+  interviewStage   String? // SCREENING | CODING_CHALLENGE | TECH_INTERVIEW | FINAL_ROUND | OFFER_STAGE
+  timeSpentMinutes Int?      @default(0) // Aufwand in Minuten (Recherche, Anschreiben, Vorbereitung)
+  tags             String? // kommasepariert, z.B. "Prio1,Frontend,Empfehlung"
+  notes            String?
+  source           String? // z.B. "Stepstone", "Initiativbewerbung"
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  companyId    String
-  company      Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   jobPostingId String?
   jobPosting   JobPosting? @relation(fields: [jobPostingId], references: [id], onDelete: SetNull)
 
-  statusEvents      ApplicationStatusEvent[]
-  interactions      ApplicationInteraction[]
-  documents         ApplicationDocument[]
-  coverLetter       CoverLetter?
+  statusEvents     ApplicationStatusEvent[]
+  interactions     ApplicationInteraction[]
+  documents        ApplicationDocument[]
+  coverLetter      CoverLetter?
+  emailSuggestions EmailSuggestion[]
 
   @@index([companyId])
   @@index([jobPostingId])
@@ -124,10 +125,10 @@ model Application {
 // Status-Historie — jede Statusänderung einer Bewerbung wird protokolliert
 // ---------------------------------------------------------------------------
 model ApplicationStatusEvent {
-  id            String   @id @default(cuid())
-  status        String
-  note          String?
-  changedAt     DateTime @default(now())
+  id        String   @id @default(cuid())
+  status    String
+  note      String?
+  changedAt DateTime @default(now())
 
   applicationId String
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
@@ -140,14 +141,14 @@ model ApplicationStatusEvent {
 // ---------------------------------------------------------------------------
 model ApplicationInteraction {
   id              String   @id @default(cuid())
-  type            String   // CALL | EMAIL | INTERVIEW_ROUND | FEEDBACK | NOTE
+  type            String // CALL | EMAIL | INTERVIEW_ROUND | FEEDBACK | NOTE
   title           String
   summary         String?
   interactionDate DateTime @default(now())
   createdAt       DateTime @default(now())
 
-  applicationId   String
-  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@index([applicationId])
 }
@@ -209,67 +210,67 @@ model CoverLetter {
 // Präferenzen & Profil — Job-Suchpräferenzen (Singleton, id = "default")
 // ---------------------------------------------------------------------------
 model Preferences {
-  id      String  @id @default("default")
+  id         String  @id @default("default")
   // Absender-/Kontaktdaten des Bewerbers, werden im Anschreiben-Kopf verwendet
-  fullName    String?
-  email       String?
-  phone       String?
-  street      String?
-  postalCode  String?
-  city        String?
+  fullName   String?
+  email      String?
+  phone      String?
+  street     String?
+  postalCode String?
+  city       String?
 
-  desiredRole        String   @default("Fachinformatiker für Anwendungsentwicklung")
-  techStack          String   @default("TypeScript,JavaScript,CSS,React,Next.js,HTML")
-  preferredLocations String   @default("Bonn,Dortmund,Remote")
-  searchRadiusKm     Int      @default(50)
-  remotePreference   String   @default("HYBRID") // ONSITE | HYBRID | REMOTE | ANY
-  minSalary          Int?
-  profileSummary     String? // Kurzprofil für den Anschreiben-Generator
+  desiredRole                String    @default("Fachinformatiker für Anwendungsentwicklung")
+  techStack                  String    @default("TypeScript,JavaScript,CSS,React,Next.js,HTML")
+  preferredLocations         String    @default("Bonn,Dortmund,Remote")
+  searchRadiusKm             Int       @default(50)
+  remotePreference           String    @default("HYBRID") // ONSITE | HYBRID | REMOTE | ANY
+  minSalary                  Int?
+  profileSummary             String? // Kurzprofil für den Anschreiben-Generator
   // Fester Anschreiben-Haupttext (Werdegang, Projekt(e), Abschluss) — wird
   // unverändert in jedes generierte Anschreiben übernommen (siehe
   // src/lib/coverLetterGenerator.ts). Nur Empfänger-Adresse, Datum, Anrede
   // und Einleitungssatz variieren pro Bewerbung.
-  standardCoverLetterBody   String?
+  standardCoverLetterBody    String?
   // Vorlage für den Einleitungssatz mit Platzhaltern {company}/{position}.
   coverLetterOpeningSentence String?
-  weeklyGoal         Int      @default(5) // Wochenziel für Bewerbungen
+  weeklyGoal                 Int       @default(5) // Wochenziel für Bewerbungen
   // Mindest-Match-Score (%), ab dem ein Stellenangebot auf /jobs standardmäßig
   // als "passend" angezeigt wird (0 = Filter deaktiviert, alle anzeigen).
-  minMatchScore      Int      @default(0)
-  excludedCompanies  String?  // kommasepariert, z.B. "Firma X,Firma Y" (Blacklist)
-  excludedKeywords   String?  // kommasepariert, z.B. "Senior,Lead,Cobol,PHP"
-  excludedTechStack  String?  // kommasepariert, z.B. "WordPress,Typo3,PHP"
-  aiProvider         String?  // openai | anthropic | openrouter | ollama
-  aiApiKey           String?
-  aiModel            String?
+  minMatchScore              Int       @default(0)
+  excludedCompanies          String? // kommasepariert, z.B. "Firma X,Firma Y" (Blacklist)
+  excludedKeywords           String? // kommasepariert, z.B. "Senior,Lead,Cobol,PHP"
+  excludedTechStack          String? // kommasepariert, z.B. "WordPress,Typo3,PHP"
+  aiProvider                 String? // openai | anthropic | openrouter | ollama
+  aiApiKey                   String?
+  aiModel                    String?
   // Digitales Recruiter-Portfolio / One-Pager
-  portfolioShareToken      String?  @unique
-  portfolioTokenExpiresAt DateTime?
-  portfolioViewCount      Int      @default(0)
-  portfolioActive         Boolean  @default(true)
+  portfolioShareToken        String?   @unique
+  portfolioTokenExpiresAt    DateTime?
+  portfolioViewCount         Int       @default(0)
+  portfolioActive            Boolean   @default(true)
   // E-Mail IMAP Auto-Sync
-  imapHost           String?
-  imapPort           Int?
-  imapUser           String?
+  imapHost                   String?
+  imapPort                   Int?
+  imapUser                   String?
   // Verschlüsselt at-rest gespeichert (AES-256-GCM, siehe src/lib/secretCrypto.ts),
   // exakt wie aiApiKey — nie im Klartext an den Client zurückgegeben und nie
   // Teil eines Backup-Exports (src/lib/backup.ts).
-  imapPassword       String?
-  imapFolder         String?  @default("INBOX")
-  imapEnabled        Boolean  @default(false)
+  imapPassword               String?
+  imapFolder                 String?   @default("INBOX")
+  imapEnabled                Boolean   @default(false)
   // Hintergrund-Scheduler (src/lib/scheduler.ts): läuft in-process, solange
   // der Server läuft, synct bei aktiviertem IMAP periodisch neue E-Mails und
   // verschickt fällige Push-Benachrichtigungen. Standardmäßig aktiv, hier
   // abschaltbar (Einstellungen -> Automatisierung & Push).
-  backgroundSchedulerEnabled Boolean @default(true)
+  backgroundSchedulerEnabled Boolean   @default(true)
   // Letzter fehlgeschlagener Hintergrund-Tick (siehe runSchedulerTick() in
   // src/lib/scheduler.ts) — bislang landeten IMAP-/Push-/Backup-Fehler nur im
   // Server-Log und blieben für den Nutzer unsichtbar (background-scheduler-card.tsx
   // zeigt sie jetzt als Warnhinweis an). Wird bei jedem Tick ohne Fehler
   // wieder auf null zurückgesetzt.
-  lastSchedulerErrorSource  String?   // "email_sync" | "push" | "backup"
-  lastSchedulerErrorMessage String?
-  lastSchedulerErrorAt      DateTime?
+  lastSchedulerErrorSource   String? // "email_sync" | "push" | "backup"
+  lastSchedulerErrorMessage  String?
+  lastSchedulerErrorAt       DateTime?
   // Wöchentlicher Erinnerungs-Digest (src/lib/digest.ts, per Push versendet
   // über src/lib/pushNotifications.ts::sendWeeklyDigestIfDue()): fasst
   // Bewerbungen ohne Rückmeldung seit X Tagen sowie anstehende Termine der
@@ -277,9 +278,9 @@ model Preferences {
   // einzelne Bewerbung separat zu benachrichtigen. Läuft im selben
   // 15-Minuten-Scheduler-Tick mit, verschickt aber höchstens einmal pro
   // Woche (siehe lastDigestSentAt unten).
-  digestEnabled      Boolean   @default(true)
-  lastDigestSentAt   DateTime?
-  updatedAt          DateTime @updatedAt
+  digestEnabled              Boolean   @default(true)
+  lastDigestSentAt           DateTime?
+  updatedAt                  DateTime  @updatedAt
 
   educationEntries EducationEntry[]
   projectEntries   ProjectEntry[]
@@ -359,4 +360,40 @@ model ProjectEntry {
   preferences   Preferences @relation(fields: [preferencesId], references: [id], onDelete: Cascade)
 
   @@index([preferencesId])
+}
+
+// ---------------------------------------------------------------------------
+// E-Mail-Antworten-Inbox — vom Auto-Sync (src/lib/emailImapSync.ts) erkannte
+// Status-Vorschläge, persistiert je Bewerbung/E-Mail, damit sie in einer
+// zentralen "Inbox"-Ansicht über alle Bewerbungen hinweg (statt nur pro
+// einzeln geöffneter Bewerbung) angezeigt und per Klick angenommen/abgelehnt
+// werden können (siehe /api/email-sync/pending).
+// ---------------------------------------------------------------------------
+model EmailSuggestion {
+  id              String    @id @default(cuid())
+  // Stabile ID der Quell-E-Mail (SyncEmailMessage.id) — zusammen mit
+  // applicationId eindeutig, damit ein erneuter Sync (POST /api/email-sync)
+  // dieselbe E-Mail nicht doppelt als Vorschlag anlegt.
+  emailId         String
+  emailFrom       String
+  emailSubject    String
+  emailSnippet    String
+  emailDate       DateTime
+  detectedStatus  String // INTERVIEW | OFFER | REJECTED | CONFIRMATION | UNKNOWN (siehe emailResponseParser.ts)
+  suggestedStatus String? // Bewerbungsstatus, der bei Annahme gesetzt wird (z.B. INTERVIEW, OFFER, REJECTED, SENT)
+  statusLabel     String
+  reasoning       String
+  confidence      Int // 0 - 100 (Matching-Score aus matchEmailToApplication())
+  extractedDate   String?
+  extractedTime   String?
+  status          String    @default("PENDING") // PENDING | ACCEPTED | REJECTED
+  createdAt       DateTime  @default(now())
+  resolvedAt      DateTime?
+
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([applicationId, emailId])
+  @@index([status])
+  @@index([applicationId])
 }

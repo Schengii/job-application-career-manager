@@ -14,6 +14,7 @@ export async function resetDb() {
   await prisma.applicationDocument.deleteMany();
   await prisma.applicationStatusEvent.deleteMany();
   await prisma.applicationInteraction.deleteMany();
+  await prisma.emailSuggestion.deleteMany();
   await prisma.coverLetter.deleteMany();
   await prisma.application.deleteMany();
   await prisma.document.deleteMany();
