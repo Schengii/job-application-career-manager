@@ -33,14 +33,51 @@ const DEFAULT_SCHEMA_SQL_PATH = path.resolve(import.meta.dirname, "../../prisma/
 /**
  * Löscht eine ggf. vorhandene SQLite-Datei (inkl. WAL-/Journal-Nebendateien)
  * an `dbPath` und wendet das aktuelle Prisma-Schema frisch darauf an.
+ *
+ * Windows-Besonderheit: Playwright startet den `webServer`-Plugin-Hook VOR
+ * dem hier aufrufenden `globalSetup` (Plugin-Setup läuft in
+ * `createGlobalSetupTasks` vor dem User-`globalSetup`-Task) — der Next.js
+ * Dev-Server kann die DB-Datei also bereits geöffnet haben, BEVOR wir hier
+ * ankommen (u.a. durch den sofortigen Scheduler-Tick beim Serverstart, siehe
+ * `runSchedulerTick()` in src/lib/scheduler.ts). Ein offener Handle verbietet
+ * unter Windows das Löschen der Datei (EPERM), anders als unter Linux/macOS
+ * (dort funktioniert `rmSync` auf offenen Dateien anstandslos, daher fällt
+ * das dort nie auf). Statt die Datei zu löschen, wird sie deshalb — falls sie
+ * schon existiert — über eine eigene Verbindung geleert (alle Tabellen
+ * `DROP`en) statt neu angelegt; das kommt ohne Löschrecht auf einen fremden
+ * Handle aus.
  */
 export function resetSqliteDatabase(dbPath: string, schemaSqlPath: string = DEFAULT_SCHEMA_SQL_PATH): void {
-  for (const suffix of ["", "-journal", "-wal", "-shm"]) {
+  for (const suffix of ["-journal", "-wal", "-shm"]) {
     const file = `${dbPath}${suffix}`;
-    if (existsSync(file)) rmSync(file);
+    if (existsSync(file)) {
+      try {
+        rmSync(file);
+      } catch {
+        // Von einem parallel gestarteten Prozess (s. Kommentar oben) offen
+        // gehalten — unschädlich, wird beim gleich folgenden Schema-Reset
+        // der Hauptdatei ohnehin verworfen/neu geschrieben.
+      }
+    }
   }
 
-  const db = new Database(dbPath);
+  let db: Database.Database;
+  try {
+    rmSync(dbPath);
+    db = new Database(dbPath);
+  } catch {
+    // Datei existiert bereits und ist (unter Windows) von einem anderen
+    // Prozess offen -> stattdessen bestehende Verbindung nutzen und alle
+    // Tabellen droppen, statt die Datei zu ersetzen.
+    db = new Database(dbPath);
+    const tables = db
+      .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")
+      .all() as { name: string }[];
+    for (const { name } of tables) {
+      db.exec(`DROP TABLE IF EXISTS "${name}"`);
+    }
+  }
+
   try {
     db.exec(readFileSync(schemaSqlPath, "utf-8"));
   } finally {
