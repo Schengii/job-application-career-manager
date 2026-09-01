@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Mic,
   Printer,
+  Target,
 } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import { ApplicationListItem } from "@/types";
@@ -32,6 +33,8 @@ import { QuestionNoteEditor } from "@/components/interview/question-note-editor"
 import { AudioInterviewRecorder } from "@/components/interview/audio-interview-recorder";
 import { generateInterviewCheatsheetHtml } from "@/lib/interviewCheatsheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { SkillGapAnalysisResult } from "@/lib/skillGapAnalyzer";
+import { getQuizFocusRecommendations } from "@/lib/skillGapToQuizFocus";
 
 const TABS = [
   { id: "questions", label: "Fachfragen-Katalog & Leitfaden" },
@@ -54,6 +57,10 @@ const CATEGORIES: { id: "ALL" | QuestionCategory; label: string }[] = [
 
 export default function InterviewPrepPage() {
   const { data: applications } = useSWR<ApplicationListItem[]>("/api/applications", fetcher);
+  const { data: skillGapAnalysis } = useSWR<SkillGapAnalysisResult>(
+    "/api/analytics/skill-gap",
+    fetcher
+  );
 
   const [selectedAppId, setSelectedAppId] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<"ALL" | QuestionCategory>("ALL");
@@ -64,6 +71,17 @@ export default function InterviewPrepPage() {
   const [mockInterviewOpen, setMockInterviewOpen] = useState(false);
   const [voiceSimulatorOpen, setVoiceSimulatorOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<PrepTab>("questions");
+  const [quizSkillFocus, setQuizSkillFocus] = useState<string[] | undefined>(undefined);
+
+  const quizFocusRecommendations = useMemo(() => {
+    if (!skillGapAnalysis?.highDemandMissing) return [];
+    return getQuizFocusRecommendations(skillGapAnalysis.highDemandMissing);
+  }, [skillGapAnalysis]);
+
+  function startQuizForSkill(skill: string) {
+    setQuizSkillFocus([skill]);
+    setActiveTab("tech_quiz");
+  }
 
   const selectedApp = useMemo(
     () => applications?.find((a) => a.id === selectedAppId),
@@ -174,6 +192,41 @@ export default function InterviewPrepPage() {
         </div>
       </header>
 
+      {/* Empfehlung basierend auf Skill-Gap-Matrix */}
+      {quizFocusRecommendations.length > 0 && (
+        <Card className="border-primary/20 bg-primary-soft/10">
+          <CardContent className="pt-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-primary" />
+              <p className="text-xs font-semibold text-primary uppercase tracking-wider">
+                Empfohlen basierend auf deinen Skill-Gaps
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {quizFocusRecommendations.map((rec) => (
+                <button
+                  key={rec.skill}
+                  type="button"
+                  onClick={() => startQuizForSkill(rec.skill)}
+                  className="flex items-center gap-2 rounded-full border border-primary/30 bg-surface px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-primary/10"
+                  title={`${rec.questionCount} passende Frage(n) im Tech-Quiz üben`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      rec.priority === "HIGH" ? "bg-rose-500" : "bg-amber-500"
+                    }`}
+                  />
+                  {rec.skill}
+                  <span className="text-muted-foreground">
+                    ({rec.marketDemandPercentage}% Marktnachfrage)
+                  </span>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Haupt-Tab-Leiste */}
       <div className="flex flex-wrap gap-2 border-b border-border" role="tablist">
         {TABS.map((t) => (
@@ -197,7 +250,10 @@ export default function InterviewPrepPage() {
       {activeTab === "negotiation" ? (
         <SalaryNegotiationTrainer />
       ) : activeTab === "tech_quiz" ? (
-        <TechQuizSimulator />
+        <TechQuizSimulator
+          key={quizSkillFocus?.join(",") ?? "all"}
+          initialSkillFocus={quizSkillFocus}
+        />
       ) : activeTab === "coding_canvas" ? (
         <CodingChallengeCanvas />
       ) : (

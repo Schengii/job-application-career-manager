@@ -22,6 +22,7 @@ import {
   TechQuizCategory,
   TechQuizQuestion,
   evaluateQuizSession,
+  getQuestionsBySkills,
 } from "@/lib/techQuizEngine";
 
 const CATEGORIES: { id: "ALL" | TechQuizCategory; label: string }[] = [
@@ -31,16 +32,36 @@ const CATEGORIES: { id: "ALL" | TechQuizCategory; label: string }[] = [
   { id: "PERF_CSS_ARCH", label: "Web Performance & Arch" },
 ];
 
-export function TechQuizSimulator() {
+interface TechQuizSimulatorProps {
+  /** Optional: Wenn gesetzt, startet das Quiz gefiltert auf diese Skills
+   * (z. B. aus der Skill-Gap-Matrix), statt auf ein Fachgebiet. */
+  initialSkillFocus?: string[];
+}
+
+export function TechQuizSimulator({ initialSkillFocus }: TechQuizSimulatorProps = {}) {
   const [selectedCategory, setSelectedCategory] = useState<"ALL" | TechQuizCategory>("ALL");
+  const [skillFocus, setSkillFocus] = useState<string[] | null>(
+    initialSkillFocus && initialSkillFocus.length > 0 ? initialSkillFocus : null
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [isFinished, setIsFinished] = useState(false);
 
   const filteredQuestions = useMemo(() => {
+    if (skillFocus && skillFocus.length > 0) {
+      const bySkill = getQuestionsBySkills(skillFocus);
+      if (bySkill.length > 0) return bySkill;
+    }
     if (selectedCategory === "ALL") return TECH_QUIZ_QUESTIONS;
     return TECH_QUIZ_QUESTIONS.filter((q) => q.category === selectedCategory);
-  }, [selectedCategory]);
+  }, [selectedCategory, skillFocus]);
+
+  function clearSkillFocus() {
+    setSkillFocus(null);
+    setAnswers({});
+    setCurrentIndex(0);
+    setIsFinished(false);
+  }
 
   const currentQ: TechQuizQuestion | undefined = filteredQuestions[currentIndex];
   const hasAnsweredCurrent = currentQ ? answers[currentQ.id] !== undefined : false;
@@ -140,6 +161,18 @@ export function TechQuizSimulator() {
 
   return (
     <div className="flex flex-col gap-5">
+      {skillFocus && skillFocus.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/30 bg-primary-soft/20 px-3.5 py-2.5 text-xs">
+          <span className="text-foreground">
+            <span className="font-semibold text-primary">Fokus aus deinen Skill-Gaps:</span>{" "}
+            {skillFocus.join(", ")}
+          </span>
+          <Button size="sm" variant="outline" onClick={clearSkillFocus}>
+            Fokus aufheben
+          </Button>
+        </div>
+      )}
+
       {/* Category Pills & Progress */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
         <div className="flex flex-wrap gap-1.5" role="tablist">
@@ -149,6 +182,7 @@ export function TechQuizSimulator() {
               type="button"
               onClick={() => {
                 setSelectedCategory(cat.id);
+                setSkillFocus(null);
                 setAnswers({});
                 setCurrentIndex(0);
                 setIsFinished(false);

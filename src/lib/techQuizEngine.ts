@@ -15,6 +15,9 @@ export type TechQuizQuestion = {
   correctIndex: number;
   explanation: string;
   keyTakeaway: string;
+  /** Skill-/Technologie-Bezeichner (lowercase), die diese Frage inhaltlich abdeckt.
+   * Dient der Verknüpfung mit der Skill-Gap-Matrix (siehe skillGapToQuizFocus.ts). */
+  relatedSkills: string[];
 };
 
 export const TECH_QUIZ_QUESTIONS: TechQuizQuestion[] = [
@@ -34,6 +37,7 @@ export const TECH_QUIZ_QUESTIONS: TechQuizQuestion[] = [
     correctIndex: 1,
     explanation: "`useActionState` (ehemals `useFormState`) standardisiert die Verwaltung von asynchronen Server Actions. Er liefert den aktuellen State, die gebundene Action-Funktion und ein automatisches `isPending`-Flag, ohne manuelles `try/catch` und `setIsLoading(true)`.",
     keyTakeaway: "React 19 bindet Form-Zustand und Pending-Status nativ an Server Actions.",
+    relatedSkills: ["react", "next.js"],
   },
   {
     id: "r19-server-client-boundary",
@@ -56,6 +60,7 @@ export function ServerComponent({ dbUser }) {
     correctIndex: 1,
     explanation: "Server Components übertragen Daten an Client Components über den React Server Component (RSC) Payload. Nicht serialisierbare Typen wie Klasseninstanzen oder Funktionen (außer Server Actions mit 'use server') können nicht übergeben werden.",
     keyTakeaway: "Props über die RSC-Boundary müssen JSON-serialisierbar sein.",
+    relatedSkills: ["react", "next.js"],
   },
   {
     id: "ts-satisfies-operator",
@@ -78,6 +83,7 @@ const palette = {
     correctIndex: 1,
     explanation: "Mit `: ThemeConfig` würde TypeScript den Typ auf `string | { r, g, b }` verbreitern. `satisfies` prüft die Konformität, behält aber die spezifische Inferenz – z. B. weiß TS, dass `palette.primary.toLowerCase()` erlaubt ist, ohne Type Narrowing.",
     keyTakeaway: "`satisfies` validiert Typkonformität ohne Typverbreiterung (Narrow Types preserved).",
+    relatedSkills: ["typescript"],
   },
   {
     id: "ts-discriminated-unions",
@@ -108,6 +114,7 @@ function handleEvent(e: AppEvent) {
     correctIndex: 1,
     explanation: "Der Typ `never` stellt Werte dar, die niemals eintreten können. Wenn alle Fälle der Union im Switch abgedeckt sind, ist `e` im `default`-Zweig vom Typ `never`. Wurde ein Fall vergessen, ist `e` nicht `never` und TS meldet einen Build-Fehler.",
     keyTakeaway: "`const _exhaustive: never = val` garantiert Compile-Time-Sicherheit bei Enums/Unions.",
+    relatedSkills: ["typescript"],
   },
   {
     id: "perf-event-loop-microtasks",
@@ -129,6 +136,7 @@ console.log("5");`,
     correctIndex: 1,
     explanation: "Synchrone Tasks (1, 5) laufen zuerst. Danach wird der Microtask-Queue (Promise.then '3', queueMicrotask '4') vollständig abgearbeitet, bevor der nächste Macrotask (setTimeout '2') ausgeführt wird.",
     keyTakeaway: "Synchron ➔ Microtasks (Promises/queueMicrotask) ➔ Render ➔ Macrotasks (Timer/I/O).",
+    relatedSkills: ["javascript", "node.js"],
   },
   {
     id: "perf-core-web-vitals-inp",
@@ -145,8 +153,31 @@ console.log("5");`,
     correctIndex: 1,
     explanation: "INP (Interaction to Next Paint) hat FID offiziell als Core Web Vital abgelöst. Während FID nur die Verzögerung des ersten Klicks maß, bewertet INP die Zeit bis zum nächsten visuellen Frame für alle Interaktionen während des gesamten Besuchs.",
     keyTakeaway: "INP optimieren: Long Tasks aufteilen, React Transitions (`useTransition`) nutzen.",
+    relatedSkills: ["css", "performance", "architecture"],
   }
 ];
+
+/**
+ * Filtert Quiz-Fragen anhand einer Liste von Skill-/Technologie-Bezeichnern
+ * (z. B. aus der Skill-Gap-Matrix). Der Vergleich ist case-insensitive und
+ * toleriert Teilstring-Übereinstimmungen (z. B. "next.js" matcht "next").
+ */
+export function getQuestionsBySkills(
+  skills: string[],
+  questions: TechQuizQuestion[] = TECH_QUIZ_QUESTIONS
+): TechQuizQuestion[] {
+  const normalizedSkills = skills
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (normalizedSkills.length === 0) return [];
+
+  return questions.filter((q) =>
+    q.relatedSkills.some((related) =>
+      normalizedSkills.some((skill) => related.includes(skill) || skill.includes(related))
+    )
+  );
+}
 
 export type QuizEvaluationResult = {
   scorePct: number;
