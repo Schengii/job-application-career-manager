@@ -69,11 +69,28 @@ type WindowWithSpeechRecognition = Window & {
 export function VoiceInterviewRunner({ onFinish }: VoiceInterviewRunnerProps) {
   const toast = useToast();
 
-  // 5 Fragen für den Durchlauf auswählen
-  const [questions] = useState<InterviewQuestion[]>(() => {
+  // 5 Fragen für den Durchlauf auswählen. Initial bewusst NICHT zufällig
+  // gemischt (nur `slice(0, 5)` in fester Reihenfolge) — der Server- und der
+  // erste Client-Render müssen exakt übereinstimmen, sonst löst
+  // `Math.random()` hier einen React-Hydration-Mismatch für den gesamten
+  // Seitenbaum aus (dieser Runner steckt immer im DOM, auch bei geschlossenem
+  // Dialog, siehe MockInterviewModal), der den kompletten Baum client-seitig
+  // neu rendert und dabei jeden bereits gesetzten UI-State (z.B. aufgeklappte
+  // Fragen im Fragenkatalog) zurücksetzt. Die eigentliche Zufallsmischung
+  // erfolgt stattdessen NACH der Hydration im Effect direkt unten.
+  const [questions, setQuestions] = useState<InterviewQuestion[]>(() => INTERVIEW_QUESTIONS.slice(0, 5));
+
+  useEffect(() => {
     const pool = [...INTERVIEW_QUESTIONS];
-    return pool.sort(() => 0.5 - Math.random()).slice(0, 5);
-  });
+    // Bewusste Ausnahme von react-hooks/set-state-in-effect: Dies ist genau
+    // der empfohlene Weg, echten Zufall erst NACH der Hydration einzubringen
+    // (statt im Render/useState-Initializer, wo er den Server-/Client-Render
+    // auseinanderlaufen lässt, s. Kommentar am `questions`-State oben). Kein
+    // externes System wird synchronisiert, nur einmalig beim Mount gemischt.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQuestions(pool.sort(() => 0.5 - Math.random()).slice(0, 5));
+    // Nur beim ersten Mount mischen, nicht bei jedem Re-Render.
+  }, []);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
