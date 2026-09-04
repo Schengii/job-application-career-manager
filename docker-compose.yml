@@ -1,0 +1,41 @@
+# -----------------------------------------------------------------------------
+# docker-compose.yml — lokaler Self-Hosting-Betrieb außerhalb von Vercel
+# -----------------------------------------------------------------------------
+# Start: `docker compose up -d --build`, danach erreichbar unter
+# http://localhost:3000. Für den ersten Start Beispieldaten laden (optional):
+# `docker compose exec app npx prisma db seed`.
+#
+# Persistenz: `./prisma` (SQLite-Datenbank), `./public/uploads` (hochgeladene
+# Bewerbungsunterlagen) und `./backups` (automatische Sicherheitskopien vor
+# destruktiven Aktionen, siehe src/lib/serverBackupRotation.ts) werden als
+# Bind-Mounts vom Host eingehängt — Container-Neustarts/-Updates verlieren
+# damit keine Daten. Dieselben drei Pfade wie im lokalen Nicht-Docker-Betrieb
+# (README), nur eben explizit gemountet statt implizit im Projektverzeichnis.
+# -----------------------------------------------------------------------------
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "file:/app/prisma/dev.db"
+      # Siehe .env.example für alle optionalen Variablen (APP_PASSWORD,
+      # ENCRYPTION_KEY, VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY, OLLAMA_BASE_URL).
+      # Für Hosting außerhalb von localhost werden APP_PASSWORD sowie ein
+      # fest gesetzter ENCRYPTION_KEY dringend empfohlen (siehe README,
+      # Abschnitt "Sicherheit") — ohne festen ENCRYPTION_KEY/VAPID-Schlüssel
+      # erzeugt die App sie beim Start automatisch neu, sie überstehen dann
+      # aber keinen Container-Neuaufbau (nur einen reinen Neustart, da
+      # `./prisma`/`./public/uploads`/`./backups` gemountet sind, der
+      # restliche Container-Dateibaum — inkl. `.encryption-key`/
+      # `.vapid-keys.json` im Arbeitsverzeichnis — dagegen nicht).
+      APP_PASSWORD: "${APP_PASSWORD:-}"
+      ENCRYPTION_KEY: "${ENCRYPTION_KEY:-}"
+      VAPID_PUBLIC_KEY: "${VAPID_PUBLIC_KEY:-}"
+      VAPID_PRIVATE_KEY: "${VAPID_PRIVATE_KEY:-}"
+      OLLAMA_BASE_URL: "${OLLAMA_BASE_URL:-}"
+    volumes:
+      - ./prisma:/app/prisma
+      - ./public/uploads:/app/public/uploads
+      - ./backups:/app/backups
+    restart: unless-stopped

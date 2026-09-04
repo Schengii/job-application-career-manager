@@ -44,6 +44,11 @@ yarn-error.log*
 # src/lib/vapidKeys.ts. Darf niemals versioniert werden.
 /.vapid-keys.json
 
+# Lokal geführtes KI-Kosten-/Token-Nutzungsprotokoll (Einstellungen -> Profil
+# & Präferenzen). Siehe src/lib/aiUsageTracker.ts. Rein statistisch, nicht
+# versionieren.
+/.ai-usage.json
+
 # vercel
 .vercel
 
@@ -56,8 +61,12 @@ next-env.d.ts
 # SQLite-Datenbank (lokale Entwicklungsdaten, nicht versionieren)
 /prisma/dev.db
 /prisma/dev.db-journal
+/prisma/dev.db-wal
+/prisma/dev.db-shm
 /dev.db
 /dev.db-journal
+/dev.db-wal
+/dev.db-shm
 
 # SQLite-Testdatenbank (wird von vitest.global-setup.ts bei jedem Testlauf neu erzeugt)
 /prisma/test.db

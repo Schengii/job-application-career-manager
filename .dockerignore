@@ -1,0 +1,40 @@
+node_modules
+.next
+out
+build
+coverage
+playwright-report
+test-results
+blob-report
+
+.git
+.github
+
+*.md
+!README.md
+
+.env
+.env.*
+!.env.example
+
+.encryption-key
+.vapid-keys.json
+.ai-usage.json
+
+prisma/dev.db*
+prisma/test.db*
+prisma/e2e.db*
+
+# Hochgeladene Bewerbungsunterlagen & automatische Backups enthalten echte
+# persönliche Daten (Name, Adresse, Zeugnisse) — dürfen nie in den Docker-
+# Build-Context (und damit potenziell in ein Image-Layer) gelangen.
+public/uploads/*
+!public/uploads/.gitkeep
+backups
+
+src/generated/prisma
+*.tsbuildinfo
+next-env.d.ts
+
+.vscode
+.idea
