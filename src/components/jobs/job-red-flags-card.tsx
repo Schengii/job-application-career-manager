@@ -1,11 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import { AlertTriangle, CheckCircle2, ShieldAlert, Sparkles, HelpCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ShieldAlert, HelpCircle } from "lucide-react";
 import { analyzeJobRedFlags, type JobFlagsAnalysis } from "@/lib/jobRedFlags";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 
 export function JobRedFlagsCard({ text }: { text: string }) {
   const analysis: JobFlagsAnalysis = useMemo(() => analyzeJobRedFlags(text), [text]);

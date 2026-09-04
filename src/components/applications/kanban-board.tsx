@@ -8,7 +8,6 @@ import Link from "next/link";
 import { MoreVertical } from "lucide-react";
 import { APPLICATION_STATUSES } from "@/lib/constants";
 import { formatDate, cn } from "@/lib/utils";
-import { parseTags, getTagStyle } from "@/lib/tags";
 import { checkColumnWip, detectGhosting } from "@/lib/kanbanWip";
 import type { ApplicationListItem } from "@/types";
 

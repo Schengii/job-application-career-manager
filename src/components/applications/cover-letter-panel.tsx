@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------------
 import { useState, useMemo } from "react";
 import useSWR from "swr";
-import { Sparkles, Save, Send, Printer, Mail, FileDown, Columns, AlertTriangle, CheckCircle2, SplitSquareVertical } from "lucide-react";
+import { Sparkles, Save, Send, Printer, Mail, FileDown, Columns, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { apiPost, apiPatch, fetcher } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Textarea } from "@/components/ui/form";

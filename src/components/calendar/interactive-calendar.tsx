@@ -8,7 +8,6 @@ import {
   Calendar as CalendarIcon,
   Video,
   Clock,
-  Building2,
   ExternalLink,
   List,
   LayoutGrid,

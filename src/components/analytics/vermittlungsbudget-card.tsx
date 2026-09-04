@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import useSWR from "swr";
-import { Coins, Printer, Sparkles, Building2, HelpCircle } from "lucide-react";
+import { Coins, Printer, Sparkles } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

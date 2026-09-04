@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { Calendar as CalendarIcon, Download, Sparkles } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem } from "@/types";
 import { InteractiveCalendar } from "@/components/calendar/interactive-calendar";
