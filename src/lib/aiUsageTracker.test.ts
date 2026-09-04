@@ -2,15 +2,25 @@ import { describe, it, expect } from "vitest";
 import { estimateCostUsd, summarizeAiUsage, type AiUsageEntry } from "./aiUsageTracker";
 
 function entry(overrides: Partial<AiUsageEntry> = {}): AiUsageEntry {
-  return {
+  const base = {
     timestamp: "2026-01-01T00:00:00.000Z",
     provider: "openai",
     model: "gpt-4o-mini",
-    action: "POLISH_COVER_LETTER",
+    action: "POLISH_COVER_LETTER" as const,
     promptTokens: 1000,
     completionTokens: 500,
-    estimatedCostUsd: estimateCostUsd("openai", "gpt-4o-mini", 1000, 500),
-    ...overrides,
+  };
+  // `estimatedCostUsd` wird bewusst NACH dem Merge aus den (ggf.
+  // überschriebenen) provider/model/token-Feldern neu berechnet, statt einen
+  // festen Default zu übernehmen — sonst würde z.B. `entry({ promptTokens: 2000 })`
+  // weiterhin die Kosten für 1000 Tokens tragen.
+  const merged = { ...base, ...overrides };
+  return {
+    ...merged,
+    estimatedCostUsd:
+      overrides.estimatedCostUsd !== undefined
+        ? overrides.estimatedCostUsd
+        : estimateCostUsd(merged.provider, merged.model, merged.promptTokens, merged.completionTokens),
   };
 }
 
@@ -97,5 +107,49 @@ describe("summarizeAiUsage", () => {
     expect(summary.recentEntries.length).toBe(20);
     // Letzter erzeugter Eintrag (höchste Sekunde) muss zuerst stehen.
     expect(summary.recentEntries[0].timestamp).toBe("2026-01-01T00:00:24.000Z");
+  });
+
+  // Bewusst Zeitpunkte TIEF innerhalb des jeweiligen Monats (Tag 15, lokale
+  // Zeit via `new Date(Jahr, MonatIndex, Tag)`) statt Monatsgrenzen wie
+  // "31.03. 23:59 UTC" — Letzteres kippt je nach Zeitzone des Testrechners
+  // (z.B. CEST = UTC+2) in den Folgemonat, weil summarizeAiUsage bewusst
+  // lokale Zeit verwendet (passend zum "Kalendermonat aus Nutzersicht" einer
+  // Single-User-Lokal-App, analog zu src/lib/eigenbemuehungenReport.ts).
+  it("zählt nur Einträge des per referenceDate übergebenen Kalendermonats in die currentMonth-Felder", () => {
+    const referenceDate = new Date(2026, 2, 15); // März 2026
+    const entries = [
+      entry({ timestamp: new Date(2026, 2, 5).toISOString(), promptTokens: 1000, completionTokens: 1000 }),
+      entry({ timestamp: new Date(2026, 2, 25).toISOString(), promptTokens: 1000, completionTokens: 1000 }),
+      entry({ timestamp: new Date(2026, 1, 15).toISOString() }), // Vormonat (Februar) -> zählt nicht mit
+      entry({ timestamp: new Date(2026, 3, 15).toISOString() }), // Folgemonat (April) -> zählt nicht mit
+    ];
+
+    const summary = summarizeAiUsage(entries, referenceDate);
+
+    expect(summary.totalRequests).toBe(4);
+    expect(summary.currentMonthRequests).toBe(2);
+    // Nur die beiden März-Einträge fließen in die Monatskosten ein.
+    const marchCost =
+      estimateCostUsd("openai", "gpt-4o-mini", 1000, 1000)! + estimateCostUsd("openai", "gpt-4o-mini", 1000, 1000)!;
+    expect(summary.currentMonthEstimatedCostUsd).toBeCloseTo(marchCost, 5);
+  });
+
+  it("markiert currentMonthHasUnknownPricing unabhängig von Einträgen außerhalb des Monats", () => {
+    const referenceDate = new Date(2026, 2, 15); // März 2026
+    const entries = [
+      entry({
+        timestamp: new Date(2026, 2, 10).toISOString(),
+        provider: "openrouter",
+        model: "some/model",
+        estimatedCostUsd: null,
+      }),
+      entry({ timestamp: new Date(2026, 1, 10).toISOString(), provider: "openrouter", model: "some/model", estimatedCostUsd: null }),
+    ];
+
+    const summary = summarizeAiUsage(entries, referenceDate);
+
+    expect(summary.currentMonthRequests).toBe(1);
+    expect(summary.currentMonthHasUnknownPricing).toBe(true);
+    expect(summary.currentMonthEstimatedCostUsd).toBe(0);
   });
 });

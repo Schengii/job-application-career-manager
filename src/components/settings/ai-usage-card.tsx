@@ -6,13 +6,17 @@
 // Zeigt, wie viel der in der PreferencesForm hinterlegte KI-API-Key (OpenAI/
 // Anthropic/Ollama) tatsächlich verbraucht — siehe src/lib/aiUsageTracker.ts.
 // -----------------------------------------------------------------------------
+import { useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
-import { Coins, Trash2, AlertTriangle } from "lucide-react";
+import { Coins, Trash2, AlertTriangle, Wallet } from "lucide-react";
 import { fetcher, apiDelete } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/form";
+import { cn } from "@/lib/utils";
 import type { AiUsageSummary } from "@/lib/aiUsageTracker";
+import { getAiMonthlyBudgetUsd, setAiMonthlyBudgetUsd } from "@/lib/aiBudget";
 
 const PROVIDER_LABELS: Record<string, string> = {
   openai: "OpenAI",
@@ -38,6 +42,21 @@ export function AiUsageCard() {
   const { mutate } = useSWRConfig();
   const toast = useToast();
 
+  // Lazy-Initializer statt useEffect (analog zu `getSavedFilters()` in
+  // saved-filters-bar.tsx) — localStorage ist client-only, ein SSR-Vorrendern
+  // liefert hier ohnehin immer "" (kein funktionaler Unterschied, da das
+  // Limit reine UI-Warnschwelle ist, keine sicherheitsrelevante Sperre).
+  const [budgetInput, setBudgetInput] = useState(() => {
+    const stored = getAiMonthlyBudgetUsd();
+    return stored !== null ? String(stored) : "";
+  });
+
+  function handleBudgetChange(raw: string) {
+    setBudgetInput(raw);
+    const parsed = Number(raw);
+    setAiMonthlyBudgetUsd(raw.trim() === "" || !Number.isFinite(parsed) ? null : parsed);
+  }
+
   async function handleReset() {
     if (!confirm("Die gesamte KI-Nutzungsstatistik wirklich zurücksetzen? Das kann nicht rückgängig gemacht werden.")) return;
     try {
@@ -48,6 +67,12 @@ export function AiUsageCard() {
       toast.error("Zurücksetzen fehlgeschlagen.");
     }
   }
+
+  const monthlyBudget = getAiMonthlyBudgetUsd();
+  const monthlyBudgetRatio =
+    monthlyBudget && usage ? usage.currentMonthEstimatedCostUsd / monthlyBudget : null;
+  const monthlyBudgetExceeded = monthlyBudgetRatio !== null && monthlyBudgetRatio >= 1;
+  const monthlyBudgetNear = monthlyBudgetRatio !== null && monthlyBudgetRatio >= 0.8 && !monthlyBudgetExceeded;
 
   return (
     <Card>
@@ -68,6 +93,45 @@ export function AiUsageCard() {
           Einleitungssatz-Generierung) seit der letzten Zurücksetzung — mit einer GESCHÄTZTEN Kostenangabe auf
           Basis öffentlicher Listenpreise. Keine Garantie für die tatsächliche Abrechnung des jeweiligen Providers.
         </p>
+
+        {/* Monatliches Kostenlimit (Warnschwelle, keine harte Sperre) */}
+        <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface p-3">
+          <div className="min-w-[12rem]">
+            <label htmlFor="ai-monthly-budget" className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-foreground">
+              <Wallet className="h-3.5 w-3.5 text-primary" /> Monatliches Kostenlimit (USD, optional)
+            </label>
+            <Input
+              id="ai-monthly-budget"
+              type="number"
+              min={0}
+              step={0.5}
+              placeholder="z. B. 10"
+              value={budgetInput}
+              onChange={(e) => handleBudgetChange(e.target.value)}
+              className="h-9 w-32 text-xs"
+            />
+          </div>
+          {usage && monthlyBudget && (
+            <p
+              className={cn(
+                "text-xs font-medium",
+                monthlyBudgetExceeded
+                  ? "text-rose-500"
+                  : monthlyBudgetNear
+                  ? "text-amber-600 dark:text-amber-400"
+                  : "text-muted-foreground"
+              )}
+            >
+              Diesen Monat bisher {formatUsd(usage.currentMonthEstimatedCostUsd)} von {formatUsd(monthlyBudget)}
+              {monthlyBudgetExceeded && " — Limit erreicht/überschritten"}
+              {monthlyBudgetNear && " — nähert sich dem Limit"}
+            </p>
+          )}
+          <p className="w-full text-[11px] text-muted-foreground">
+            Nur eine Warnanzeige — KI-Funktionen werden bei Erreichen NICHT gesperrt. Nur lokal in diesem Browser
+            gespeichert (nicht Teil eines Backup-Exports).
+          </p>
+        </div>
 
         {isLoading && <p className="text-xs text-muted-foreground">Lade Statistik …</p>}
 

@@ -44,6 +44,10 @@ export type AiUsageSummary = {
   byProvider: Record<string, { requests: number; totalTokens: number; estimatedCostUsd: number }>;
   /** Neueste zuerst, auf MAX_RECENT_ENTRIES begrenzt (Tabelle in der Einstellungen-UI). */
   recentEntries: AiUsageEntry[];
+  /** Requests/Kosten NUR des laufenden Kalendermonats — Basis für das optionale Budget-Limit (s. src/lib/aiBudget.ts). */
+  currentMonthRequests: number;
+  currentMonthEstimatedCostUsd: number;
+  currentMonthHasUnknownPricing: boolean;
 };
 
 const USAGE_FILE_PATH = path.join(process.cwd(), ".ai-usage.json");
@@ -132,12 +136,18 @@ export function recordAiUsage(entry: Omit<AiUsageEntry, "timestamp" | "estimated
  * hält die eigentliche Aggregationslogik dateisystemfrei und damit ohne
  * Mocking testbar; `getAiUsageSummary()` unten ist der dünne I/O-Wrapper.
  */
-export function summarizeAiUsage(entries: AiUsageEntry[]): AiUsageSummary {
+export function summarizeAiUsage(entries: AiUsageEntry[], referenceDate: Date = new Date()): AiUsageSummary {
   const byProvider: AiUsageSummary["byProvider"] = {};
   let totalPromptTokens = 0;
   let totalCompletionTokens = 0;
   let totalEstimatedCostUsd = 0;
   let hasUnknownPricing = false;
+
+  const currentYear = referenceDate.getFullYear();
+  const currentMonth = referenceDate.getMonth();
+  let currentMonthRequests = 0;
+  let currentMonthEstimatedCostUsd = 0;
+  let currentMonthHasUnknownPricing = false;
 
   for (const entry of entries) {
     totalPromptTokens += entry.promptTokens;
@@ -153,6 +163,16 @@ export function summarizeAiUsage(entries: AiUsageEntry[]): AiUsageSummary {
     bucket.totalTokens += entry.promptTokens + entry.completionTokens;
     bucket.estimatedCostUsd += entry.estimatedCostUsd ?? 0;
     byProvider[entry.provider] = bucket;
+
+    const entryDate = new Date(entry.timestamp);
+    if (entryDate.getFullYear() === currentYear && entryDate.getMonth() === currentMonth) {
+      currentMonthRequests += 1;
+      if (entry.estimatedCostUsd === null) {
+        currentMonthHasUnknownPricing = true;
+      } else {
+        currentMonthEstimatedCostUsd += entry.estimatedCostUsd;
+      }
+    }
   }
 
   return {
@@ -164,6 +184,9 @@ export function summarizeAiUsage(entries: AiUsageEntry[]): AiUsageSummary {
     hasUnknownPricing,
     byProvider,
     recentEntries: [...entries].reverse().slice(0, MAX_RECENT_ENTRIES),
+    currentMonthRequests,
+    currentMonthEstimatedCostUsd,
+    currentMonthHasUnknownPricing,
   };
 }
 
