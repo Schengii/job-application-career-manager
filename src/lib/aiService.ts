@@ -11,6 +11,7 @@
 // -----------------------------------------------------------------------------
 import { evaluateInterviewAnswer } from "./mockInterviewEngine";
 import { INTERVIEW_QUESTIONS } from "./interviewGuide";
+import { recordAiUsage, type AiUsageAction } from "./aiUsageTracker";
 
 export type AiProvider = "openai" | "anthropic" | "openrouter" | "ollama";
 
@@ -54,7 +55,7 @@ export type EvaluateInterviewAnswerResult = {
   modelUsed: string;
 };
 
-type ChatCompletion = { content: string; modelUsed: string } | null;
+type ChatCompletion = { content: string; modelUsed: string; promptTokens: number; completionTokens: number } | null;
 
 const REQUEST_TIMEOUT_MS = 20_000;
 const OLLAMA_TIMEOUT_MS = 30_000; // lokale Modelle können deutlich langsamer antworten als Cloud-APIs
@@ -96,7 +97,14 @@ async function callOpenAiCompatible(
   const data = await response.json();
   const content = data.choices?.[0]?.message?.content?.trim();
   if (!content) return null;
-  return { content, modelUsed: selectedModel };
+  return {
+    content,
+    modelUsed: selectedModel,
+    // `usage` fehlt bei manchen OpenRouter-Modellen/Proxys — 0 statt undefined,
+    // damit das Kosten-Tracking (src/lib/aiUsageTracker.ts) nicht mit NaN rechnet.
+    promptTokens: data.usage?.prompt_tokens ?? 0,
+    completionTokens: data.usage?.completion_tokens ?? 0,
+  };
 }
 
 /** Ruft die Anthropic Messages API auf (eigenes Request-/Response-Schema, nicht OpenAI-kompatibel). */
@@ -126,7 +134,12 @@ async function callAnthropic(
   const data = await response.json();
   const content = data.content?.[0]?.text?.trim();
   if (!content) return null;
-  return { content, modelUsed: selectedModel };
+  return {
+    content,
+    modelUsed: selectedModel,
+    promptTokens: data.usage?.input_tokens ?? 0,
+    completionTokens: data.usage?.output_tokens ?? 0,
+  };
 }
 
 /**
@@ -158,7 +171,15 @@ async function callOllama(
   const data = await response.json();
   const content = data.message?.content?.trim();
   if (!content) return null;
-  return { content, modelUsed: `${selectedModel} (Ollama, lokal)` };
+  return {
+    content,
+    modelUsed: `${selectedModel} (Ollama, lokal)`,
+    // Ollama liefert bei stream:false `prompt_eval_count`/`eval_count` statt
+    // eines `usage`-Objekts — kostet ohnehin immer 0 (s. estimateCostUsd),
+    // dient hier nur der Token-Statistik.
+    promptTokens: data.prompt_eval_count ?? 0,
+    completionTokens: data.eval_count ?? 0,
+  };
 }
 
 /**
@@ -167,6 +188,11 @@ async function callOllama(
  * Gibt `null` zurück, wenn kein Provider konfiguriert/erreichbar ist oder der
  * Request fehlschlägt — der Aufrufer fällt dann auf die Offline-Heuristik
  * zurück, statt den Fehler nach außen zu werfen.
+ *
+ * Protokolliert bei Erfolg zentral den Token-/Kostenverbrauch (s.
+ * src/lib/aiUsageTracker.ts, angezeigt in Einstellungen -> Profil &
+ * Präferenzen) — an EINER Stelle statt in jeder der drei aufrufenden
+ * Funktionen einzeln, damit kein Aufrufer versehentlich vergessen wird.
  */
 async function getAiCompletion(params: {
   provider?: AiProvider | string | null;
@@ -174,25 +200,35 @@ async function getAiCompletion(params: {
   model?: string | null;
   prompt: string;
   jsonMode?: boolean;
+  action: AiUsageAction;
 }): Promise<ChatCompletion> {
-  const { provider, apiKey, model, prompt, jsonMode = false } = params;
+  const { provider, apiKey, model, prompt, jsonMode = false, action } = params;
   const trimmedKey = apiKey?.trim();
 
   try {
+    let completion: ChatCompletion = null;
     if (provider === "ollama") {
-      return await callOllama(model, prompt, jsonMode);
+      completion = await callOllama(model, prompt, jsonMode);
+    } else if (trimmedKey && (provider === "openai" || provider === "openrouter")) {
+      completion = await callOpenAiCompatible(provider, trimmedKey, model, prompt, jsonMode);
+    } else if (trimmedKey && provider === "anthropic") {
+      completion = await callAnthropic(trimmedKey, model, prompt);
     }
-    if (!trimmedKey) return null; // openai/anthropic/openrouter benötigen einen Key
-    if (provider === "openai" || provider === "openrouter") {
-      return await callOpenAiCompatible(provider, trimmedKey, model, prompt, jsonMode);
+
+    if (completion) {
+      recordAiUsage({
+        provider: provider ?? "unbekannt",
+        model: completion.modelUsed,
+        action,
+        promptTokens: completion.promptTokens,
+        completionTokens: completion.completionTokens,
+      });
     }
-    if (provider === "anthropic") {
-      return await callAnthropic(trimmedKey, model, prompt);
-    }
+    return completion;
   } catch (err) {
     console.warn(`AI-Request (${provider ?? "unbekannt"}) fehlgeschlagen, nutze Heuristik-Fallback:`, err);
+    return null;
   }
-  return null;
 }
 
 export async function polishCoverLetterWithAI(
@@ -214,7 +250,7 @@ Regeln:
 Original-Anschreiben:
 ${coverLetter}`;
 
-  const completion = await getAiCompletion({ provider, apiKey, model, prompt });
+  const completion = await getAiCompletion({ provider, apiKey, model, prompt, action: "POLISH_COVER_LETTER" });
   if (completion) {
     return {
       polishedContent: completion.content,
@@ -334,7 +370,7 @@ Regeln:
 3. Vermeide ausgelutschte Floskeln wie "hiermit bewerbe ich mich" oder "mit großem Interesse habe ich Ihre Stellenanzeige gelesen".
 4. Maximal 35 Wörter, ein einzelner Satz.`;
 
-  const completion = await getAiCompletion({ provider, apiKey, model, prompt });
+  const completion = await getAiCompletion({ provider, apiKey, model, prompt, action: "GENERATE_OPENING_SENTENCE" });
   if (!completion) {
     return { sentence: "", usedAi: false, modelUsed: "Lokale Heuristik (Offline)" };
   }
@@ -372,7 +408,14 @@ Antworte ausschließlich im folgenden JSON-Format:
   }
 }`;
 
-  const completion = await getAiCompletion({ provider, apiKey, model, prompt, jsonMode: true });
+  const completion = await getAiCompletion({
+    provider,
+    apiKey,
+    model,
+    prompt,
+    jsonMode: true,
+    action: "EVALUATE_INTERVIEW_ANSWER",
+  });
   if (completion) {
     try {
       // Manche Provider (v.a. lokale Ollama-Modelle) liefern trotz

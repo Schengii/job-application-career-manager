@@ -17,6 +17,7 @@ import { BrowserExtensionCard } from "@/components/settings/browser-extension-ca
 import { PushNotificationsCard } from "@/components/settings/push-notifications-card";
 import { BackgroundSchedulerCard } from "@/components/settings/background-scheduler-card";
 import { CoverLetterSnippetsCard } from "@/components/settings/cover-letter-snippets-card";
+import { AiUsageCard } from "@/components/settings/ai-usage-card";
 import { SystemHealthCard } from "@/components/settings/system-health-card";
 
 const TABS = [
@@ -76,6 +77,7 @@ export default function SettingsPage() {
                   <PreferencesForm preferences={preferences} />
                 </CardContent>
               </Card>
+              <AiUsageCard />
               <MatchingWeightsCard />
               <CoverLetterSnippetsCard />
             </div>
