@@ -60,3 +60,7 @@ export function getVapidKeys(): VapidKeyPair {
   cachedKeys = loadOrCreateLocalKeys();
   return cachedKeys;
 }
+
+export function getVapidPublicKey(): string {
+  return getVapidKeys().publicKey;
+}

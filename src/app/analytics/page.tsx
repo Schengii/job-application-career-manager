@@ -21,6 +21,7 @@ import { TotalCompensationCard } from "@/components/analytics/total-compensation
 import { RoiTrackerCard } from "@/components/analytics/roi-tracker-card";
 import { CurrencyRelocationCalculator } from "@/components/analytics/currency-relocation-calculator";
 import { SkillRoadmapTracker } from "@/components/analytics/skill-roadmap-tracker";
+import { VermittlungsbudgetCard } from "@/components/analytics/vermittlungsbudget-card";
 
 type Analytics = {
   statusDistribution: { status: string; label: string; color: string; count: number }[];
@@ -113,6 +114,8 @@ export default function AnalyticsPage() {
               icon={TrendingUp}
             />
           </div>
+
+          <VermittlungsbudgetCard />
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Conversion Funnel */}

@@ -13,6 +13,7 @@ import {
   Mic,
   Printer,
   Target,
+  Star,
 } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import { ApplicationListItem } from "@/types";
@@ -31,6 +32,7 @@ import { TechQuizSimulator } from "@/components/interview/tech-quiz-simulator";
 import { CodingChallengeCanvas } from "@/components/interview/coding-challenge-canvas";
 import { QuestionNoteEditor } from "@/components/interview/question-note-editor";
 import { AudioInterviewRecorder } from "@/components/interview/audio-interview-recorder";
+import { StarAuditModal } from "@/components/interview/star-audit-modal";
 import { generateInterviewCheatsheetHtml } from "@/lib/interviewCheatsheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SkillGapAnalysisResult } from "@/lib/skillGapAnalyzer";
@@ -70,6 +72,9 @@ export default function InterviewPrepPage() {
 
   const [mockInterviewOpen, setMockInterviewOpen] = useState(false);
   const [voiceSimulatorOpen, setVoiceSimulatorOpen] = useState(false);
+  const [starAuditOpen, setStarAuditOpen] = useState(false);
+  const [starAuditQuestion, setStarAuditQuestion] = useState("");
+  const [starAuditAnswer, setStarAuditAnswer] = useState("");
   const [activeTab, setActiveTab] = useState<PrepTab>("questions");
   const [quizSkillFocus, setQuizSkillFocus] = useState<string[] | undefined>(undefined);
 
@@ -269,18 +274,35 @@ export default function InterviewPrepPage() {
                   <p className="text-xs font-semibold text-primary uppercase tracking-wider">
                     Vorbereitung auf eine konkrete Stelle:
                   </p>
-                  <Select
-                    value={selectedAppId}
-                    onChange={(e) => setSelectedAppId(e.target.value)}
-                    className="mt-1 h-8 text-xs font-medium w-auto"
-                  >
-                    <option value="">Allgemeine Vorbereitung (Alle Fragen)</option>
-                    {applications?.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.company.name} – {a.position}
-                      </option>
-                    ))}
-                  </Select>
+                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                    <Select
+                      value={selectedAppId}
+                      onChange={(e) => setSelectedAppId(e.target.value)}
+                      className="h-8 text-xs font-medium w-auto"
+                    >
+                      <option value="">Allgemeine Vorbereitung (Alle Fragen)</option>
+                      {applications?.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.company.name} – {a.position}
+                        </option>
+                      ))}
+                    </Select>
+                    {selectedApp && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const stack = selectedApp.jobPosting?.techStack || selectedApp.position;
+                          const skills = stack.split(/[,/ ]+/).map((s) => s.trim()).filter(Boolean);
+                          setQuizSkillFocus(skills);
+                          setActiveTab("tech_quiz");
+                        }}
+                        className="h-8 text-xs border-primary/30 text-primary hover:bg-primary-soft font-semibold"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 mr-1" /> Stellen-Quiz ({selectedApp.company.name})
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -426,6 +448,21 @@ export default function InterviewPrepPage() {
                         <div className="space-y-3 pt-1">
                           <QuestionNoteEditor questionId={q.id} />
                           <AudioInterviewRecorder questionTitle={q.question} />
+                          <div className="flex justify-end pt-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                const saved = typeof window !== "undefined" ? localStorage.getItem(`career_prep_note_${q.id}`) || "" : "";
+                                setStarAuditQuestion(q.question);
+                                setStarAuditAnswer(saved || q.answerSummary);
+                                setStarAuditOpen(true);
+                              }}
+                              className="h-7 text-xs border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+                            >
+                              <Star className="h-3 w-3 mr-1 text-amber-500 fill-amber-500/20" /> STAR-Methoden-Audit
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -436,6 +473,13 @@ export default function InterviewPrepPage() {
           </div>
         </>
       )}
+
+      <StarAuditModal
+        open={starAuditOpen}
+        onClose={() => setStarAuditOpen(false)}
+        question={starAuditQuestion}
+        answer={starAuditAnswer}
+      />
 
       <MockInterviewModal
         open={mockInterviewOpen}

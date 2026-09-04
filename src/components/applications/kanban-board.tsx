@@ -8,6 +8,8 @@ import Link from "next/link";
 import { MoreVertical } from "lucide-react";
 import { APPLICATION_STATUSES } from "@/lib/constants";
 import { formatDate, cn } from "@/lib/utils";
+import { parseTags, getTagStyle } from "@/lib/tags";
+import { checkColumnWip, detectGhosting } from "@/lib/kanbanWip";
 import type { ApplicationListItem } from "@/types";
 
 const COLUMN_COLORS: Record<string, { header: string; dot: string; cardBorder: string }> = {
@@ -148,6 +150,7 @@ export function KanbanBoard({
       {APPLICATION_STATUSES.map((col) => {
         const items = applications.filter((a) => a.status === col.value);
         const colStyle = COLUMN_COLORS[col.value] || COLUMN_COLORS.DRAFT;
+        const wip = checkColumnWip(col.value, items.length);
 
         return (
           <div
@@ -175,14 +178,22 @@ export function KanbanBoard({
                 <span className={cn("h-2.5 w-2.5 rounded-full", colStyle.dot)} />
                 <span className="text-xs font-bold uppercase tracking-wider">{col.label}</span>
               </div>
-              <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-bold text-foreground shadow-2xs">
-                {items.length}
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[11px] font-bold shadow-2xs transition-colors",
+                  wip.isOverloaded ? "bg-rose-500 text-white" : "bg-surface text-foreground"
+                )}
+                title={wip.isOverloaded ? `WIP-Limit überschritten (Empfohlen: max. ${wip.limit})` : undefined}
+              >
+                {wip.label}
               </span>
             </div>
 
             {/* Karten-Liste */}
             <div className="flex min-h-[140px] flex-col gap-2.5 p-2.5">
-              {items.map((app) => (
+              {items.map((app) => {
+                const ghosting = detectGhosting(app);
+                return (
                 <div key={app.id} className="relative">
                   <Link
                     href={`/applications/${app.id}`}
@@ -201,10 +212,18 @@ export function KanbanBoard({
                     <p className="truncate text-sm font-semibold text-foreground">{app.company.name}</p>
                     <p className="truncate text-xs text-muted-foreground mt-0.5">{app.position}</p>
 
-                    {/* Sub-Status / Phase Badges */}
-                    {app.tags && (
-                      <div className="mt-1.5 flex flex-wrap gap-1">
-                        {app.tags.split(",").slice(0, 2).map((t) => (
+                    {/* Sub-Status / Phase Badges & Ghosting */}
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {ghosting.isGhosting && (
+                        <span
+                          className="rounded bg-rose-500/15 border border-rose-500/30 px-1.5 py-0.2 text-[9.5px] font-bold text-rose-600 dark:text-rose-400"
+                          title={ghosting.label}
+                        >
+                          ⚠️ Inaktiv ({ghosting.daysSinceApplication}d)
+                        </span>
+                      )}
+                      {app.tags &&
+                        app.tags.split(",").slice(0, 2).map((t) => (
                           <span
                             key={t}
                             className="rounded bg-primary/10 px-1.5 py-0.5 text-[9.5px] font-semibold text-primary"
@@ -212,8 +231,7 @@ export function KanbanBoard({
                             #{t.trim()}
                           </span>
                         ))}
-                      </div>
-                    )}
+                    </div>
 
                     <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground border-t border-border/40 pt-1.5">
                       <span>{formatDate(app.applicationDate)}</span>
@@ -232,7 +250,8 @@ export function KanbanBoard({
                   </Link>
                   <StatusMoveMenu app={app} onMove={(status, label) => handleMove(app, status, label)} />
                 </div>
-              ))}
+              );
+            })}
               {items.length === 0 && (
                 <p className="py-6 text-center text-xs text-muted-foreground/60">
                   Keine Bewerbungen

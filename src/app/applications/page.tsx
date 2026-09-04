@@ -16,6 +16,7 @@ import {
   SlidersHorizontal,
   X,
   Video,
+  FileText,
 } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem } from "@/types";
@@ -35,6 +36,7 @@ import { ExcelGridTable } from "@/components/excel/excel-grid-table";
 import { ExcelImportModal } from "@/components/excel/excel-import-modal";
 import { BatchActionBar } from "@/components/applications/batch-action-bar";
 import { SavedFiltersBar } from "@/components/applications/saved-filters-bar";
+import { EigenbemuehungenModal } from "@/components/applications/eigenbemuehungen-modal";
 import type { SavedFilterValues } from "@/lib/savedFilters";
 import { parseTags, getTagStyle } from "@/lib/tags";
 
@@ -62,6 +64,7 @@ export default function ApplicationsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [eigenbemuehungenOpen, setEigenbemuehungenOpen] = useState(false);
   const [view, setView] = useState<ViewMode>("table");
 
   // Server-seitige Pagination NUR für die Tabellenansicht (siehe
@@ -279,6 +282,9 @@ export default function ApplicationsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setEigenbemuehungenOpen(true)} className="card-hover-effect">
+            <FileText className="h-4 w-4 text-primary" /> Nachweis Arbeitsamt (§ 38)
+          </Button>
           <Button variant="outline" onClick={() => setImportModalOpen(true)} className="card-hover-effect">
             <Upload className="h-4 w-4" /> Import (.xlsx/.csv)
           </Button>
@@ -630,6 +636,11 @@ export default function ApplicationsPage() {
           mutate("/api/applications");
           mutate("/api/metrics");
         }}
+      />
+      <EigenbemuehungenModal
+        open={eigenbemuehungenOpen}
+        onClose={() => setEigenbemuehungenOpen(false)}
+        applications={applications ?? []}
       />
     </div>
   );

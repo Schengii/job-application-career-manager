@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Briefcase, Building2, Search, Settings, Menu, X, BarChart3, GraduationCap, FileText, FileSpreadsheet, Keyboard, Inbox } from "lucide-react";
+import { LayoutDashboard, Briefcase, Calendar, Building2, Search, Settings, Menu, X, BarChart3, GraduationCap, FileText, FileSpreadsheet, Keyboard, Inbox } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -11,6 +11,7 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/applications", label: "Bewerbungen", icon: Briefcase },
+  { href: "/calendar", label: "Kalender", icon: Calendar },
   { href: "/inbox", label: "Antworten-Inbox", icon: Inbox },
   { href: "/excel-view", label: "Excel-Tabelle", icon: FileSpreadsheet },
   { href: "/companies", label: "Unternehmen", icon: Building2 },

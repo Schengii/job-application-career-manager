@@ -27,6 +27,7 @@ import {
   Globe2,
   Network,
   Inbox,
+  Calendar,
 } from "lucide-react";
 import { fetcher } from "@/lib/api";
 import type { ApplicationListItem, CompanyWithCounts, JobPostingWithCompany } from "@/types";
@@ -87,6 +88,7 @@ export function CommandPalette() {
   const allResults: ResultItem[] = useMemo(() => {
     const actionResults: ResultItem[] = [
       { id: "act-new-app", group: "Aktionen", icon: PlusCircle, title: "Neue Bewerbung anlegen", subtitle: "Kanban & Trichter öffnen", href: "/applications" },
+      { id: "act-calendar", group: "Aktionen", icon: Calendar, title: "Interview- & Terminkalender", subtitle: "Gespräche & Abgabefristen einsehen", href: "/calendar" },
       { id: "act-quiz", group: "Aktionen", icon: Zap, title: "Tech- & Coding-Quiz starten", subtitle: "React 19, TS & Web Performance trainieren", href: "/interview-prep" },
       { id: "act-voice", group: "Aktionen", icon: Mic, title: "Voice-Interview Simulator", subtitle: "Gespräch mit Audio-Dialog üben", href: "/interview-prep" },
       { id: "act-cv", group: "Aktionen", icon: FileText, title: "CV & ATS-Score prüfen", subtitle: "Lebenslauf optimieren & drucken", href: "/cv-designer" },

@@ -17,8 +17,19 @@ function createPrismaClient() {
   // better-sqlite3 erwartet einen Dateipfad, kein "file:"-URI-Präfix.
   const rawUrl = process.env.DATABASE_URL ?? "file:./dev.db";
   const filePath = rawUrl.startsWith("file:") ? rawUrl.slice(5) : rawUrl;
-  const adapter = new PrismaBetterSqlite3({ url: filePath });
-  return new PrismaClient({ adapter });
+  const adapter = new PrismaBetterSqlite3({ url: filePath, timeout: 5000 });
+  const client = new PrismaClient({ adapter });
+
+  if (filePath !== ":memory:") {
+    try {
+      client.$executeRawUnsafe("PRAGMA journal_mode = WAL;").catch(() => {});
+      client.$executeRawUnsafe("PRAGMA synchronous = NORMAL;").catch(() => {});
+    } catch {
+      // Ignorieren bei isolierten Test-Umgebungen
+    }
+  }
+
+  return client;
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();

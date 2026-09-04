@@ -37,6 +37,7 @@ import { CommuteRadarCard } from "@/components/jobs/commute-radar-card";
 import { JobDismissModal } from "@/components/jobs/job-dismiss-modal";
 import { LiveJobSearchModal } from "@/components/jobs/live-job-search-modal";
 import { UrlJobScraperCard } from "@/components/jobs/url-job-scraper-card";
+import { JobRedFlagsCard } from "@/components/jobs/job-red-flags-card";
 import { Globe2 } from "lucide-react";
 
 function matchColor(score: number) {
@@ -501,6 +502,8 @@ export default function JobsPage() {
                   ))}
                 </div>
               )}
+
+              <JobRedFlagsCard text={`${job.description} ${job.requirementsProfile ?? ""} ${job.salaryInfo ?? ""}`} />
             </div>
 
             {/* Aktionen Footer */}

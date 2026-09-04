@@ -3,9 +3,9 @@
 // -----------------------------------------------------------------------------
 // Anschreiben-Panel: feste Vorlage, DIN 5008 Druck & Nachfass-Generator
 // -----------------------------------------------------------------------------
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import useSWR from "swr";
-import { Sparkles, Save, Send, Printer, Mail } from "lucide-react";
+import { Sparkles, Save, Send, Printer, Mail, FileDown, Columns, AlertTriangle, CheckCircle2, SplitSquareVertical } from "lucide-react";
 import { apiPost, apiPatch, fetcher } from "@/lib/api";
 import { useToast } from "@/components/ui/toast";
 import { Textarea } from "@/components/ui/form";
@@ -17,6 +17,9 @@ import { FollowUpEmailModal } from "./follow-up-email-modal";
 import { CoverLetterKeywordBooster } from "./cover-letter-keyword-booster";
 import { RequirementTailoringWidget } from "./requirement-tailoring-widget";
 import { CoverLetterSnippetPicker } from "./cover-letter-snippet-picker";
+import { calculateDin5008Metrics } from "@/lib/din5008Guard";
+import { generateEmlString, downloadEmlFile } from "@/lib/emlExport";
+import { cn } from "@/lib/utils";
 
 export function CoverLetterPanel({
   application,
@@ -28,7 +31,7 @@ export function CoverLetterPanel({
   const toast = useToast();
   // Nur für den eigenen Namen im Betreff des "Als E-Mail öffnen"-Buttons
   // (handleOpenMailClient) benötigt.
-  const { data: preferences } = useSWR<{ fullName: string | null }>("/api/preferences", fetcher);
+  const { data: preferences } = useSWR<{ fullName: string | null; email?: string | null }>("/api/preferences", fetcher);
 
   const [content, setContent] = useState(application.coverLetter?.content ?? "");
   const [generating, setGenerating] = useState(false);
@@ -40,6 +43,42 @@ export function CoverLetterPanel({
   const coverLetter = application.coverLetter;
 
   const [polishing, setPolishing] = useState(false);
+  const [activeVariant, setActiveVariant] = useState<"A" | "B">("A");
+  const [splitScreen, setSplitScreen] = useState(false);
+
+  const din5008Metrics = useMemo(() => calculateDin5008Metrics(content), [content]);
+
+  function switchVariant(variant: "A" | "B") {
+    if (variant === activeVariant) return;
+    if (variant === "B") {
+      localStorage.setItem(`cl_variant_a_${application.id}`, content);
+      const savedB = localStorage.getItem(`cl_variant_b_${application.id}`) || "";
+      setContent(savedB);
+      setActiveVariant("B");
+      toast.info("Zu Entwurf B (Alternativer Pitch) gewechselt.");
+    } else {
+      localStorage.setItem(`cl_variant_b_${application.id}`, content);
+      const savedA = localStorage.getItem(`cl_variant_a_${application.id}`) || application.coverLetter?.content || "";
+      setContent(savedA);
+      setActiveVariant("A");
+      toast.info("Zu Entwurf A (Hauptentwurf) gewechselt.");
+    }
+  }
+
+  function handleExportEml() {
+    if (!content) return;
+    const recipient = application.company?.contactEmail || "";
+    const subject = `Bewerbung als ${application.position} - ${preferences?.fullName ?? "Bewerber"}`;
+    const emlContent = generateEmlString({
+      to: recipient,
+      from: preferences?.email || null,
+      subject,
+      body: content,
+    });
+    const filename = `bewerbung-${application.company.name.toLowerCase().replace(/[^a-z0-9]/g, "-")}.eml`;
+    downloadEmlFile(filename, emlContent);
+    toast.success(".eml Datei heruntergeladen! Mit 1 Klick in Outlook / Thunderbird öffnen.");
+  }
 
   async function handleAiPolish() {
     if (!content) return;
@@ -202,9 +241,55 @@ export function CoverLetterPanel({
                 <Send className="h-3.5 w-3.5" />
                 Als {coverLetter.status === "DRAFT" ? "gesendet" : "Entwurf"} markieren
               </Button>
+
+              {/* A/B Varianten-Umschalter */}
+              <div className="flex items-center rounded-lg border border-border bg-surface p-0.5 ml-2">
+                <button
+                  type="button"
+                  onClick={() => switchVariant("A")}
+                  className={cn(
+                    "px-2 py-0.5 text-xs font-semibold rounded-md transition-colors",
+                    activeVariant === "A" ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Entwurf A
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchVariant("B")}
+                  className={cn(
+                    "px-2 py-0.5 text-xs font-semibold rounded-md transition-colors",
+                    activeVariant === "B" ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Entwurf B (Alt)
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setSplitScreen(!splitScreen)}
+                className={cn("text-xs", splitScreen && "bg-primary-soft text-primary font-semibold border-primary/40")}
+                title="Split-Screen DIN 5008 Live-Vorschau an-/ausschalten"
+              >
+                <Columns className="h-3.5 w-3.5" /> Split-View
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleExportEml}
+                title="Als .eml Datei herunterladen (direkt in Outlook/Thunderbird öffnen)"
+                className="text-xs card-hover-effect"
+              >
+                <FileDown className="h-3.5 w-3.5 text-emerald-500" /> .eml Datei
+              </Button>
+
               <Button
                 type="button"
                 variant="outline"
@@ -213,7 +298,7 @@ export function CoverLetterPanel({
                 title="In deinem Standard-E-Mail-Programm (Outlook, Thunderbird, Mail-App) öffnen"
                 className="text-xs card-hover-effect"
               >
-                <Mail className="h-3.5 w-3.5 text-sky-500" /> Als E-Mail öffnen
+                <Mail className="h-3.5 w-3.5 text-sky-500" /> Mailto
               </Button>
 
               <Button
@@ -227,13 +312,82 @@ export function CoverLetterPanel({
             </div>
           </div>
 
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={16}
-            aria-label="Inhalt des Anschreibens"
-            className="font-mono text-sm leading-relaxed"
-          />
+          {/* DIN 5008 1-Seiten-Wächter & Überlängen-Radar */}
+          <div className="rounded-lg border border-border bg-surface p-3 space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-foreground">DIN 5008 Seitenbelegung:</span>
+                <span className={cn(
+                  "font-bold",
+                  din5008Metrics.status === "OPTIMAL" ? "text-emerald-600 dark:text-emerald-400" :
+                  din5008Metrics.status === "WARNING" ? "text-amber-500" : "text-rose-500"
+                )}>
+                  {din5008Metrics.fillPercentage}% ({din5008Metrics.totalEstimatedLines}/{din5008Metrics.maxPageLines} Zeilen)
+                </span>
+                <span className={cn(
+                  "rounded px-1.5 py-0.2 text-[10px] font-bold uppercase",
+                  din5008Metrics.status === "OPTIMAL" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
+                  din5008Metrics.status === "WARNING" ? "bg-amber-500/10 text-amber-500" : "bg-rose-500/10 text-rose-500"
+                )}>
+                  {din5008Metrics.statusLabel}
+                </span>
+              </div>
+              <span className="text-muted-foreground text-[11px]">
+                {din5008Metrics.wordCount} Wörter · {din5008Metrics.characterCount} Zeichen
+              </span>
+            </div>
+
+            {/* Fortschrittsbalken */}
+            <div className="h-2 w-full overflow-hidden rounded-full bg-surface-hover">
+              <div
+                className={cn(
+                  "h-full transition-all duration-300",
+                  din5008Metrics.status === "OPTIMAL" ? "bg-emerald-500" :
+                  din5008Metrics.status === "WARNING" ? "bg-amber-500" : "bg-rose-500"
+                )}
+                style={{ width: `${Math.min(100, din5008Metrics.fillPercentage)}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+              {din5008Metrics.status === "OPTIMAL" ? (
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+              ) : (
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+              )}
+              {din5008Metrics.advice}
+            </p>
+          </div>
+
+          {splitScreen ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs font-semibold text-muted-foreground mb-1 block">Editor</span>
+                <Textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  rows={20}
+                  aria-label="Inhalt des Anschreibens"
+                  className="font-mono text-xs leading-relaxed h-[520px]"
+                />
+              </div>
+              <div className="rounded-lg border border-border bg-white text-black p-6 shadow-xs h-[545px] overflow-y-auto font-sans text-xs leading-relaxed space-y-4">
+                <div className="border-b border-gray-200 pb-3 text-gray-500 text-[10px]">
+                  <strong>DIN 5008 Form B Vorschau</strong> · {application.company.name}
+                </div>
+                <div className="whitespace-pre-wrap font-sans text-gray-800">
+                  {content}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={16}
+              aria-label="Inhalt des Anschreibens"
+              className="font-mono text-sm leading-relaxed"
+            />
+          )}
 
           <RequirementTailoringWidget
             applicationId={application.id}

@@ -17,6 +17,7 @@ import { BrowserExtensionCard } from "@/components/settings/browser-extension-ca
 import { PushNotificationsCard } from "@/components/settings/push-notifications-card";
 import { BackgroundSchedulerCard } from "@/components/settings/background-scheduler-card";
 import { CoverLetterSnippetsCard } from "@/components/settings/cover-letter-snippets-card";
+import { SystemHealthCard } from "@/components/settings/system-health-card";
 
 const TABS = [
   { id: "preferences", label: "Profil & Präferenzen" },
@@ -86,6 +87,7 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <PushNotificationsCard />
               <BackgroundSchedulerCard preferences={preferences} />
+              <SystemHealthCard />
             </div>
           )}
           {tab === "education" && <EducationProjectsManager preferences={preferences} />}
