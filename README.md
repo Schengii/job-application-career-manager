@@ -92,7 +92,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 ---
 
 ### 10. 📬 E-Mail Auto-Sync & Smart IMAP Inbox (`/api/email-sync` & Einstellungen)
-- **Echter automatischer E-Mail-Abgleich für Bewerbungsrückmeldungen** (`src/lib/imapClient.ts`, via `imapflow`/`mailparser`):
+- **Echter automatischer E-Mail-Abgleich für Bewerbungsrückmeldungen** (`src/lib/email/imapClient.ts`, via `imapflow`/`mailparser`):
   - Verbindet sich per IMAP/TLS mit dem konfigurierten Postfach, matched Absender/Betreff mit bestehenden Bewerbungen und schlägt Statusübergänge vor — der Statuswechsel selbst bleibt bewusst ein manueller 1-Klick-Schritt.
   - IMAP-Passwort verschlüsselt at-rest (AES-256-GCM, wie der KI-API-Key), nie im Klartext an den Client zurückgegeben.
   - Ohne hinterlegte Zugangsdaten (oder bei einem Verbindungsfehler) arbeitet die App transparent mit simulierten Beispiel-E-Mails weiter — nie ein Hard-Fail für den Nutzer.
@@ -100,8 +100,8 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 ---
 
 ### 11. 🔔 Echte Web-Push-Benachrichtigungen & Hintergrund-Automatisierung (Einstellungen → „Automatisierung & Push")
-- **Browser-Push für Absagen, Zusagen, Interview-Einladungen und fällige Termine** (`src/lib/pushNotifications.ts`, Standard Web Push API + VAPID): Kommt auch an, wenn das Dashboard gerade nicht im Vordergrund ist, solange der Server läuft.
-- **In-Process Hintergrund-Scheduler** (`src/lib/scheduler.ts`, gestartet über `src/instrumentation.ts`): läuft alle 15 Minuten automatisch, solange der Server aktiv ist — synct bei aktiviertem IMAP neue E-Mails und verschickt fällige Push-Benachrichtigungen. Standardmäßig aktiv, in den Einstellungen abschaltbar.
+- **Browser-Push für Absagen, Zusagen, Interview-Einladungen und fällige Termine** (`src/lib/settings/pushNotifications.ts`, Standard Web Push API + VAPID): Kommt auch an, wenn das Dashboard gerade nicht im Vordergrund ist, solange der Server läuft.
+- **In-Process Hintergrund-Scheduler** (`src/lib/settings/scheduler.ts`, gestartet über `src/instrumentation.ts`): läuft alle 15 Minuten automatisch, solange der Server aktiv ist — synct bei aktiviertem IMAP neue E-Mails und verschickt fällige Push-Benachrichtigungen. Standardmäßig aktiv, in den Einstellungen abschaltbar.
 
 ---
 
@@ -116,8 +116,8 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ---
 
-### 17. 🔔 Wöchentlicher Erinnerungs-Digest & Anschreiben-Textbaustein-Bibliothek
-- **Wöchentlicher Erinnerungs-Digest** (`src/lib/digest.ts`, Einstellungen → Automatisierung & Push): fasst überfällige
+### 13. 🔔 Wöchentlicher Erinnerungs-Digest & Anschreiben-Textbaustein-Bibliothek
+- **Wöchentlicher Erinnerungs-Digest** (`src/lib/email/digest.ts`, Einstellungen → Automatisierung & Push): fasst überfällige
   Termine, anstehende Gespräche, empfohlene Nachfassaktionen und neue Status-Rückmeldungen zu EINER zusammenfassenden
   Push-Benachrichtigung pro Woche zusammen — ergänzend zu den sofortigen Einzelbenachrichtigungen. Läuft im 15-Minuten-
   Scheduler-Tick mit, verschickt aber dank `Preferences.lastDigestSentAt` höchstens einmal alle 7 Tage; einzeln abschaltbar.
@@ -128,14 +128,14 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ---
 
-### 13. 🤖 Hybrid-KI-Anbindung (Anschreiben-Polishing & Interview-Feedback)
-- **Vier wählbare Provider** (Einstellungen → KI-Provider, s. `src/lib/aiService.ts`): **OpenAI** (GPT-4o/-mini), **Anthropic** (Claude), **OpenRouter** (Universal-Router für zahlreiche Modelle) sowie **Ollama** für vollständig lokale, kostenlose Modelle auf `localhost:11434` — Ollama benötigt dabei bewusst keinen API-Key.
+### 14. 🤖 Hybrid-KI-Anbindung (Anschreiben-Polishing & Interview-Feedback)
+- **Vier wählbare Provider** (Einstellungen → KI-Provider, s. `src/lib/settings/aiService.ts`): **OpenAI** (GPT-4o/-mini), **Anthropic** (Claude), **OpenRouter** (Universal-Router für zahlreiche Modelle) sowie **Ollama** für vollständig lokale, kostenlose Modelle auf `localhost:11434` — Ollama benötigt dabei bewusst keinen API-Key.
 - **100% Offline-Fallback**: Ohne konfigurierten Provider (oder bei einem fehlgeschlagenen Request) arbeitet die App transparent mit einer lokalen Heuristik weiter — nie ein Hard-Fail für den Nutzer.
-- **API-Key verschlüsselt at-rest** (`src/lib/secretCrypto.ts`, AES-256-GCM): Der Key wird nie im Klartext an den Client zurückgegeben und auch in der SQLite-Datei nicht im Klartext abgelegt.
+- **API-Key verschlüsselt at-rest** (`src/lib/core/secretCrypto.ts`, AES-256-GCM): Der Key wird nie im Klartext an den Client zurückgegeben und auch in der SQLite-Datei nicht im Klartext abgelegt.
 
 ---
 
-### 14. 🗂️ Visuelle Bewerbungsmappen-Zusammenstellung & PDF-Merge (`/api/applications/[id]/pdf-package`)
+### 15. 🗂️ Visuelle Bewerbungsmappen-Zusammenstellung & PDF-Merge (`/api/applications/[id]/pdf-package`)
 - **Interaktiver Bewerbungsmappen-Builder (`ApplicationPdfPackageModal`)**:
   - Fasst Premium-Deckblatt, DIN 5008 Anschreiben, Lebenslauf und alle angehängten PDF-Zeugnisse oder hochauflösenden Scans zu **einer einzigen, versandfertigen Gesamt-PDF** zusammen.
   - Dokument-Reihenfolge mit 1 Klick per Auf-/Ab-Buttons sortieren und Dokumente flexibel an- oder abwählen.
@@ -143,7 +143,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ---
 
-### 15. 🎯 KI Requirement-Matching & Pitch-Tailoring (`src/lib/requirementTailoring.ts`)
+### 16. 🎯 KI Requirement-Matching & Pitch-Tailoring (`src/lib/applications/requirementTailoring.ts`)
 - **Automatischer "Gap-to-Pitch"-Abgleich**:
   - Scannt Stellenanzeigen auf geforderte Kern-Technologien und gleicht sie mit dem Bewerberprofil und realen Referenzprojekten ab.
   - Hebt erfüllte Anforderungen mit konkreten Projektnachweisen hervor und identifiziert fehlende Kenntnisse.
@@ -151,7 +151,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ---
 
-### 16. 📧 Smart Multi-Szenario Nachfass-Assistent (`src/lib/followUp.ts`)
+### 17. 📧 Smart Multi-Szenario Nachfass-Assistent (`src/lib/applications/followUp.ts`)
 - **Vier spezialisierte Nachfass-Vorlagen**:
   - *1. Freundliche Nachfrage* (7–14 Tage nach Versand ohne Rückmeldung).
   - *2. Dankes-E-Mail & Re-Pitch* (24–48h nach Vorstellungsgespräch oder Screening).
@@ -161,27 +161,27 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ---
 
-### 17. ⚡ Tech- & Coding-Challenge Quiz-Simulator (`/interview-prep`)
+### 18. ⚡ Tech- & Coding-Challenge Quiz-Simulator (`/interview-prep`)
 - **Interaktiver Fachfragen-Trainer für moderne Web-Entwickler**:
   - Praxisnahe Multiple-Choice-Fragen und Code-Snippets zu **React 19** (`useActionState`, RSC-Boundaries), **TypeScript 5+** (`satisfies`, Discriminated Unions, `never`-Checks) und **Web Performance / CSS** (Event Loop, INP Core Web Vital, Tailwind v4).
   - Sofortige detaillierte Code-Erklärungen, Key-Takeaways für das Bewerbungsgespräch und Scorecards nach Fachbereich.
 
 ---
 
-### 18. 📊 Funnel-Benchmarking & KI-Erfolgsdiagnose (`/analytics`)
+### 19. 📊 Funnel-Benchmarking & KI-Erfolgsdiagnose (`/analytics`)
 - **Bewerbungstrichter-Vergleich mit Marktdurchschnittswerten**:
   - Vergleicht eigene Konversionsraten (*Gesendet ➔ Interview ➔ Angebot*) mit realen Branchen-Benchmarks für Frontend-Entwickler.
   - **Automatisierte Pipeline-Diagnose**: Gibt datengestützte Tipps (z. B. bei schwacher Einladungsquote: CV ATS-Optimierung; bei schwachem Abschluss: Tech-Quiz & Interview-Training).
 
 ---
 
-### 19. ⌨️ Command Palette Quick Actions & Modern Two-Column CV-Layout
+### 20. ⌨️ Command Palette Quick Actions & Modern Two-Column CV-Layout
 - **Schnellaktionen via `Strg+K / ⌘K`**: Sofortiges Anlegen neuer Bewerbungen, Starten des Tech-Quiz oder Voice-Simulators von überall in der App.
 - **Modern Two-Column Layout im CV-Designer**: Stilvolle zweispaltige Vorlage mit dunkler Tech-Sidebar und übersichtlicher Werdegangs-Timeline.
 
 ---
 
-### 20. 🎙️ Persönliche Interview-Notizen & Sprach-Diktat (`/interview-prep`)
+### 21. 🎙️ Persönliche Interview-Notizen & Sprach-Diktat (`/interview-prep`)
 - **Individuelle Formulierungen pro Fachfrage (`QuestionNoteEditor`)**:
   - Speichert eigene Formulierungen und Anekdoten zu Projekten (z. B. *electroCheck-ai*) direkt an jeder Fachfrage.
   - **Echtzeit-Sprachdiktat (Speech-to-Text)**: Mit einem Klick auf *„Diktieren 🎙️“* die eigene Antwort frei einsprechen (Web Speech API).
@@ -189,86 +189,136 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ---
 
-### 21. 📋 Druckbarer 2-Seiten-Interview-Vorbereitungs-Spickzettel (`src/lib/interviewCheatsheet.ts`)
+### 22. 📋 Druckbarer 2-Seiten-Interview-Vorbereitungs-Spickzettel (`src/lib/interview/interviewCheatsheet.ts`)
 - **Kompakter DIN A4 Spickzettel**:
   - Fasst 2-Minuten-Selbstpräsentations-Pitch, vorbereitete Fachfragen inkl. persönlicher Notizen und 3 strategische Gegenfragen an das Entwickler-Team zusammen.
   - Mit 1 Klick über *„Spickzettel drucken“* als optimierte DIN A4 PDF ausdrucken oder auf dem Smartphone/Tablet mitnehmen.
 
 ---
 
-### 22. 🔍 Smart Recruiter- & Ansprechpartner-Erkennung im Career Manager Clipper
+### 23. 🔍 Smart Recruiter- & Ansprechpartner-Erkennung im Career Manager Clipper
 - **Automatische Extraktion von Kontaktdaten (`public/extension/content.js`)**:
   - Erkennt Personaler, Talent Acquisition Manager, Recruiting-E-Mails und Telefonnummern direkt im DOM von Stellenanzeigen.
   - Überträgt Ansprechpartner und Recruiter-E-Mail automatisch in die Unternehmensdatenbank beim 1-Klick-Import.
 
 ---
 
-### 23. 📱 PWA Offline-First Caching-Upgrade (`public/sw.js`)
+### 24. 📱 PWA Offline-First Caching-Upgrade (`public/sw.js`)
 - **Service Worker V2 mit erweiterten Routen**:
   - Cacht `/interview-prep`, `/cv-designer`, `/applications` und `/companies` für unterbrechungsfreie Nutzung auch ohne Internetverbindung (z. B. im Zug vor einem Vor-Ort-Gespräch).
 
 ---
 
-### 24. 🌍 Multi-Währungs- & Relocation-Rechner (`/analytics`)
-- **Kaufkraftparität & Währungsumrechnung (`src/lib/currencyRelocation.ts`)**:
+### 25. 🌍 Multi-Währungs- & Relocation-Rechner (`/analytics`)
+- **Kaufkraftparität & Währungsumrechnung (`src/lib/salary/currencyRelocation.ts`)**:
   - Berechnet für internationale oder überregionale Angebote (USD, CHF, GBP, EUR) das reale Kaufkraft-Äquivalent bezogen auf die Heimatregion Bonn/Köln.
   - Berücksichtigt Lebenshaltungskosten-Indizes (z. B. Zürich +75%, London +45%, München +30%) und geschätzte Nettoquoten (z. B. Schweizer Quellensteuer ~20%, US W-8BEN Contractor, Steuerklasse 1).
   - Gibt datengestützte KI-Empfehlungen zur tatsächlichen Rentabilität von Umzug oder US-Remote-Verträgen.
 
 ---
 
-### 25. 📄 Intelligenter Dokumenten- & Zeugnis-Parser (`src/lib/documentParser.ts`)
+### 26. 📄 Intelligenter Dokumenten- & Zeugnis-Parser (`src/lib/documents/documentParser.ts`)
 - **Automatische Zertifikats- & Noten-Analyse**:
   - Analysiert hochgeladene PDF-Dokumente und schlägt automatisch passende Kategorien (`CERTIFICATE`, `REFERENCE`, `RESUME`) vor.
   - Erkennt IHK-Abschlusszeugnisse, Weiterbildungs-Zertifikate, Ausbildungsnoten und extrahiert nachgewiesene Tech-Skills (z. B. React, TypeScript, SQL, Scrum).
 
 ---
 
-### 26. 🏷️ Sub-Status- & Sub-Phasen-Badges im Kanban-Board
+### 27. 🏷️ Sub-Status- & Sub-Phasen-Badges im Kanban-Board
 - **Erweiterte Kanban-Visualisierung**:
   - Zeigt Sub-Phasen (z. B. `#Tech-Challenge`, `#2. Interview`, `#Follow-Up`) direkt als kompakte Badges auf den Karten an.
   - Hebt anstehende Fälligkeits- und Interview-Termine (`📅 DD.MM.YYYY`) farblich hervor.
 
 ---
 
-### 27. 💻 Interaktiver Coding-Challenge Canvas & Sandbox (`/interview-prep`)
-- **Live-Code-Editor & Test-Runner (`src/lib/codingChallenges.ts`)**:
+### 28. 💻 Interaktiver Coding-Challenge Canvas & Sandbox (`/interview-prep`)
+- **Live-Code-Editor & Test-Runner (`src/lib/interview/codingChallenges.ts`)**:
   - Praxisnahe Frontend-Coding-Aufgaben (Debounce-Hooks, GroupBy-Transformationen, Gehalts-Formatierer, Virtual-List-Windowing).
   - Sichere Sandbox-Ausführung im Browser mit Test-Case-Validierung, Diff-Ausgabe, Tipps und Musterlösungen.
 
 ---
 
-### 28. 🕸️ Firmen- & Recruiter-Netzwerk-Graph (`/companies`)
+### 29. 🕸️ Firmen- & Recruiter-Netzwerk-Graph (`/companies`)
 - **Interaktiver Standort- & Beziehungs-Graph (`CompanyNetworkGraph`)**:
   - Visualisiert Unternehmens-Cluster nach Regionen (Rheinland, Ruhrgebiet, Remote/Tech-Zentren).
   - Hebt Firmen mit bekannten Ansprechpartnern, offenen Vorstellungsgesprächen und aktiven Bewerbungen hervor.
 
 ---
 
-### 29. ⏰ Smart Follow-Up Snooze & Schnelle Wiedervorlage (`/api/applications/[id]/snooze`)
+### 30. ⏰ Smart Follow-Up Snooze & Schnelle Wiedervorlage (`/api/applications/[id]/snooze`)
 - **1-Klick-Wiedervorlage (`FollowUpSnoozeButtons`)**:
   - Schnell-Verschieben des nächsten Handlungsschritts (`+3 Tage`, `+1 Woche`, `+2 Wochen`) mit sofortiger Historien-Protokollierung.
 
 ---
 
-### 30. 🎙️ Interaktiver Mock-Interview Audio-Recorder & Waveform-Player
-- **Audio-Selbstcheck (`AudioInterviewRecorder`, `src/lib/audioRecorder.ts`)**:
+### 31. 🎙️ Interaktiver Mock-Interview Audio-Recorder & Waveform-Player
+- **Audio-Selbstcheck (`AudioInterviewRecorder`, `src/lib/interview/audioRecorder.ts`)**:
   - Audio-Aufnahme über das Mikrofon (MediaRecorder API) zur Selbstüberprüfung von Betonung und Antworttempo.
   - Interaktiver Waveform-Player mit Fortschrittsbalken, Reset-Funktion und direktem Download (`.webm`).
 
 ---
 
-### 31. ✉️ Gehaltsverhandlungs- & E-Mail-Generator (`src/lib/offerNegotiationGenerator.ts`)
+### 32. ✉️ Gehaltsverhandlungs- & E-Mail-Generator (`src/lib/salary/offerNegotiationGenerator.ts`)
 - **Professionelle Gegenangebote & Verhandlungsschreiben**:
   - Generiert diplomatische und durchsetzungsstarke E-Mails für Fixgehalts-Anpassungen, Remote-Konditionen, Konkurrenzangebote und Sign-on-Boni.
   - Enthält praxiserprobte Verhandlungstipps und 1-Klick-Kopierfunktion.
 
 ---
 
-### 32. 🧭 Persönliche Skill-Roadmap & Lernziel-Tracker (`/analytics`)
-- **Meilenstein-Tracking (`SkillRoadmapTracker`, `src/lib/skillRoadmap.ts`)**:
+### 33. 🧭 Persönliche Skill-Roadmap & Lernziel-Tracker (`/analytics`)
+- **Meilenstein-Tracking (`SkillRoadmapTracker`, `src/lib/interview/skillRoadmap.ts`)**:
   - Strukturierte Lernziele für Fachinformatiker Anwendungsentwicklung (React 19, TypeScript, Testing, Cloud/DevOps).
   - Fortschrittsberechnung in Prozent, Marktrelevanz-Indikatoren und Verknüpfung zu Coding-Challenges.
+
+---
+
+### 34. 📅 Interaktiver Interview- & Termin-Kalender (`/calendar`)
+- **Monats- & Agenda-Ansicht (`InteractiveCalendar`)**:
+  - Extrahiert automatisch alle Termine aus dem Feld „Nächster Schritt & Datum" jeder Bewerbung, farblich unterschieden nach Interview/Coding-Challenge/Nachfassen.
+  - Jede Kalenderkarte verlinkt direkt zurück zur betroffenen Bewerbung.
+- **Live-Kalender-Abonnement**: Ein-Klick-Zugriff auf dieselbe abonnierbare `.ics`-Feed-URL wie in den Einstellungen (siehe Feature 12), direkt aus der Kalenderansicht heraus kopierbar.
+
+---
+
+### 35. 🚩 Arbeitgeber-Audit & Benefit-Scanner (`src/lib/jobs/jobRedFlags.ts`)
+- **Automatische Muster-Erkennung in Stellenanzeigen**:
+  - Scannt Beschreibung, Anforderungsprofil und Gehaltsangabe jeder Stellenanzeige nach bekannten Warnsignal-Formulierungen (z. B. „Wir sind eine Familie", unbezahlter Probearbeitstag, veraltete Tech-Stacks) und positiven Signalen (100% Remote, Weiterbildungsbudget, moderner Tech-Stack, transparente Gehaltsangabe).
+  - Zeigt einen Attraktivitäts-Score sowie passende Gegenfragen fürs Vorstellungsgespräch direkt auf der Jobkarte in `/jobs`.
+
+---
+
+### 36. 💶 Vermittlungsbudget-Rechner (§ 44 SGB III, `/analytics`)
+- **Automatische Erstattungsberechnung**:
+  - Berechnet den Erstattungsanspruch für Bewerbungskosten (pauschal je Bewerbung) und das verbleibende Jahresbudget aus den erfassten Bewerbungen.
+  - 1-Klick-Generierung eines unterschriftsreifen Antragsformulars inkl. vollständiger Nachweistabelle für Agentur für Arbeit / Jobcenter.
+
+---
+
+### 37. 📋 Nachweis von Eigenbemühungen (§ 38 / § 159 SGB III, `/applications`)
+- **Amtlicher DIN A4 Monatsnachweis (`EigenbemuehungenModal`)**:
+  - Filtert alle Bewerbungen mit Datum im gewählten Monat und stellt sie als druckfertigen Nachweis für Arbeitsagentur oder Jobcenter zusammen — inkl. hinterlegter Kundennummer/BG-Nr.
+
+---
+
+### 38. ⭐ STAR-Methoden Antwort-Audit (`/interview-prep`)
+- **Automatisierte STAR-Analyse eigener Interview-Antworten (`src/lib/interview/starAudit.ts`)**:
+  - Bewertet jede hinterlegte Antwort separat nach den vier STAR-Dimensionen (Situation, Task, Action, Result) mit Score und konkretem Optimierungspotenzial.
+  - Schlägt eine optimierte Muster-Formulierung vor, die sich mit 1 Klick in die Zwischenablage kopieren lässt.
+
+---
+
+### 39. 🩺 System-Diagnose & Status-Dashboard (Einstellungen)
+- **Live-Statusprüfung aller technischen Teilsysteme (`SystemHealthCard`, `/api/health`)**:
+  - Zeigt auf einen Blick, ob SQLite-Datenbank, Web-Push (VAPID), konfigurierter KI-Provider und Hintergrund-Scheduler funktionsfähig sind — inkl. des letzten Scheduler-Fehlers, falls vorhanden.
+
+---
+
+### 40. 💰 KI-Kosten-/Token-Tracking & Monatslimit (Einstellungen)
+- **Automatisches Nutzungsprotokoll (`src/lib/settings/aiUsageTracker.ts`)**:
+  - Protokolliert Provider, Modell sowie Prompt-/Completion-Tokens jedes tatsächlich ausgeführten KI-Requests (Anschreiben-Politur, Interview-Bewertung, Einleitungssatz-Generierung) und schätzt die Kosten anhand einer hinterlegten Preistabelle für OpenAI-/Anthropic-Modelle.
+  - Aufschlüsselung nach Provider, Tabelle der letzten 20 Requests, jederzeit zurücksetzbar.
+- **Optionales monatliches Kostenlimit (`src/lib/settings/aiBudget.ts`)**:
+  - Frei wählbare USD-Warnschwelle mit Live-Anzeige der bisherigen Kosten des laufenden Kalendermonats — bewusst nur eine Warnung, KI-Funktionen werden nicht gesperrt.
 
 ## 🛠️ Tech-Stack
 
@@ -278,39 +328,54 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 | Backend   | Next.js Route Handler (REST-API unter `/api/*`), Zod-Validierung          |
 | Datenbank | SQLite via Prisma 7 ORM (Adapter: `better-sqlite3`)                       |
 | State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
-| E-Mail    | `imapflow` + `mailparser` für echten IMAP/TLS-Postfachabruf (`src/lib/imapClient.ts`) |
-| Push      | Web Push API + VAPID (`web-push`, `src/lib/pushNotifications.ts`), Hintergrund-Scheduler via `src/instrumentation.ts` |
+| E-Mail    | `imapflow` + `mailparser` für echten IMAP/TLS-Postfachabruf (`src/lib/email/imapClient.ts`) |
+| Push      | Web Push API + VAPID (`web-push`, `src/lib/settings/pushNotifications.ts`), Hintergrund-Scheduler via `src/instrumentation.ts` |
 | Audio     | Web Speech API (SpeechSynthesis für TTS & webkitSpeechRecognition für STT)|
 | Extension | Chrome/Edge Manifest V3 (Content Script, Popup UI, Background Worker)     |
-| Testing   | Vitest (322 automatisierte Tests: Unit-/API-Integrationstests, s. `vitest.global-setup.ts`, sowie Komponenten-Tests mit React Testing Library, s. `src/test/setupTests.ts`) + Playwright E2E-Tests gegen eine eigene SQLite-Testdatenbank (s. `playwright.config.mts`) |
+| Testing   | Vitest (498 automatisierte Tests: Unit-/API-Integrationstests, s. `vitest.global-setup.ts`, sowie Komponenten-Tests mit React Testing Library, s. `src/test/setupTests.ts`) + Playwright E2E-Tests (15 End-to-End-Flows gegen eine eigene SQLite-Testdatenbank, s. `playwright.config.mts`) |
 | CI/CD     | GitHub Actions (`.github/workflows/ci.yml`) für automatisierte Test- & Build-Pipelines |
+| Deployment | Docker (mehrstufiges `Dockerfile` + `docker-compose.yml`) für reproduzierbares Self-Hosting außerhalb von Vercel, siehe Abschnitt „Schnellstart & Setup" |
 
 ---
 
 ## 📁 Projektstruktur
 
 ```text
-├── prisma/                     # Prisma 7 SQLite Schema, Migrationen & Test-Fixtures
-│   ├── schema.prisma           # Datenmodelle (Company, JobPosting, Application, Preferences)
-│   └── seed.ts                 # Realistische Test- & Beispieldaten
+├── e2e/                         # Playwright End-to-End-Tests (Kernflows: Bewerbung anlegen,
+│                                 # Unternehmen verwalten, Kalender, Notifications, Job-Filter, …)
+├── prisma/                      # Prisma 7 SQLite Schema, Migrationen & Test-Fixtures
+│   ├── schema.prisma            # Datenmodelle (Company, JobPosting, Application, Preferences)
+│   └── seed.ts                  # Realistische Test- & Beispieldaten
 ├── public/
-│   ├── extension/              # Browser-Erweiterung Manifest V3 (manifest.json, popup.html, content.js)
-│   └── manifest.webmanifest    # PWA Web-App-Manifest
+│   ├── extension/               # Browser-Erweiterung Manifest V3 (manifest.json, popup.html, content.js)
+│   └── manifest.webmanifest     # PWA Web-App-Manifest
+├── scripts/                     # Einmalige Hilfsskripte (z. B. Import bestehender Bewerbungslisten)
 ├── src/
-│   ├── app/                    # Next.js 16 App Router
-│   │   ├── (routes)/           # Analytics, Applications, Companies, CV-Designer, Jobs, Portfolio, Settings
-│   │   └── api/                # REST API Endpoints mit Zod-Validierung (Export, Extension, Jobs, Portfolio, Resume)
-│   ├── components/             # Modulare React 19 Komponenten
-│   │   ├── analytics/          # ROI-Tracker, Skill-Gap Matrix, Total Compensation, Gehalts-Analysen
-│   │   ├── applications/       # Kanban-Board, Detailformulare, Time-Tracker & Dokumenten-Panel
-│   │   ├── cv/                 # ATS-Scorecard, JSON-Resume Modal & Druckvorschau
-│   │   ├── interview/          # Gehaltsverhandlungs-Coach, Voice Simulator & Dossier-Druck
-│   │   ├── jobs/               # Live-Jobsuche Modal, URL-Scraper Card, Job-Vergleich & Alerts
-│   │   ├── settings/           # Browser-Extension Card, Portfolio-Share Manager, E-Mail Sync
-│   │   └── ui/                 # Wiederverwendbare Basiskomponenten (Button, Card, Dialog, Form, Toast)
-│   ├── lib/                    # Domänenlogik (salaryNegotiationEngine, roiAnalytics, pdfExport, realJobSearch, atsChecker, jsonResume)
-│   ├── test/                   # Test-Helfer (DB-Reset, SQLite Test-Setup)
-│   └── types/                  # TypeScript Typdefinitionen & Prisma Model-Re-Exporte
+│   ├── app/                     # Next.js 16 App Router
+│   │   ├── (routes)/            # Analytics, Applications, Calendar, Companies, CV-Designer, Jobs, Portfolio, Settings
+│   │   └── api/                 # REST API Endpoints mit Zod-Validierung (Export, Extension, Jobs, Portfolio, Resume)
+│   ├── components/              # Modulare React 19 Komponenten
+│   │   ├── analytics/           # ROI-Tracker, Skill-Gap Matrix, Total Compensation, Gehalts-Analysen
+│   │   ├── applications/        # Kanban-Board, Detailformulare, Time-Tracker & Dokumenten-Panel
+│   │   ├── calendar/            # Interaktiver Termin-Kalender & Abo-Modal
+│   │   ├── cv/                  # ATS-Scorecard, JSON-Resume Modal & Druckvorschau
+│   │   ├── interview/           # Gehaltsverhandlungs-Coach, Voice Simulator, STAR-Audit & Dossier-Druck
+│   │   ├── jobs/                # Live-Jobsuche Modal, URL-Scraper Card, Job-Vergleich, Alerts & Red-Flags-Scanner
+│   │   ├── settings/            # Browser-Extension Card, Portfolio-Share Manager, E-Mail Sync, System-Health, KI-Nutzung
+│   │   └── ui/                  # Wiederverwendbare Basiskomponenten (Button, Card, Dialog, Form, Toast)
+│   ├── lib/                     # Domänenlogik, nach Feature-Bereich sortiert (analog zu components/)
+│   │   ├── core/                # Generische Infrastruktur: API-Client, Validierung, Rate-Limiting, Security-Guards
+│   │   ├── applications/        # Bewerbungsliste/Kanban/Status: Query, Filter, Notifications, Follow-up-Tracking
+│   │   ├── jobs/                # Jobsuche & Matching: Portale, Parser, Red-Flags-Scanner, Live-Suche
+│   │   ├── salary/              # Gehalt/Vergütung: Benchmark, Relocation, Verhandlung, Vermittlungsbudget
+│   │   ├── interview/           # Interview-Vorbereitung: Fragenkatalog, Quiz, Coding-Challenges, STAR-Audit
+│   │   ├── documents/           # Anschreiben/CV/Exporte: Generator, PDF-/ZIP-Export, JSON-Resume, ATS-Check
+│   │   ├── email/               # E-Mail-Sync/Inbox: IMAP-Client, Response-Parser, .eml-Export, Digest
+│   │   └── settings/            # Backup, Scheduler, KI-Provider & -Kosten-Tracking, Push, Präferenzen
+│   ├── test/                     # Test-Helfer (DB-Reset, SQLite Test-Setup)
+│   └── types/                    # TypeScript Typdefinitionen & Prisma Model-Re-Exporte
+├── Dockerfile                    # Mehrstufiger Produktions-Build für Self-Hosting
+└── docker-compose.yml            # Lokaler Self-Hosting-Betrieb (Bind-Mounts für DB/Uploads/Backups)
 ```
 
 ---
@@ -338,6 +403,20 @@ npm run dev
 
 Die Anwendung läuft anschließend unter **http://localhost:3000**.
 
+### 🐳 Alternative: Docker (Self-Hosting außerhalb von Vercel)
+
+Für reproduzierbares Self-Hosting auf einem eigenen Server statt lokalem `npm run dev`:
+
+```bash
+# .env-Variablen optional in docker-compose.yml eintragen (APP_PASSWORD, ENCRYPTION_KEY, …)
+docker compose up -d --build
+```
+
+Baut das mehrstufige `Dockerfile` (Node 20, native `better-sqlite3`-Kompilierung), synct beim Start
+automatisch das Prisma-Schema und mountet `./prisma`, `./public/uploads` sowie `./backups` als
+persistente Bind-Mounts. Details siehe Kommentare in `Dockerfile`/`docker-compose.yml` sowie den
+Abschnitt „Sicherheit" unten.
+
 ---
 
 ## 🧪 Nützliche Befehle
@@ -347,8 +426,8 @@ Die Anwendung läuft anschließend unter **http://localhost:3000**.
 | `npm run dev`               | Entwicklungsserver (Turbopack) starten                            |
 | `npm run build`             | Produktions-Build erstellen (inkl. TypeScript-Check)               |
 | `npm run lint`               | ESLint ausführen                                                    |
-| `npm run test`                | Testsuite (Vitest, 236 Tests) einmalig ausführen                    |
-| `npm run test:e2e`            | E2E-Tests (Playwright) ausführen — startet den Dev-Server automatisch gegen `prisma/e2e.db` |
+| `npm run test`                | Testsuite (Vitest, 498 Tests) einmalig ausführen                    |
+| `npm run test:e2e`            | E2E-Tests (Playwright, 15 Flows) ausführen — startet den Dev-Server automatisch gegen `prisma/e2e.db` |
 | `npm run test:e2e:ui`         | E2E-Tests im interaktiven Playwright-UI-Modus ausführen             |
 | `npm run test:watch`           | Testsuite im Watch-Modus ausführen                                    |
 | `npm run test:db:regenerate`   | SQL-Fixture für die Test-DB neu generieren (nach Schema-Änderungen) |
@@ -361,18 +440,18 @@ Die Anwendung läuft anschließend unter **http://localhost:3000**.
 ## 🔒 Sicherheit
 
 Die App ist primär für den lokalen Einzelnutzer-Betrieb (`localhost`) konzipiert, unterstützt aber
-bewusst auch Hosting darüber hinaus (z. B. Vercel) — siehe `middleware.ts`/`APP_PASSWORD`. Folgende
-Schutzmaßnahmen greifen dabei zusätzlich:
+bewusst auch Hosting darüber hinaus (z. B. Vercel oder eigenes Docker-Self-Hosting, siehe oben) —
+siehe `middleware.ts`/`APP_PASSWORD`. Folgende Schutzmaßnahmen greifen dabei zusätzlich:
 
 | Bereich | Schutzmaßnahme |
 | --- | --- |
-| URL-Scraper (`/jobs/scrape-url`) | SSRF-Schutz (`src/lib/ssrfGuard.ts`): DNS-Auflösung + IP-Prüfung gegen private/interne Netzwerke (inkl. Cloud-Metadaten-Endpunkte) für die Ziel-URL UND jeden Redirect-Hop, plus Content-Type-/Größen-Limit der Antwort. |
-| Datei-Upload (`/api/documents/upload`) | Allowlist statt Denylist für MIME-Type + Dateiendung (`src/lib/constants.ts`) — verhindert das Hochladen aktiver Inhalte (`.html`, `.svg`, `.js`, …), die unter `/uploads/` sonst als gespeichertes XSS ausführbar wären. |
-| KI-API-Key & IMAP-Passwort (Einstellungen) | At-Rest-Verschlüsselung (AES-256-GCM, `src/lib/secretCrypto.ts`) statt Klartext in der SQLite-Datei; beide werden zusätzlich nie im Klartext an den Client zurückgegeben und nie in Backup-Exporte mit aufgenommen. |
-| Stapel-Löschung & Restore | Automatischer JSON-Snapshot vor jeder unwiderruflichen Aktion (`src/lib/serverBackupRotation.ts`, rotierend unter `./backups/`). |
+| URL-Scraper (`/jobs/scrape-url`) | SSRF-Schutz (`src/lib/core/ssrfGuard.ts`): DNS-Auflösung + IP-Prüfung gegen private/interne Netzwerke (inkl. Cloud-Metadaten-Endpunkte) für die Ziel-URL UND jeden Redirect-Hop, plus Content-Type-/Größen-Limit der Antwort. |
+| Datei-Upload (`/api/documents/upload`) | Allowlist statt Denylist für MIME-Type + Dateiendung (`src/lib/core/constants.ts`) — verhindert das Hochladen aktiver Inhalte (`.html`, `.svg`, `.js`, …), die unter `/uploads/` sonst als gespeichertes XSS ausführbar wären. |
+| KI-API-Key & IMAP-Passwort (Einstellungen) | At-Rest-Verschlüsselung (AES-256-GCM, `src/lib/core/secretCrypto.ts`) statt Klartext in der SQLite-Datei; beide werden zusätzlich nie im Klartext an den Client zurückgegeben und nie in Backup-Exporte mit aufgenommen. |
+| Stapel-Löschung & Restore | Automatischer JSON-Snapshot vor jeder unwiderruflichen Aktion (`src/lib/settings/serverBackupRotation.ts`, rotierend unter `./backups/`). |
 | Passwortabgleich (`middleware.ts`) | Konstante-Zeit-Vergleich (`timingSafeEqual`) gegen Timing-Angriffe. |
-| Brute-Force auf `APP_PASSWORD` (`middleware.ts`) | Rate-Limiting mit Lockout pro Client (`src/lib/rateLimiter.ts`): Nach 10 Fehlversuchen in 15 Minuten wird die IP für 15 Minuten mit `429 Too Many Requests` gesperrt, statt weitere Versuche zuzulassen. |
-| Missbrauch kostenpflichtiger/externer Routen (`/api/ai`, `/api/jobs/live-search`, `/api/jobs/scrape-url`) | Eigenständiges Rate-Limiting pro Route (`src/lib/apiRateLimit.ts`): begrenzt Aufrufe pro Client-IP (15–20 pro 10 Minuten), damit weder unnötige KI-Provider-Kosten entstehen noch die Route als Proxy zum Fluten externer Server missbraucht werden kann. |
+| Brute-Force auf `APP_PASSWORD` (`middleware.ts`) | Rate-Limiting mit Lockout pro Client (`src/lib/core/rateLimiter.ts`): Nach 10 Fehlversuchen in 15 Minuten wird die IP für 15 Minuten mit `429 Too Many Requests` gesperrt, statt weitere Versuche zuzulassen. |
+| Missbrauch kostenpflichtiger/externer Routen (`/api/ai`, `/api/jobs/live-search`, `/api/jobs/scrape-url`) | Eigenständiges Rate-Limiting pro Route (`src/lib/core/apiRateLimit.ts`): begrenzt Aufrufe pro Client-IP (15–20 pro 10 Minuten), damit weder unnötige KI-Provider-Kosten entstehen noch die Route als Proxy zum Fluten externer Server missbraucht werden kann. |
 | `xlsx`-Abhängigkeit (Excel-Import, `/excel-view`) | Bezug direkt vom offiziellen SheetJS-CDN (`https://cdn.sheetjs.com/...`) statt der veralteten npm-Registry-Version — behebt zwei bekannte High-Severity-CVEs (Prototype Pollution, ReDoS) beim Parsen hochgeladener `.xlsx`-Dateien (die npm-Registry-Version wird von SheetJS wegen eines Namensraum-Streits nicht mehr aktuell gehalten). |
 
 Details und Begründungen stehen jeweils als Kommentar direkt am Code.
