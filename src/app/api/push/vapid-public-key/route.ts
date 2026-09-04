@@ -7,8 +7,8 @@
 // privaten Key, der nur serverseitig in src/lib/vapidKeys.ts verwendet wird).
 // -----------------------------------------------------------------------------
 import { NextResponse } from "next/server";
-import { getVapidKeys } from "@/lib/vapidKeys";
-import { handleApiError } from "@/lib/apiUtils";
+import { getVapidKeys } from "@/lib/core/vapidKeys";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 export async function GET() {
   try {

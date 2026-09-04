@@ -4,7 +4,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import { resetDb, createTestCompany } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 import { GET } from "./route";
 
 function getRequest(query = "") {

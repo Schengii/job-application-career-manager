@@ -2,9 +2,9 @@
 // POST /api/push/subscribe -> registriert eine Browser-Push-Subscription
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { pushSubscribeSchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { pushSubscribeSchema } from "@/lib/core/validation";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 export async function POST(request: NextRequest) {
   try {

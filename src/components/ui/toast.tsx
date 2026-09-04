@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------------
 import { createContext, useCallback, useContext, useState } from "react";
 import { CheckCircle2, AlertCircle, Info, AlertTriangle, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/core/utils";
 
 type ToastVariant = "success" | "error" | "info" | "warning";
 type Toast = { id: number; message: string; variant: ToastVariant };

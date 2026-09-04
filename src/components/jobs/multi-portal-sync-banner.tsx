@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { apiPost } from "@/lib/api";
-import { SUPPORTED_PORTALS } from "@/lib/mockJobPortals";
+import { apiPost } from "@/lib/core/api";
+import { SUPPORTED_PORTALS } from "@/lib/jobs/mockJobPortals";
 import type { JobPostingWithCompany } from "@/types";
 
 interface SyncResponse {

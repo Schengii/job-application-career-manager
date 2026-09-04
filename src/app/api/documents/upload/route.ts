@@ -8,15 +8,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
 import {
   ALLOWED_DOCUMENT_EXTENSIONS,
   ALLOWED_DOCUMENT_MIME_TYPES,
   ALLOWED_DOCUMENT_UPLOADS,
   DOCUMENT_CATEGORY_VALUES,
-} from "@/lib/constants";
-import { analyzeDocumentContent } from "@/lib/documentParser";
+} from "@/lib/core/constants";
+import { analyzeDocumentContent } from "@/lib/documents/documentParser";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB

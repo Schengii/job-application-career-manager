@@ -3,12 +3,12 @@
 import { useRef, useState, type FormEvent } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { FileText, Trash2, Upload, Download, Eye, Star } from "lucide-react";
-import { fetcher, apiUpload, apiDelete, apiPatch } from "@/lib/api";
+import { fetcher, apiUpload, apiDelete, apiPatch } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DOCUMENT_CATEGORIES, findStatusMeta } from "@/lib/constants";
+import { DOCUMENT_CATEGORIES, findStatusMeta } from "@/lib/core/constants";
 import type { Document } from "@/types";
 import { DocumentPreviewModal } from "@/components/documents/document-preview-modal";
 

@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------------
 import { useState } from "react";
 import { Train, Car, Home, Sparkles, Clock, Compass } from "lucide-react";
-import { estimateCommute } from "@/lib/commuteCalculator";
+import { estimateCommute } from "@/lib/jobs/commuteCalculator";
 
 const NRW_REGIONS = [
   { label: "Bonn (Heimatstandort)", location: "Bonn", remote: false },

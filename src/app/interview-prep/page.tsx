@@ -15,7 +15,7 @@ import {
   Target,
   Star,
 } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import { ApplicationListItem } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ import {
   INTERVIEW_QUESTIONS,
   QuestionCategory,
   InterviewQuestion,
-} from "@/lib/interviewGuide";
+} from "@/lib/interview/interviewGuide";
 import { MockInterviewModal } from "@/components/interview/mock-interview-modal";
 import { VoiceInterviewRunner } from "@/components/interview/voice-interview-runner";
 import { SalaryNegotiationTrainer } from "@/components/interview/salary-negotiation-trainer";
@@ -33,10 +33,10 @@ import { CodingChallengeCanvas } from "@/components/interview/coding-challenge-c
 import { QuestionNoteEditor } from "@/components/interview/question-note-editor";
 import { AudioInterviewRecorder } from "@/components/interview/audio-interview-recorder";
 import { StarAuditModal } from "@/components/interview/star-audit-modal";
-import { generateInterviewCheatsheetHtml } from "@/lib/interviewCheatsheet";
+import { generateInterviewCheatsheetHtml } from "@/lib/interview/interviewCheatsheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { SkillGapAnalysisResult } from "@/lib/skillGapAnalyzer";
-import { getQuizFocusRecommendations } from "@/lib/skillGapToQuizFocus";
+import { SkillGapAnalysisResult } from "@/lib/interview/skillGapAnalyzer";
+import { getQuizFocusRecommendations } from "@/lib/interview/skillGapToQuizFocus";
 
 const TABS = [
   { id: "questions", label: "Fachfragen-Katalog & Leitfaden" },

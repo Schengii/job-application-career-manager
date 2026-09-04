@@ -8,10 +8,10 @@
 // müssen (bisher nur über den EmailResponseModal pro Bewerbung möglich).
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
-import { emailSuggestionActionSchema } from "@/lib/validation";
-import { applyApplicationStatusChange } from "@/lib/applicationStatus";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { emailSuggestionActionSchema } from "@/lib/core/validation";
+import { applyApplicationStatusChange } from "@/lib/applications/applicationStatus";
 
 export const dynamic = "force-dynamic";
 

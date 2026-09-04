@@ -26,10 +26,10 @@
 // unvollständige Bewerbung stillschweigend als "fertig" zurückzugeben.
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
-import { generateCoverLetter } from "@/lib/coverLetterGenerator";
-import { getPreferencesWithProfile } from "@/lib/preferences";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { generateCoverLetter } from "@/lib/documents/coverLetterGenerator";
+import { getPreferencesWithProfile } from "@/lib/settings/preferences";
 import type { Application, Company, JobPosting } from "@/types";
 
 type Params = { params: Promise<{ id: string }> };

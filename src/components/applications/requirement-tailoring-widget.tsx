@@ -6,10 +6,10 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { Sparkles, CheckCircle2, AlertCircle, Plus, Copy, ChevronDown, ChevronUp, Layers } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import type { TailoringResult } from "@/lib/requirementTailoring";
+import type { TailoringResult } from "@/lib/applications/requirementTailoring";
 
 export function RequirementTailoringWidget({
   applicationId,

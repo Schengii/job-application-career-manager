@@ -8,11 +8,11 @@
 // bestehenden Entwurf).
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { coverLetterGenerateSchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
-import { generateCoverLetter } from "@/lib/coverLetterGenerator";
-import { getPreferencesWithProfile } from "@/lib/preferences";
+import { prisma } from "@/lib/core/prisma";
+import { coverLetterGenerateSchema } from "@/lib/core/validation";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { generateCoverLetter } from "@/lib/documents/coverLetterGenerator";
+import { getPreferencesWithProfile } from "@/lib/settings/preferences";
 
 export async function POST(request: NextRequest) {
   try {

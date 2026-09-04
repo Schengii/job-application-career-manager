@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import JSZip from "jszip";
 import fs from "fs";
 import path from "path";
-import { handleApiError } from "@/lib/apiUtils";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 export const dynamic = "force-dynamic";
 

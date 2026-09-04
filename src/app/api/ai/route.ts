@@ -2,14 +2,14 @@
 // POST /api/ai  -> KI-Assistent für Anschreiben-Polishing & Mock-Interview
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { aiRequestSchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
-import { getPreferencesWithProfile } from "@/lib/preferences";
-import { createApiRateLimiter } from "@/lib/apiRateLimit";
+import { aiRequestSchema } from "@/lib/core/validation";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { getPreferencesWithProfile } from "@/lib/settings/preferences";
+import { createApiRateLimiter } from "@/lib/core/apiRateLimit";
 import {
   polishCoverLetterWithAI,
   evaluateInterviewAnswerWithAI,
-} from "@/lib/aiService";
+} from "@/lib/settings/aiService";
 
 // Strenger als der API-Default: Jeder Aufruf löst einen kostenpflichtigen
 // Request an einen externen KI-Provider aus (OpenAI/Anthropic/OpenRouter).

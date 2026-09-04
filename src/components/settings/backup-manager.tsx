@@ -19,15 +19,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
-import { apiPost } from "@/lib/api";
+import { apiPost } from "@/lib/core/api";
 import {
   saveRotatedBackup,
   getRotatedBackups,
   deleteRotatedBackup,
   formatBackupSize,
   type RotatedBackupEntry,
-} from "@/lib/backupRotation";
-import type { BackupData } from "@/lib/backup";
+} from "@/lib/settings/backupRotation";
+import type { BackupData } from "@/lib/settings/backup";
 
 export function BackupManager() {
   const toast = useToast();

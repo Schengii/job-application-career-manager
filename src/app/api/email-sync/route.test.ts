@@ -10,13 +10,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { resetDb } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 import { GET, POST, PUT } from "./route";
 
 // vi.mock()-Aufrufe werden von Vitest an den Anfang der Datei gehoisted,
 // greifen also bereits für den obigen Import von "./route".
 const mockFetchInboxMessages = vi.fn();
-vi.mock("@/lib/imapClient", () => ({
+vi.mock("@/lib/email/imapClient", () => ({
   fetchInboxMessages: (...args: unknown[]) => mockFetchInboxMessages(...args),
 }));
 
@@ -24,7 +24,7 @@ vi.mock("@/lib/imapClient", () => ({
 // damit kein echter (nicht awaited) DB-Zugriff mit resetDb() im nächsten
 // Test kollidieren kann (siehe status/route.test.ts für dieselbe Begründung).
 const mockSendDueNotifications = vi.fn().mockResolvedValue({ sent: 0, skipped: 0 });
-vi.mock("@/lib/pushNotifications", () => ({
+vi.mock("@/lib/settings/pushNotifications", () => ({
   sendDueNotifications: () => mockSendDueNotifications(),
 }));
 

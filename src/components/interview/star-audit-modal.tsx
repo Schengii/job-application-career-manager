@@ -5,9 +5,9 @@ import { Sparkles, Copy, Check, Star } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { auditAnswerWithStar, type StarAuditResult } from "@/lib/starAudit";
+import { auditAnswerWithStar, type StarAuditResult } from "@/lib/interview/starAudit";
 import { useToast } from "@/components/ui/toast";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/core/utils";
 
 export function StarAuditModal({
   open,

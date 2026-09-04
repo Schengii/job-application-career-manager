@@ -6,9 +6,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { MoreVertical } from "lucide-react";
-import { APPLICATION_STATUSES } from "@/lib/constants";
-import { formatDate, cn } from "@/lib/utils";
-import { checkColumnWip, detectGhosting } from "@/lib/kanbanWip";
+import { APPLICATION_STATUSES } from "@/lib/core/constants";
+import { formatDate, cn } from "@/lib/core/utils";
+import { checkColumnWip, detectGhosting } from "@/lib/applications/kanbanWip";
 import type { ApplicationListItem } from "@/types";
 
 const COLUMN_COLORS: Record<string, { header: string; dot: string; cardBorder: string }> = {

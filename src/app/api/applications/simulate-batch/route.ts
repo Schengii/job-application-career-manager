@@ -2,8 +2,8 @@
 // POST /api/applications/simulate-batch -> Erstellt automatisch Beispiel-Bewerbungen
 // -----------------------------------------------------------------------------
 import { NextResponse } from "next/server";
-import { generateSampleApplications } from "@/lib/sampleGenerator";
-import { handleApiError } from "@/lib/apiUtils";
+import { generateSampleApplications } from "@/lib/core/sampleGenerator";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 export async function POST() {
   try {

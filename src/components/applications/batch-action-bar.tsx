@@ -10,10 +10,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { apiPost } from "@/lib/api";
-import { APPLICATION_STATUSES, REJECTION_REASONS } from "@/lib/constants";
+import { apiPost } from "@/lib/core/api";
+import { APPLICATION_STATUSES, REJECTION_REASONS } from "@/lib/core/constants";
 import type { ApplicationListItem } from "@/types";
-import { applicationsToCsv, downloadCsv } from "@/lib/csv";
+import { applicationsToCsv, downloadCsv } from "@/lib/core/csv";
 
 export function BatchActionBar({
   selectedIds,

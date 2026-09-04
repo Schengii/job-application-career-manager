@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { Coins, Printer, Sparkles } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { ApplicationListItem, PreferencesPublic } from "@/types";
@@ -11,7 +11,7 @@ import {
   calculateVermittlungsbudget,
   generateReimbursementApplicationHtml,
   DEFAULT_BUDGET_SETTINGS,
-} from "@/lib/vermittlungsbudget";
+} from "@/lib/salary/vermittlungsbudget";
 
 export function VermittlungsbudgetCard() {
   const { data: applications } = useSWR<ApplicationListItem[]>("/api/applications", fetcher);

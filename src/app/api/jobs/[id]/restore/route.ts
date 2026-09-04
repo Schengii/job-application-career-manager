@@ -4,8 +4,8 @@
 // Stellt ein zuvor ausgeblendetes Stellenangebot wieder her.
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 type Params = { params: Promise<{ id: string }> };
 

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { PATCH, DELETE } from "./route";
 import { resetDb } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 
 function patchRequest(id: string, body: unknown) {
   return new NextRequest(`http://localhost/api/snippets/${id}`, {

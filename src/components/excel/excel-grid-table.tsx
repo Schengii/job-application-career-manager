@@ -21,19 +21,19 @@ import {
   Columns,
   X,
 } from "lucide-react";
-import { fetcher, apiPost, apiDelete } from "@/lib/api";
+import { fetcher, apiPost, apiDelete } from "@/lib/core/api";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
-import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/constants";
+import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/core/constants";
 import type { ApplicationListItem } from "@/types";
-import type { PaginatedResult } from "@/lib/apiUtils";
-import type { ApplicationStatusCounts } from "@/lib/applicationQuery";
-import { applicationsToCsv, downloadCsv } from "@/lib/csv";
-import { cn } from "@/lib/utils";
+import type { PaginatedResult } from "@/lib/core/apiUtils";
+import type { ApplicationStatusCounts } from "@/lib/applications/applicationQuery";
+import { applicationsToCsv, downloadCsv } from "@/lib/core/csv";
+import { cn } from "@/lib/core/utils";
 import { ExcelImportModal } from "@/components/excel/excel-import-modal";
 import { SavedFiltersBar } from "@/components/applications/saved-filters-bar";
-import type { SavedFilterValues } from "@/lib/savedFilters";
+import type { SavedFilterValues } from "@/lib/applications/savedFilters";
 
 // Seitengröße für den initialen Ladevorgang & jedes weitere "Weitere laden"
 // (siehe applyPage()/handleLoadMore unten). Begrenzt die anfänglich geladene

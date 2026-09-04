@@ -8,7 +8,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { POST } from "./route";
 import { resetDb, createTestCompany } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 
 type Params = { params: Promise<{ id: string }> };
 

@@ -6,12 +6,12 @@ import { FileText, Printer, Calendar, User } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import type { ApplicationListItem, PreferencesPublic } from "@/types";
 import {
   filterApplicationsByPeriod,
   generateEigenbemuehungenHtml,
-} from "@/lib/eigenbemuehungenReport";
+} from "@/lib/applications/eigenbemuehungenReport";
 
 export function EigenbemuehungenModal({
   open,

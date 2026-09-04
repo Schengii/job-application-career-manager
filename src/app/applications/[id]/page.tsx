@@ -12,7 +12,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { fetcher, apiDelete } from "@/lib/api";
+import { fetcher, apiDelete } from "@/lib/core/api";
 import type { ApplicationDetail } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,8 +27,8 @@ import { InterviewNotesEditor } from "@/components/applications/interview-notes-
 import { InterviewDossierModal } from "@/components/applications/interview-dossier-modal";
 import { FollowUpSnoozeButtons } from "@/components/applications/follow-up-snooze-buttons";
 import { ApplicationStatusBadge } from "@/components/status-badge";
-import { parseTags, getTagStyle } from "@/lib/tags";
-import { apiPut } from "@/lib/api";
+import { parseTags, getTagStyle } from "@/lib/core/tags";
+import { apiPut } from "@/lib/core/api";
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

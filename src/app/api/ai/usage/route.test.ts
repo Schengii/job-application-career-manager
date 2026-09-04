@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { GET, DELETE } from "./route";
-import { clearAiUsage, recordAiUsage } from "@/lib/aiUsageTracker";
+import { clearAiUsage, recordAiUsage } from "@/lib/settings/aiUsageTracker";
 
 describe("/api/ai/usage", () => {
   beforeEach(() => {

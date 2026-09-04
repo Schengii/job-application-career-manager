@@ -11,13 +11,13 @@ import { useState } from "react";
 import useSWR, { mutate } from "swr";
 import Link from "next/link";
 import { Mail, Sparkles, Check, X, Calendar, Building2, RefreshCw, Inbox as InboxIcon, History } from "lucide-react";
-import { fetcher, apiPost } from "@/lib/api";
+import { fetcher, apiPost } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { APPLICATION_STATUSES } from "@/lib/constants";
+import { cn } from "@/lib/core/utils";
+import { APPLICATION_STATUSES } from "@/lib/core/constants";
 import type { EmailSuggestionWithApplication } from "@/types";
 
 const PENDING_URL = "/api/email-sync/pending";

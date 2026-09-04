@@ -6,7 +6,7 @@
 import { useState, useMemo } from "react";
 import useSWR from "swr";
 import { Sparkles, Save, Send, Printer, Mail, FileDown, Columns, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { apiPost, apiPatch, fetcher } from "@/lib/api";
+import { apiPost, apiPatch, fetcher } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import { Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,9 @@ import { FollowUpEmailModal } from "./follow-up-email-modal";
 import { CoverLetterKeywordBooster } from "./cover-letter-keyword-booster";
 import { RequirementTailoringWidget } from "./requirement-tailoring-widget";
 import { CoverLetterSnippetPicker } from "./cover-letter-snippet-picker";
-import { calculateDin5008Metrics } from "@/lib/din5008Guard";
-import { generateEmlString, downloadEmlFile } from "@/lib/emlExport";
-import { cn } from "@/lib/utils";
+import { calculateDin5008Metrics } from "@/lib/documents/din5008Guard";
+import { generateEmlString, downloadEmlFile } from "@/lib/email/emlExport";
+import { cn } from "@/lib/core/utils";
 
 export function CoverLetterPanel({
   application,

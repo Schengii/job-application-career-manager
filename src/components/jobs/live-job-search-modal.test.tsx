@@ -3,9 +3,9 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LiveJobSearchModal } from "./live-job-search-modal";
-import { apiPost } from "@/lib/api";
+import { apiPost } from "@/lib/core/api";
 
-vi.mock("@/lib/api", () => ({
+vi.mock("@/lib/core/api", () => ({
   apiPost: vi.fn(),
 }));
 

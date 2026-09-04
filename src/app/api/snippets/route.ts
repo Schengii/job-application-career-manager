@@ -3,9 +3,9 @@
 // POST /api/snippets -> neuen Textbaustein anlegen
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { coverLetterSnippetSchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { coverLetterSnippetSchema } from "@/lib/core/validation";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 export async function GET() {
   const snippets = await prisma.coverLetterSnippet.findMany({ orderBy: { title: "asc" } });

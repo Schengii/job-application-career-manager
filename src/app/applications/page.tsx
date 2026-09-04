@@ -18,27 +18,27 @@ import {
   Video,
   FileText,
 } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import type { ApplicationListItem } from "@/types";
-import type { PaginatedResult } from "@/lib/apiUtils";
+import type { PaginatedResult } from "@/lib/core/apiUtils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/form";
 import { Pagination } from "@/components/ui/pagination";
-import { formatDate, cn } from "@/lib/utils";
-import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/constants";
+import { formatDate, cn } from "@/lib/core/utils";
+import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/core/constants";
 import { ApplicationFormDialog, quickUpdateStatus } from "@/components/applications/application-form-dialog";
 import { KanbanBoard } from "@/components/applications/kanban-board";
 import { useToast } from "@/components/ui/toast";
-import { applicationsToCsv, downloadCsv } from "@/lib/csv";
+import { applicationsToCsv, downloadCsv } from "@/lib/core/csv";
 import { EmailResponseModal } from "@/components/applications/email-response-modal";
 import { ExcelGridTable } from "@/components/excel/excel-grid-table";
 import { ExcelImportModal } from "@/components/excel/excel-import-modal";
 import { BatchActionBar } from "@/components/applications/batch-action-bar";
 import { SavedFiltersBar } from "@/components/applications/saved-filters-bar";
 import { EigenbemuehungenModal } from "@/components/applications/eigenbemuehungen-modal";
-import type { SavedFilterValues } from "@/lib/savedFilters";
-import { parseTags, getTagStyle } from "@/lib/tags";
+import type { SavedFilterValues } from "@/lib/applications/savedFilters";
+import { parseTags, getTagStyle } from "@/lib/core/tags";
 
 const TABLE_PAGE_SIZE = 25;
 // Verzögerung, bevor eine geänderte Volltextsuche einen neuen (paginierten)

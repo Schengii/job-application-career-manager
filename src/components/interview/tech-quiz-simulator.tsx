@@ -23,7 +23,7 @@ import {
   TechQuizQuestion,
   evaluateQuizSession,
   getQuestionsBySkills,
-} from "@/lib/techQuizEngine";
+} from "@/lib/interview/techQuizEngine";
 
 const CATEGORIES: { id: "ALL" | TechQuizCategory; label: string }[] = [
   { id: "ALL", label: "Alle Fachgebiete (Mix)" },

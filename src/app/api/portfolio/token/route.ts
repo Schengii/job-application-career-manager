@@ -2,9 +2,9 @@
 // Portfolio Share Token Management Route: /api/portfolio/token
 // -----------------------------------------------------------------------------
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
-import { getOrCreatePreferences } from "@/lib/preferences";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { getOrCreatePreferences } from "@/lib/settings/preferences";
 import crypto from "crypto";
 
 export const dynamic = "force-dynamic";

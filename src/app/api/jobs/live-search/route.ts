@@ -2,12 +2,12 @@
 // Live Job Search API Route: /api/jobs/live-search
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { handleApiError } from "@/lib/apiUtils";
-import { jobLiveSearchSchema } from "@/lib/validation";
-import { searchRealJobs } from "@/lib/realJobSearch";
-import { getOrCreatePreferences } from "@/lib/preferences";
-import { computeMatchScore, isCompanyExcluded } from "@/lib/matching";
-import { createApiRateLimiter } from "@/lib/apiRateLimit";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { jobLiveSearchSchema } from "@/lib/core/validation";
+import { searchRealJobs } from "@/lib/jobs/realJobSearch";
+import { getOrCreatePreferences } from "@/lib/settings/preferences";
+import { computeMatchScore, isCompanyExcluded } from "@/lib/jobs/matching";
+import { createApiRateLimiter } from "@/lib/core/apiRateLimit";
 
 export const dynamic = "force-dynamic";
 

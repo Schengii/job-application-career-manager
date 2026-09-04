@@ -2,14 +2,14 @@ import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
 import Link from "next/link";
 import { Pencil, X, Globe, Mail, Phone, MapPin, ExternalLink } from "lucide-react";
-import { apiPatch } from "@/lib/api";
+import { apiPatch } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { CompanyStatusBadge } from "@/components/status-badge";
-import { COMPANY_STATUSES } from "@/lib/constants";
-import { parseTags, getTagStyle } from "@/lib/tags";
+import { COMPANY_STATUSES } from "@/lib/core/constants";
+import { parseTags, getTagStyle } from "@/lib/core/tags";
 import type { Company } from "@/types";
 
 export function CompanyInfoCard({ company, onSaved }: { company: Company; onSaved: () => void }) {

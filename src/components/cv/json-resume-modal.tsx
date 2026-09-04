@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
-import { apiPost } from "@/lib/api";
+import { apiPost } from "@/lib/core/api";
 
 interface JsonResumeModalProps {
   open: boolean;

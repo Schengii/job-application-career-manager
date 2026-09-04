@@ -3,8 +3,8 @@
 // POST /api/backup -> Wiederherstellung aus JSON-Backup
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { createFullBackup, restoreFromBackup, BackupData } from "@/lib/backup";
-import { handleApiError } from "@/lib/apiUtils";
+import { createFullBackup, restoreFromBackup, BackupData } from "@/lib/settings/backup";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 export async function GET() {
   try {

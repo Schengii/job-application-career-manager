@@ -2,8 +2,8 @@
 // Portfolio Recruiter View Tracker Route: /api/portfolio/track
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 export const dynamic = "force-dynamic";
 

@@ -2,9 +2,9 @@
 // GET/PATCH/DELETE /api/jobs/:id
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { jobPostingUpdateSchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { jobPostingUpdateSchema } from "@/lib/core/validation";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 type Params = { params: Promise<{ id: string }> };
 

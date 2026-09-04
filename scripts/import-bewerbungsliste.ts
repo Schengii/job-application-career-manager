@@ -20,7 +20,7 @@ import path from "path";
 import XLSX from "xlsx";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { generateCoverLetter } from "../src/lib/coverLetterGenerator";
+import { generateCoverLetter } from "../src/lib/documents/coverLetterGenerator";
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 const SOURCE_FOLDER = path.join(PROJECT_ROOT, "Bewerbungsunterlagen final");

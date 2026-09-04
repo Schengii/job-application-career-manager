@@ -11,8 +11,8 @@
 import Link from "next/link";
 import { XCircle, PartyPopper, Users, X } from "lucide-react";
 import type { ApplicationListItem } from "@/types";
-import { getNotificationsFromApplications, type AppNotification } from "@/lib/notifications";
-import { useDismissedNotifications } from "@/lib/useDismissedNotifications";
+import { getNotificationsFromApplications, type AppNotification } from "@/lib/applications/notifications";
+import { useDismissedNotifications } from "@/lib/applications/useDismissedNotifications";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const STATUS_TYPES: AppNotification["type"][] = ["REJECTED", "OFFER", "INTERVIEW"];

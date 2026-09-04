@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { AlertTriangle, CheckCircle2, ShieldAlert, HelpCircle } from "lucide-react";
-import { analyzeJobRedFlags, type JobFlagsAnalysis } from "@/lib/jobRedFlags";
+import { analyzeJobRedFlags, type JobFlagsAnalysis } from "@/lib/jobs/jobRedFlags";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 

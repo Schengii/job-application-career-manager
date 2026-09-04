@@ -9,7 +9,7 @@ import { Globe2, Copy, Check, RefreshCw, Trash2, Eye, ShieldCheck, ExternalLink,
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { fetcher, apiPost, apiDelete } from "@/lib/api";
+import { fetcher, apiPost, apiDelete } from "@/lib/core/api";
 
 export function PortfolioShareCard() {
   const toast = useToast();

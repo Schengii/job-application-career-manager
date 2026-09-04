@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { KanbanBoard } from "./kanban-board";
-import { APPLICATION_STATUSES } from "@/lib/constants";
+import { APPLICATION_STATUSES } from "@/lib/core/constants";
 import type { ApplicationListItem } from "@/types";
 
 /**

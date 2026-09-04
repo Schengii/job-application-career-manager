@@ -4,9 +4,9 @@
 // ZIP-Export unter /api/applications/[id]/package.
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
-import { createApplicationPdfPackage } from "@/lib/pdfMerge";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { createApplicationPdfPackage } from "@/lib/documents/pdfMerge";
 
 export async function GET(
   _request: NextRequest,

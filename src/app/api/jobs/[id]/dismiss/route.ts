@@ -6,11 +6,11 @@
 // negative Keywords, unerwünschte Technologien).
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { jobDismissSchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
-import { getOrCreatePreferences } from "@/lib/preferences";
-import { toKeywordList } from "@/lib/matching";
+import { prisma } from "@/lib/core/prisma";
+import { jobDismissSchema } from "@/lib/core/validation";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { getOrCreatePreferences } from "@/lib/settings/preferences";
+import { toKeywordList } from "@/lib/jobs/matching";
 
 type Params = { params: Promise<{ id: string }> };
 

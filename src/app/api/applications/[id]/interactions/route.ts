@@ -3,9 +3,9 @@
 // DELETE /api/applications/:id/interactions -> Interaktion löschen
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { interactionSchema } from "@/lib/validation";
-import { handleApiError, toDateOrNull } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { interactionSchema } from "@/lib/core/validation";
+import { handleApiError, toDateOrNull } from "@/lib/core/apiUtils";
 
 type Params = { params: Promise<{ id: string }> };
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { GET, POST, DELETE } from "./route";
 import { resetDb } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 
 describe("GET / POST / DELETE /api/portfolio/token", () => {
   beforeEach(async () => {

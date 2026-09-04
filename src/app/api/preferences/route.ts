@@ -3,16 +3,16 @@
 // PATCH /api/preferences  -> Präferenzen aktualisieren (Upsert des Singletons)
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { preferencesSchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { preferencesSchema } from "@/lib/core/validation";
+import { handleApiError } from "@/lib/core/apiUtils";
 import {
   getPreferencesWithProfile,
   toPublicPreferences,
   withDecryptedApiKey,
   withDecryptedImapPassword,
-} from "@/lib/preferences";
-import { encryptSecret } from "@/lib/secretCrypto";
+} from "@/lib/settings/preferences";
+import { encryptSecret } from "@/lib/core/secretCrypto";
 
 export async function GET() {
   const preferences = await getPreferencesWithProfile();

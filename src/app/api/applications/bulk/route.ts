@@ -2,15 +2,15 @@
 // POST /api/applications/bulk -> Batch-Erstellung oder Inline-Speicherung von Zeilen
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
 import { z } from "zod";
 
-import { batchActionSchema } from "@/lib/validation";
-import { addTag, removeTag } from "@/lib/tags";
-import { createAutoSnapshot } from "@/lib/serverBackupRotation";
-import { generateCoverLetter } from "@/lib/coverLetterGenerator";
-import { getPreferencesWithProfile } from "@/lib/preferences";
+import { batchActionSchema } from "@/lib/core/validation";
+import { addTag, removeTag } from "@/lib/core/tags";
+import { createAutoSnapshot } from "@/lib/settings/serverBackupRotation";
+import { generateCoverLetter } from "@/lib/documents/coverLetterGenerator";
+import { getPreferencesWithProfile } from "@/lib/settings/preferences";
 
 const bulkRowSchema = z.object({
   id: z.string().optional(),

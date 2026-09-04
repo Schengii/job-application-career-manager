@@ -10,7 +10,7 @@ import { useSWRConfig } from "swr";
 import { Clock, Loader2, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
-import { apiPatch } from "@/lib/api";
+import { apiPatch } from "@/lib/core/api";
 import type { PreferencesPublic } from "@/types";
 
 const ERROR_SOURCE_LABELS: Record<string, string> = {

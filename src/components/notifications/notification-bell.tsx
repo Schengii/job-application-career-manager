@@ -7,11 +7,11 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import useSWR from "swr";
 import Link from "next/link";
 import { Bell, AlertCircle, Calendar, MailQuestion, Check, X, XCircle, PartyPopper, Users, Sparkles } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import type { ApplicationListItem, EmailSuggestionWithApplication } from "@/types";
-import { getNotificationsFromApplications, getEmailSuggestionNotifications } from "@/lib/notifications";
-import { useDismissedNotifications } from "@/lib/useDismissedNotifications";
-import { cn } from "@/lib/utils";
+import { getNotificationsFromApplications, getEmailSuggestionNotifications } from "@/lib/applications/notifications";
+import { useDismissedNotifications } from "@/lib/applications/useDismissedNotifications";
+import { cn } from "@/lib/core/utils";
 
 export function NotificationBell() {
   const { data: applications } = useSWR<ApplicationListItem[]>("/api/applications", fetcher);

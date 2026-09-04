@@ -9,8 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
-import { apiPost } from "@/lib/api";
-import type { SimulatedJobPosting } from "@/lib/mockJobPortals";
+import { apiPost } from "@/lib/core/api";
+import type { SimulatedJobPosting } from "@/lib/jobs/mockJobPortals";
 
 interface ScrapedJobResultState extends SimulatedJobPosting {
   matchScore: number;

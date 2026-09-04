@@ -22,7 +22,7 @@ import {
   Milestone,
   calculateSkillGoalProgress,
   calculateTotalRoadmapProgress,
-} from "@/lib/skillRoadmap";
+} from "@/lib/interview/skillRoadmap";
 
 function createCustomMilestone(title: string): Milestone {
   return {

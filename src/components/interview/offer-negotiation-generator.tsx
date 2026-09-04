@@ -16,7 +16,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   generateOfferNegotiationEmail,
   NegotiationScenario,
-} from "@/lib/offerNegotiationGenerator";
+} from "@/lib/salary/offerNegotiationGenerator";
 
 const SCENARIOS: { id: NegotiationScenario; label: string; desc: string }[] = [
   {

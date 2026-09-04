@@ -22,8 +22,8 @@
 // nicht nur den Build-Erfolg).
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { isBasicAuthValid } from "@/lib/basicAuth";
-import { checkRateLimit, clientKeyFromHeaders, createRateLimitStore, recordFailure, recordSuccess } from "@/lib/rateLimiter";
+import { isBasicAuthValid } from "@/lib/core/basicAuth";
+import { checkRateLimit, clientKeyFromHeaders, createRateLimitStore, recordFailure, recordSuccess } from "@/lib/core/rateLimiter";
 
 export const config = {
   // Schützt auch statische Dateien aus /public (z. B. hochgeladene

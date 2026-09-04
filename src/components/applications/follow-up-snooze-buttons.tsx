@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { apiPost } from "@/lib/api";
+import { apiPost } from "@/lib/core/api";
 
 export function FollowUpSnoozeButtons({
   applicationId,

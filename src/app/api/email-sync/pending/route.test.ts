@@ -4,11 +4,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { resetDb, createTestCompany } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 import { GET, POST } from "./route";
 
 const mockSendDueNotifications = vi.fn().mockResolvedValue({ sent: 0, skipped: 0 });
-vi.mock("@/lib/pushNotifications", () => ({
+vi.mock("@/lib/settings/pushNotifications", () => ({
   sendDueNotifications: () => mockSendDueNotifications(),
 }));
 

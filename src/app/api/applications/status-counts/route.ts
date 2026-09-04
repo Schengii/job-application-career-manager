@@ -9,14 +9,14 @@
 // würde daher nur die geladene Seite zählen, nicht den echten Gesamtwert.
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
 import {
   buildApplicationWhere,
   parseApplicationQueryParams,
   type ApplicationStatusCounts,
-} from "@/lib/applicationQuery";
-import { APPLICATION_STATUS_VALUES } from "@/lib/constants";
+} from "@/lib/applications/applicationQuery";
+import { APPLICATION_STATUS_VALUES } from "@/lib/core/constants";
 
 export async function GET(request: NextRequest) {
   try {

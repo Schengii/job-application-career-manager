@@ -5,9 +5,9 @@
 // -----------------------------------------------------------------------------
 import useSWR from "swr";
 import { AlertCircle, CheckCircle2, BookOpen, Layers } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { SkillGapAnalysisResult } from "@/lib/skillGapAnalyzer";
+import type { SkillGapAnalysisResult } from "@/lib/interview/skillGapAnalyzer";
 
 export function SkillGapCard() {
   const { data: analysis, isLoading } = useSWR<SkillGapAnalysisResult>(

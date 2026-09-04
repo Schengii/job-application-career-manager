@@ -12,8 +12,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/form";
-import { InterviewQuestion } from "@/lib/interviewGuide";
-import { apiPost } from "@/lib/api";
+import { InterviewQuestion } from "@/lib/interview/interviewGuide";
+import { apiPost } from "@/lib/core/api";
 
 type EnhancedEvaluation = {
   score: number;

@@ -4,7 +4,7 @@ import {
   COMPANY_STATUSES,
   COVER_LETTER_STATUSES,
   findStatusMeta,
-} from "@/lib/constants";
+} from "@/lib/core/constants";
 
 export function ApplicationStatusBadge({ status }: { status: string }) {
   const meta = findStatusMeta(APPLICATION_STATUSES, status);

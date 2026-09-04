@@ -6,9 +6,9 @@
 // Transaktion, damit das Dashboard sofort konsistente Daten sieht.
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { statusEventSchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
-import { applyApplicationStatusChange } from "@/lib/applicationStatus";
+import { statusEventSchema } from "@/lib/core/validation";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { applyApplicationStatusChange } from "@/lib/applications/applicationStatus";
 
 type Params = { params: Promise<{ id: string }> };
 

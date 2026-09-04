@@ -14,11 +14,11 @@ import {
   CheckCircle2,
   Settings,
 } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import type { ApplicationListItem, PreferencesWithProfile } from "@/types";
-import { calculateGoalStats, Milestone } from "@/lib/goalTracker";
+import { calculateGoalStats, Milestone } from "@/lib/applications/goalTracker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/core/utils";
 
 const ICON_MAP: Record<string, typeof Sparkles> = {
   Sparkles,

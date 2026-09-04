@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 import { POST } from "./route";
 import { resetDb, createTestCompany } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 
 describe("POST /api/applications/[id]/snooze", () => {
   beforeEach(async () => {

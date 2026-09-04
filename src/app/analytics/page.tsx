@@ -3,7 +3,7 @@
 import { useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { TrendingUp, Clock, Target, Send, Filter, Sparkles } from "lucide-react";
-import { fetcher, apiPost } from "@/lib/api";
+import { fetcher, apiPost } from "@/lib/core/api";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

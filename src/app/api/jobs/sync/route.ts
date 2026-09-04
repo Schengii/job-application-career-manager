@@ -6,11 +6,11 @@
 // Monster, Honeypot), prüft Duplikate und berechnet individuelle Match-Scores.
 // -----------------------------------------------------------------------------
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
-import { generateMultiPortalBatch, SUPPORTED_PORTALS } from "@/lib/mockJobPortals";
-import { computeMatchScore, isCompanyExcluded } from "@/lib/matching";
-import { getOrCreatePreferences } from "@/lib/preferences";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { generateMultiPortalBatch, SUPPORTED_PORTALS } from "@/lib/jobs/mockJobPortals";
+import { computeMatchScore, isCompanyExcluded } from "@/lib/jobs/matching";
+import { getOrCreatePreferences } from "@/lib/settings/preferences";
 
 export const dynamic = "force-dynamic";
 

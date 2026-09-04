@@ -4,9 +4,9 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CompanyFormDialog } from "./company-form-dialog";
 import { ToastProvider } from "@/components/ui/toast";
-import { apiPost } from "@/lib/api";
+import { apiPost } from "@/lib/core/api";
 
-vi.mock("@/lib/api", () => ({
+vi.mock("@/lib/core/api", () => ({
   apiPost: vi.fn(),
 }));
 

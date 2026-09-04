@@ -2,9 +2,9 @@
 // PATCH/DELETE /api/preferences/education/:id
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { educationEntryUpdateSchema } from "@/lib/validation";
-import { handleApiError, toDateOrNull } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { educationEntryUpdateSchema } from "@/lib/core/validation";
+import { handleApiError, toDateOrNull } from "@/lib/core/apiUtils";
 
 type Params = { params: Promise<{ id: string }> };
 

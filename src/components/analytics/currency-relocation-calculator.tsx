@@ -12,7 +12,7 @@ import {
   LOCATION_PROFILES,
   FX_RATES,
   calculateRelocationCompensation,
-} from "@/lib/currencyRelocation";
+} from "@/lib/salary/currencyRelocation";
 
 export function CurrencyRelocationCalculator() {
   const [nominalSalary, setNominalSalary] = useState<number>(65000);

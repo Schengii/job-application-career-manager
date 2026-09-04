@@ -2,10 +2,10 @@ import { useMemo, useState } from "react";
 import useSWR from "swr";
 import { Printer, Check, Copy } from "lucide-react";
 import type { ApplicationDetail, PreferencesWithProfile } from "@/types";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { generateInterviewDossierHtml } from "@/lib/interviewDossier";
+import { generateInterviewDossierHtml } from "@/lib/interview/interviewDossier";
 import { useToast } from "@/components/ui/toast";
 
 export function InterviewDossierModal({

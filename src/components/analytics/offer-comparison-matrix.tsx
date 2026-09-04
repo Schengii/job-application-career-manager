@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Plus, Trash2, Trophy, Coins, Home, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { JobOffer, calculateOfferScore } from "@/lib/salaryCalculator";
+import { JobOffer, calculateOfferScore } from "@/lib/salary/salaryCalculator";
 
 const DEFAULT_OFFERS: JobOffer[] = [
   {

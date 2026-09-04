@@ -9,9 +9,9 @@ import { Mail, Sparkles, X, Check, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea, Select } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
-import { fetcher, apiPost, apiPatch } from "@/lib/api";
+import { fetcher, apiPost, apiPatch } from "@/lib/core/api";
 import type { ApplicationListItem } from "@/types";
-import { parseEmailResponse } from "@/lib/emailResponseParser";
+import { parseEmailResponse } from "@/lib/email/emailResponseParser";
 
 export function EmailResponseModal({
   open,

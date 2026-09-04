@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import { GET } from "./route";
 import { resetDb, createTestCompany } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 
 function getRequest(id: string) {
   return { params: Promise.resolve({ id }) };

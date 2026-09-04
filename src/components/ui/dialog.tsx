@@ -6,7 +6,7 @@
 // -----------------------------------------------------------------------------
 import { useEffect, useRef, createContext, useContext } from "react";
 import { X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/core/utils";
 import { Button } from "./button";
 
 const DialogContext = createContext<{ onClose?: () => void }>({});

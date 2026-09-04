@@ -5,9 +5,9 @@ import { useSWRConfig } from "swr";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { apiPost } from "@/lib/api";
+import { apiPost } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
-import { COMPANY_STATUSES } from "@/lib/constants";
+import { COMPANY_STATUSES } from "@/lib/core/constants";
 import type { CompanyWithCounts } from "@/types";
 
 const EMPTY = {

@@ -3,9 +3,9 @@
 import { useMemo } from "react";
 import useSWR from "swr";
 import { Clock, TrendingUp, Zap, Hourglass } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import { ApplicationListItem } from "@/types";
-import { calculateRoiAnalytics } from "@/lib/roiAnalytics";
+import { calculateRoiAnalytics } from "@/lib/applications/roiAnalytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 

@@ -13,11 +13,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { AlertCircle, CalendarClock, MailQuestion, Video, X, XCircle, PartyPopper, Users } from "lucide-react";
 import type { ApplicationListItem } from "@/types";
-import { getTodayOverview } from "@/lib/todayOverview";
-import { useDismissedNotifications } from "@/lib/useDismissedNotifications";
+import { getTodayOverview } from "@/lib/applications/todayOverview";
+import { useDismissedNotifications } from "@/lib/applications/useDismissedNotifications";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDate } from "@/lib/utils";
-import type { AppNotification } from "@/lib/notifications";
+import { formatDate } from "@/lib/core/utils";
+import type { AppNotification } from "@/lib/applications/notifications";
 
 type TabKey = "followups" | "interviews" | "responses";
 

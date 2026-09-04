@@ -2,7 +2,7 @@
 // Test-Hilfsfunktionen für API-Integrationstests gegen die echte (aber
 // isolierte) SQLite-Testdatenbank aus vitest.global-setup.ts.
 // -----------------------------------------------------------------------------
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 
 /**
  * Leert alle Tabellen in einer Reihenfolge, die Fremdschlüssel-Constraints

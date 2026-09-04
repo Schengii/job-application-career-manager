@@ -5,8 +5,8 @@
 // -----------------------------------------------------------------------------
 import { useState, useMemo } from "react";
 import { Sparkles, CheckCircle2, AlertTriangle, Info, BarChart2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { analyzeFunnelDiagnostics } from "@/lib/funnelDiagnostics";
+import { cn } from "@/lib/core/utils";
+import { analyzeFunnelDiagnostics } from "@/lib/applications/funnelDiagnostics";
 
 type FunnelStep = {
   stage: string;

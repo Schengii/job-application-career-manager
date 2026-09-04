@@ -2,9 +2,9 @@
 // GET / POST /api/applications/[id]/tailor -> KI Requirement-Matching & Pitch-Tailoring
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
-import { analyzeAndTailorRequirements } from "@/lib/requirementTailoring";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { analyzeAndTailorRequirements } from "@/lib/applications/requirementTailoring";
 
 export async function GET(
   _request: NextRequest,

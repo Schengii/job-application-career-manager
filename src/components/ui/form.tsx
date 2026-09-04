@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
 // Formular-Primitiven: Label, Input, Textarea, Select, Field
 // -----------------------------------------------------------------------------
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/core/utils";
 import type { InputHTMLAttributes, LabelHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 
 const fieldClasses =

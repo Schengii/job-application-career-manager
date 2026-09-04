@@ -15,7 +15,7 @@ import {
   Sparkles,
   ShieldCheck,
 } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import type { PreferencesWithProfile } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

@@ -21,7 +21,7 @@ import {
   CodingChallenge,
   executeChallengeCode,
   ExecutionResult,
-} from "@/lib/codingChallenges";
+} from "@/lib/interview/codingChallenges";
 
 export function CodingChallengeCanvas() {
   const [selectedChallenge, setSelectedChallenge] = useState<CodingChallenge>(CODING_CHALLENGES[0]);

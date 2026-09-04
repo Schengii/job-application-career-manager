@@ -4,9 +4,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
-import { prisma } from "@/lib/prisma";
-import { documentUpdateSchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { documentUpdateSchema } from "@/lib/core/validation";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 type Params = { params: Promise<{ id: string }> };
 

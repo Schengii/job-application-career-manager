@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import type { PreferencesPublic } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/core/utils";
 import { PreferencesForm } from "@/components/settings/preferences-form";
 import { EducationProjectsManager } from "@/components/settings/education-projects-manager";
 import { DocumentsManager } from "@/components/settings/documents-manager";

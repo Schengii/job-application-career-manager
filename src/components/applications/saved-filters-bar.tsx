@@ -10,7 +10,7 @@
 // -----------------------------------------------------------------------------
 import { useState } from "react";
 import { Bookmark, Plus, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/core/utils";
 import { useToast } from "@/components/ui/toast";
 import {
   deleteFilterPreset,
@@ -18,7 +18,7 @@ import {
   saveFilterPreset,
   type SavedFilterPreset,
   type SavedFilterValues,
-} from "@/lib/savedFilters";
+} from "@/lib/applications/savedFilters";
 
 export function SavedFiltersBar({
   currentFilters,

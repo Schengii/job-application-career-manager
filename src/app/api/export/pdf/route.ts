@@ -2,8 +2,8 @@
 // PDF Export API Route: /api/export/pdf
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { wrapHtmlForPdfExport, PdfExportOptions } from "@/lib/pdfExport";
-import { handleApiError } from "@/lib/apiUtils";
+import { wrapHtmlForPdfExport, PdfExportOptions } from "@/lib/documents/pdfExport";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 export const dynamic = "force-dynamic";
 

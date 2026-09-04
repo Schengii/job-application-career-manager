@@ -2,7 +2,7 @@
 
 import useSWR from "swr";
 import { Activity, CheckCircle2, AlertCircle, XCircle, RefreshCw, Database, Bell, Bot, CalendarClock } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

@@ -2,10 +2,10 @@
 // Skill Gap Analysis Route: /api/analytics/skill-gap
 // -----------------------------------------------------------------------------
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
-import { analyzeSkillGaps } from "@/lib/skillGapAnalyzer";
-import { getOrCreatePreferences } from "@/lib/preferences";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { analyzeSkillGaps } from "@/lib/interview/skillGapAnalyzer";
+import { getOrCreatePreferences } from "@/lib/settings/preferences";
 
 export const dynamic = "force-dynamic";
 

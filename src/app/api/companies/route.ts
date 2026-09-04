@@ -3,10 +3,10 @@
 // POST /api/companies       -> Neues Unternehmen anlegen
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { companySchema } from "@/lib/validation";
-import { handleApiError, parsePagination, toPaginatedResult } from "@/lib/apiUtils";
-import { findCompanyDuplicates } from "@/lib/companyDuplicates";
+import { prisma } from "@/lib/core/prisma";
+import { companySchema } from "@/lib/core/validation";
+import { handleApiError, parsePagination, toPaginatedResult } from "@/lib/core/apiUtils";
+import { findCompanyDuplicates } from "@/lib/applications/companyDuplicates";
 
 export async function GET(request: NextRequest) {
   const pagination = parsePagination(request.nextUrl.searchParams);

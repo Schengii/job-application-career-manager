@@ -29,7 +29,7 @@ import {
   Inbox,
   Calendar,
 } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import type { ApplicationListItem, CompanyWithCounts, JobPostingWithCompany } from "@/types";
 
 type ResultItem = {

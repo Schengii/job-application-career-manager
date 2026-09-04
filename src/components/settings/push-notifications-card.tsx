@@ -8,7 +8,7 @@ import { Bell, BellOff, BellRing, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { isPushSupported, getExistingSubscription, subscribeToPush, unsubscribeFromPush } from "@/lib/pushClient";
+import { isPushSupported, getExistingSubscription, subscribeToPush, unsubscribeFromPush } from "@/lib/settings/pushClient";
 
 type Status = "checking" | "unsupported" | "subscribed" | "unsubscribed";
 

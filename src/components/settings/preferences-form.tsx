@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
 import { Sparkles, Key, ShieldCheck, X, Ban, Tag, Code2, Plus, Building2 } from "lucide-react";
-import { apiPatch } from "@/lib/api";
+import { apiPatch } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { REMOTE_PREFERENCES, AI_PROVIDERS } from "@/lib/constants";
+import { REMOTE_PREFERENCES, AI_PROVIDERS } from "@/lib/core/constants";
 import type { PreferencesPublic } from "@/types";
 
 export function PreferencesForm({ preferences }: { preferences: PreferencesPublic }) {

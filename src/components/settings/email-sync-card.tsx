@@ -10,8 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
-import { fetcher, apiPut, apiPost, apiPatch } from "@/lib/api";
-import type { EmailSyncRunResult } from "@/lib/emailImapSync";
+import { fetcher, apiPut, apiPost, apiPatch } from "@/lib/core/api";
+import type { EmailSyncRunResult } from "@/lib/email/emailImapSync";
 
 type EmailSyncSettings = {
   imapEnabled: boolean;

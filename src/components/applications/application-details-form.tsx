@@ -3,13 +3,13 @@
 import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
 import { Calendar, Video, Tag, Hourglass } from "lucide-react";
-import { apiPatch } from "@/lib/api";
+import { apiPatch } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { APPLICATION_STATUSES, REJECTION_REASONS, INTERVIEW_STAGES } from "@/lib/constants";
-import { toDateInputValue } from "@/lib/utils";
-import { generateIcsContent, downloadIcsFile } from "@/lib/ical";
+import { APPLICATION_STATUSES, REJECTION_REASONS, INTERVIEW_STAGES } from "@/lib/core/constants";
+import { toDateInputValue } from "@/lib/core/utils";
+import { generateIcsContent, downloadIcsFile } from "@/lib/settings/ical";
 import type { ApplicationDetail } from "@/types";
 
 export function ApplicationDetailsForm({

@@ -12,11 +12,11 @@ import {
   Calendar,
 } from "lucide-react";
 import { ApplicationStatusBadge } from "@/components/status-badge";
-import { formatDateTime, formatDate, cn } from "@/lib/utils";
+import { formatDateTime, formatDate, cn } from "@/lib/core/utils";
 import type { ApplicationStatusEvent, ApplicationInteraction } from "@/types";
 import { Button } from "@/components/ui/button";
-import { INTERACTION_TYPES, InteractionType } from "@/lib/constants";
-import { apiPost, apiDelete } from "@/lib/api";
+import { INTERACTION_TYPES, InteractionType } from "@/lib/core/constants";
+import { apiPost, apiDelete } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 
 const STATUS_DOT_COLORS: Record<string, string> = {

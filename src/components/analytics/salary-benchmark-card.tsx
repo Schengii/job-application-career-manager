@@ -12,8 +12,8 @@ import {
   calculateSalaryBenchmark,
   type ExperienceLevel,
   type Region,
-} from "@/lib/salaryBenchmark";
-import { fetcher } from "@/lib/api";
+} from "@/lib/salary/salaryBenchmark";
+import { fetcher } from "@/lib/core/api";
 import type { Preferences } from "@/types";
 
 export function SalaryBenchmarkCard() {

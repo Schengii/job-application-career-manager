@@ -3,11 +3,11 @@
 // POST /api/jobs   -> Stellenangebot manuell anlegen
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { jobPostingSchema } from "@/lib/validation";
-import { handleApiError, parsePagination, toPaginatedResult } from "@/lib/apiUtils";
-import { computeMatchScore } from "@/lib/matching";
-import { getOrCreatePreferences } from "@/lib/preferences";
+import { prisma } from "@/lib/core/prisma";
+import { jobPostingSchema } from "@/lib/core/validation";
+import { handleApiError, parsePagination, toPaginatedResult } from "@/lib/core/apiUtils";
+import { computeMatchScore } from "@/lib/jobs/matching";
+import { getOrCreatePreferences } from "@/lib/settings/preferences";
 
 export async function GET(request: NextRequest) {
   try {

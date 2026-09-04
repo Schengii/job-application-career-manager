@@ -23,12 +23,12 @@ import { useToast } from "@/components/ui/toast";
 import {
   InterviewQuestion,
   INTERVIEW_QUESTIONS,
-} from "@/lib/interviewGuide";
+} from "@/lib/interview/interviewGuide";
 import {
   evaluateInterviewAnswer,
   generateFollowUpQuestion,
   AnswerEvaluation,
-} from "@/lib/mockInterviewEngine";
+} from "@/lib/interview/mockInterviewEngine";
 
 interface VoiceInterviewRunnerProps {
   targetJobTitle?: string;

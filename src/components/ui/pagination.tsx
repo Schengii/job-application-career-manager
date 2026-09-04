@@ -5,7 +5,7 @@
 // src/lib/apiUtils.ts `PaginatedResult<T>`).
 // -----------------------------------------------------------------------------
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/core/utils";
 
 export function Pagination({
   page,

@@ -18,7 +18,7 @@ import {
   calculateTotalCompensation,
   generateNegotiationEmailScript,
   CompensationOffer,
-} from "@/lib/totalCompensation";
+} from "@/lib/salary/totalCompensation";
 
 export function TotalCompensationCard() {
   const toast = useToast();

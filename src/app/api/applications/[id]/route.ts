@@ -2,9 +2,9 @@
 // GET/PATCH/DELETE /api/applications/:id  -> Detailansicht mit voller Historie
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { applicationUpdateSchema } from "@/lib/validation";
-import { handleApiError, toDateOrNull } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { applicationUpdateSchema } from "@/lib/core/validation";
+import { handleApiError, toDateOrNull } from "@/lib/core/apiUtils";
 
 type Params = { params: Promise<{ id: string }> };
 

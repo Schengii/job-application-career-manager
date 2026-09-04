@@ -4,14 +4,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { resetDb, createTestCompany } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 
 // sendDueNotifications() wird fire-and-forget aufgerufen (siehe route.ts) —
 // hier gemockt, damit der Test weder auf echten Web-Push-Versand wartet noch
 // durch dessen (asynchrone, nicht awaited) DB-Zugriffe mit `resetDb()` im
 // nächsten Test kollidieren kann.
 const mockSendDueNotifications = vi.fn().mockResolvedValue({ sent: 0, skipped: 0 });
-vi.mock("@/lib/pushNotifications", () => ({
+vi.mock("@/lib/settings/pushNotifications", () => ({
   sendDueNotifications: () => mockSendDueNotifications(),
 }));
 

@@ -13,13 +13,13 @@ import {
   Calendar,
 } from "lucide-react";
 import { useState } from "react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import type { ApplicationListItem, Metrics } from "@/types";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ApplicationStatusBadge } from "@/components/status-badge";
-import { formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/core/utils";
 import { EmailResponseModal } from "@/components/applications/email-response-modal";
 import { CalendarFeedModal } from "@/components/calendar/calendar-feed-modal";
 

@@ -10,7 +10,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { BookText, Plus, Trash2, Loader2 } from "lucide-react";
-import { fetcher, apiPost, apiDelete } from "@/lib/api";
+import { fetcher, apiPost, apiDelete } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

@@ -6,7 +6,7 @@
 import { useState, useMemo } from "react";
 import { Scale, CheckCircle2, X, Sparkles, Building2, MapPin, Send, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { compareJobs, type JobComparisonItem } from "@/lib/jobComparison";
+import { compareJobs, type JobComparisonItem } from "@/lib/jobs/jobComparison";
 import type { JobPostingWithCompany } from "@/types";
 
 export function JobComparisonModal({

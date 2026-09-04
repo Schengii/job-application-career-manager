@@ -9,10 +9,10 @@ import useSWR, { useSWRConfig } from "swr";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { fetcher, apiPost } from "@/lib/api";
+import { fetcher, apiPost } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import type { CompanyWithCounts, ApplicationListItem } from "@/types";
-import { APPLICATION_STATUSES } from "@/lib/constants";
+import { APPLICATION_STATUSES } from "@/lib/core/constants";
 
 const NEW_COMPANY_VALUE = "__new__";
 

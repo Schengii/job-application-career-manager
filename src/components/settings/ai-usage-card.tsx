@@ -9,14 +9,14 @@
 import { useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { Coins, Trash2, AlertTriangle, Wallet } from "lucide-react";
-import { fetcher, apiDelete } from "@/lib/api";
+import { fetcher, apiDelete } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
-import type { AiUsageSummary } from "@/lib/aiUsageTracker";
-import { getAiMonthlyBudgetUsd, setAiMonthlyBudgetUsd } from "@/lib/aiBudget";
+import { cn } from "@/lib/core/utils";
+import type { AiUsageSummary } from "@/lib/settings/aiUsageTracker";
+import { getAiMonthlyBudgetUsd, setAiMonthlyBudgetUsd } from "@/lib/settings/aiBudget";
 
 const PROVIDER_LABELS: Record<string, string> = {
   openai: "OpenAI",

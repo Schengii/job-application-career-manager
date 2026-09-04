@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getVapidPublicKey } from "@/lib/vapidKeys";
+import { prisma } from "@/lib/core/prisma";
+import { getVapidPublicKey } from "@/lib/core/vapidKeys";
 
 export type HealthCheckResult = {
   status: "ok" | "degraded" | "error";

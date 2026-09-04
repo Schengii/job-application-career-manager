@@ -6,7 +6,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Mic, Square, Play, Pause, RotateCcw, Download, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatAudioDuration, generateMockWaveformBars } from "@/lib/audioRecorder";
+import { formatAudioDuration, generateMockWaveformBars } from "@/lib/interview/audioRecorder";
 
 export function AudioInterviewRecorder({
   questionTitle,

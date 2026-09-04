@@ -17,12 +17,12 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { SWRConfig } from "swr";
 import { ExcelGridTable } from "./excel-grid-table";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import type { ApplicationListItem } from "@/types";
-import type { PaginatedResult } from "@/lib/apiUtils";
+import type { PaginatedResult } from "@/lib/core/apiUtils";
 
-vi.mock("@/lib/api", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/api")>("@/lib/api");
+vi.mock("@/lib/core/api", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/core/api")>("@/lib/core/api");
   return {
     ...actual,
     fetcher: vi.fn(),

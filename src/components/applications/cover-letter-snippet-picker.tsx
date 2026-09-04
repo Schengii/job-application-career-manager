@@ -10,7 +10,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { BookText, Plus, ChevronDown, ChevronUp } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import { Button } from "@/components/ui/button";
 import type { CoverLetterSnippet } from "@/types";
 

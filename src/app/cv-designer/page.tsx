@@ -4,11 +4,11 @@ import { useState, useMemo } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
 import { Printer, FileText, CheckSquare, Settings, FileCode } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import type { PreferencesWithProfile } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CvLayout, generateCvHtml } from "@/lib/cvGenerator";
+import { CvLayout, generateCvHtml } from "@/lib/documents/cvGenerator";
 import { AtsScoreCard } from "@/components/cv/ats-score-card";
 import { JsonResumeModal } from "@/components/cv/json-resume-modal";
 

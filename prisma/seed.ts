@@ -9,8 +9,8 @@
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import { computeMatchScore } from "../src/lib/matching";
-import { generateCoverLetter } from "../src/lib/coverLetterGenerator";
+import { computeMatchScore } from "../src/lib/jobs/matching";
+import { generateCoverLetter } from "../src/lib/documents/coverLetterGenerator";
 
 const rawUrl = process.env.DATABASE_URL ?? "file:./dev.db";
 const filePath = rawUrl.startsWith("file:") ? rawUrl.slice(5) : rawUrl;

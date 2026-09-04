@@ -2,13 +2,13 @@
 // E-Mail IMAP Sync API Route: /api/email-sync
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
-import { emailSyncRunSchema } from "@/lib/validation";
-import { processSyncedEmails, generateSampleInboxEmails } from "@/lib/emailImapSync";
-import { fetchInboxMessages } from "@/lib/imapClient";
-import { getOrCreatePreferences, maskSecret } from "@/lib/preferences";
-import { sendDueNotifications } from "@/lib/pushNotifications";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { emailSyncRunSchema } from "@/lib/core/validation";
+import { processSyncedEmails, generateSampleInboxEmails } from "@/lib/email/emailImapSync";
+import { fetchInboxMessages } from "@/lib/email/imapClient";
+import { getOrCreatePreferences, maskSecret } from "@/lib/settings/preferences";
+import { sendDueNotifications } from "@/lib/settings/pushNotifications";
 import type { ApplicationListItem } from "@/types";
 
 export const dynamic = "force-dynamic";

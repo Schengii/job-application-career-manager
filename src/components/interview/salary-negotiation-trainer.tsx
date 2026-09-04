@@ -23,7 +23,7 @@ import {
   NegotiationEvaluation,
   generateNegotiationStep,
   evaluateNegotiationPerformance,
-} from "@/lib/salaryNegotiationEngine";
+} from "@/lib/salary/salaryNegotiationEngine";
 
 export function SalaryNegotiationTrainer() {
   const [activeSubTab, setActiveSubTab] = useState<"SIMULATION" | "EMAIL_GENERATOR">("SIMULATION");

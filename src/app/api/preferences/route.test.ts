@@ -12,8 +12,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import { GET, PATCH } from "./route";
 import { resetDb } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
-import { decryptSecret } from "@/lib/secretCrypto";
+import { prisma } from "@/lib/core/prisma";
+import { decryptSecret } from "@/lib/core/secretCrypto";
 
 function patchRequest(body: unknown) {
   return new NextRequest("http://localhost/api/preferences", {

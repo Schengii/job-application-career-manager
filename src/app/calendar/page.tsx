@@ -3,7 +3,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import type { ApplicationListItem } from "@/types";
 import { InteractiveCalendar } from "@/components/calendar/interactive-calendar";
 import { CalendarFeedModal } from "@/components/calendar/calendar-feed-modal";

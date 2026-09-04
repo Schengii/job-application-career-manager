@@ -12,8 +12,8 @@ import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { POST } from "./route";
 import { resetDb } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
-import { encryptSecret } from "@/lib/secretCrypto";
+import { prisma } from "@/lib/core/prisma";
+import { encryptSecret } from "@/lib/core/secretCrypto";
 
 function postRequest(body: unknown) {
   return new NextRequest("http://localhost/api/ai", {

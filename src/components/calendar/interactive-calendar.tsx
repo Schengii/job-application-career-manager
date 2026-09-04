@@ -13,7 +13,7 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import type { ApplicationListItem } from "@/types";
-import { formatDate, cn } from "@/lib/utils";
+import { formatDate, cn } from "@/lib/core/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 

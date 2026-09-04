@@ -3,8 +3,8 @@
 // DELETE /api/applications/:id/documents  -> Dokument entfernen (?documentId=)
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
 import { z } from "zod";
 
 type Params = { params: Promise<{ id: string }> };

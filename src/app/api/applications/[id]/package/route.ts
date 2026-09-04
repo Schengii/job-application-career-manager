@@ -2,9 +2,9 @@
 // GET /api/applications/[id]/package -> ZIP-Download des Bewerbungspakets
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
-import { createApplicationZipPackage } from "@/lib/zipPackage";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { createApplicationZipPackage } from "@/lib/documents/zipPackage";
 
 export async function GET(
   _request: NextRequest,

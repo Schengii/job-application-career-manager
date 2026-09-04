@@ -2,12 +2,12 @@
 // Job URL Scraper API Route: /api/jobs/scrape-url
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { handleApiError } from "@/lib/apiUtils";
-import { jobScrapeUrlSchema } from "@/lib/validation";
-import { scrapeJobPostingUrl } from "@/lib/urlJobScraper";
-import { getOrCreatePreferences } from "@/lib/preferences";
-import { computeMatchScore, isCompanyExcluded } from "@/lib/matching";
-import { createApiRateLimiter } from "@/lib/apiRateLimit";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { jobScrapeUrlSchema } from "@/lib/core/validation";
+import { scrapeJobPostingUrl } from "@/lib/jobs/urlJobScraper";
+import { getOrCreatePreferences } from "@/lib/settings/preferences";
+import { computeMatchScore, isCompanyExcluded } from "@/lib/jobs/matching";
+import { createApiRateLimiter } from "@/lib/core/apiRateLimit";
 
 export const dynamic = "force-dynamic";
 

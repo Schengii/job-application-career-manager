@@ -3,12 +3,12 @@
 import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
 import { GraduationCap, FolderGit2, Trash2, Plus } from "lucide-react";
-import { apiPost, apiDelete } from "@/lib/api";
+import { apiPost, apiDelete } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { EDUCATION_TYPES, findStatusMeta } from "@/lib/constants";
+import { EDUCATION_TYPES, findStatusMeta } from "@/lib/core/constants";
 import type { PreferencesWithProfile } from "@/types";
 
 export function EducationProjectsManager({ preferences }: { preferences: PreferencesWithProfile }) {

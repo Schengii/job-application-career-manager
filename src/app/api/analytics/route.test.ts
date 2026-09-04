@@ -5,7 +5,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { GET } from "./route";
 import { resetDb, createTestCompany } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 
 describe("/api/analytics", () => {
   beforeEach(async () => {

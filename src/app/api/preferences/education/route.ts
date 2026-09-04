@@ -2,10 +2,10 @@
 // POST /api/preferences/education -> Neuen Ausbildungs-/Bildungseintrag anlegen
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { educationEntrySchema } from "@/lib/validation";
-import { handleApiError, toDateOrNull } from "@/lib/apiUtils";
-import { getOrCreatePreferences } from "@/lib/preferences";
+import { prisma } from "@/lib/core/prisma";
+import { educationEntrySchema } from "@/lib/core/validation";
+import { handleApiError, toDateOrNull } from "@/lib/core/apiUtils";
+import { getOrCreatePreferences } from "@/lib/settings/preferences";
 
 export async function POST(request: NextRequest) {
   try {

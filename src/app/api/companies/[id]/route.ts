@@ -4,9 +4,9 @@
 // DELETE /api/companies/:id  -> Unternehmen löschen (kaskadiert auf Bewerbungen)
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { companyUpdateSchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { companyUpdateSchema } from "@/lib/core/validation";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 type Params = { params: Promise<{ id: string }> };
 

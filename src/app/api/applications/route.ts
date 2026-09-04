@@ -3,10 +3,10 @@
 // POST /api/applications  -> Neue Bewerbung anlegen
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { applicationSchema } from "@/lib/validation";
-import { handleApiError, parsePagination, toDateOrNull, toPaginatedResult } from "@/lib/apiUtils";
-import { buildApplicationOrderBy, buildApplicationWhere, parseApplicationQueryParams } from "@/lib/applicationQuery";
+import { prisma } from "@/lib/core/prisma";
+import { applicationSchema } from "@/lib/core/validation";
+import { handleApiError, parsePagination, toDateOrNull, toPaginatedResult } from "@/lib/core/apiUtils";
+import { buildApplicationOrderBy, buildApplicationWhere, parseApplicationQueryParams } from "@/lib/applications/applicationQuery";
 
 const include = {
   company: true,

@@ -5,14 +5,14 @@ import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Trash2, ArrowUpRight } from "lucide-react";
-import { fetcher, apiDelete } from "@/lib/api";
+import { fetcher, apiDelete } from "@/lib/core/api";
 import type { CompanyDetail } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { CompanyInfoCard } from "@/components/applications/company-info-card";
 import { ApplicationStatusBadge } from "@/components/status-badge";
-import { formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/core/utils";
 
 export default function CompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

@@ -7,11 +7,11 @@
 // Match-Score anhand der hinterlegten Präferenzen.
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
-import { generateSimulatedJobPostings } from "@/lib/mockJobPortals";
-import { computeMatchScore } from "@/lib/matching";
-import { getOrCreatePreferences } from "@/lib/preferences";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { generateSimulatedJobPostings } from "@/lib/jobs/mockJobPortals";
+import { computeMatchScore } from "@/lib/jobs/matching";
+import { getOrCreatePreferences } from "@/lib/settings/preferences";
 
 export async function POST(request: NextRequest) {
   try {

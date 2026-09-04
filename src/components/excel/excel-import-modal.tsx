@@ -9,7 +9,7 @@ import * as XLSX from "xlsx";
 import { UploadCloud, FileSpreadsheet, X, Check, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { apiPost } from "@/lib/api";
+import { apiPost } from "@/lib/core/api";
 
 type ParsedRow = {
   companyName: string;

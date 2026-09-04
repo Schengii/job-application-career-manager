@@ -19,8 +19,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
-import { apiPost } from "@/lib/api";
-import type { SimulatedJobPosting } from "@/lib/mockJobPortals";
+import { apiPost } from "@/lib/core/api";
+import type { SimulatedJobPosting } from "@/lib/jobs/mockJobPortals";
 
 interface ScoredLiveJob extends SimulatedJobPosting {
   matchScore: number;

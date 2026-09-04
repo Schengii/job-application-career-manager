@@ -2,9 +2,9 @@
 // GET / POST /api/applications/[id]/pdf-package -> Zusammengeführte PDF-Bewerbungsmappe
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
-import { createApplicationPdfPackage } from "@/lib/pdfMerge";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { createApplicationPdfPackage } from "@/lib/documents/pdfMerge";
 
 export async function GET(
   request: NextRequest,

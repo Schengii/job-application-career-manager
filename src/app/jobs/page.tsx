@@ -21,13 +21,13 @@ import {
   Ban,
   Filter,
 } from "lucide-react";
-import { fetcher, apiPost } from "@/lib/api";
+import { fetcher, apiPost } from "@/lib/core/api";
 import type { JobPostingWithCompany, PreferencesPublic } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
-import { JOB_PORTALS, JOB_DISMISS_REASONS, findStatusMeta } from "@/lib/constants";
+import { cn } from "@/lib/core/utils";
+import { JOB_PORTALS, JOB_DISMISS_REASONS, findStatusMeta } from "@/lib/core/constants";
 import { useToast } from "@/components/ui/toast";
 import { JobTextParserModal } from "@/components/jobs/job-text-parser-modal";
 import { MultiPortalSyncBanner } from "@/components/jobs/multi-portal-sync-banner";

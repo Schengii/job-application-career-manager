@@ -6,7 +6,7 @@
 import { useMemo } from "react";
 import { AlertTriangle, Sparkles, FileSearch } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { evaluateAtsCompatibility } from "@/lib/atsChecker";
+import { evaluateAtsCompatibility } from "@/lib/documents/atsChecker";
 import type { PreferencesWithProfile } from "@/types";
 
 interface AtsScoreCardProps {

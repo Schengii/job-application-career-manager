@@ -2,10 +2,10 @@
 // POST /api/preferences/projects -> Neuen Projekt-/Referenzeintrag anlegen
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { projectEntrySchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
-import { getOrCreatePreferences } from "@/lib/preferences";
+import { prisma } from "@/lib/core/prisma";
+import { projectEntrySchema } from "@/lib/core/validation";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { getOrCreatePreferences } from "@/lib/settings/preferences";
 
 export async function POST(request: NextRequest) {
   try {

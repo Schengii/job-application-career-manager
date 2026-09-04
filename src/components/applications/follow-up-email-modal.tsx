@@ -8,9 +8,9 @@ import { Mail, Copy, X, Clock, CheckCircle2, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
-import { generateScenarioFollowUpEmail, FollowUpScenario } from "@/lib/followUp";
+import { generateScenarioFollowUpEmail, FollowUpScenario } from "@/lib/applications/followUp";
 import useSWR from "swr";
-import { fetcher, apiPost } from "@/lib/api";
+import { fetcher, apiPost } from "@/lib/core/api";
 import type { PreferencesWithProfile } from "@/types";
 
 const SCENARIOS: { id: FollowUpScenario; label: string; short: string }[] = [

@@ -2,7 +2,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { FollowUpSnoozeButtons } from "./follow-up-snooze-buttons";
-import * as api from "@/lib/api";
+import * as api from "@/lib/core/api";
 
 describe("FollowUpSnoozeButtons", () => {
   it("rendert Schnellbuttons (+3 Tage, +1 Woche, +2 Wochen) und führt Snooze-Call aus", async () => {

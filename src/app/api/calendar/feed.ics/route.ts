@@ -2,8 +2,8 @@
 // Live iCal-Feed Route: /api/calendar/feed.ics
 // -----------------------------------------------------------------------------
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { generateIcsFeed, type IcsEventParams } from "@/lib/ical";
+import { prisma } from "@/lib/core/prisma";
+import { generateIcsFeed, type IcsEventParams } from "@/lib/settings/ical";
 
 export const dynamic = "force-dynamic";
 

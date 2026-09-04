@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------------
 import { useMemo } from "react";
 import { Sparkles, CheckCircle2, AlertCircle, Plus } from "lucide-react";
-import { analyzeCoverLetterKeywords } from "@/lib/keywordBooster";
+import { analyzeCoverLetterKeywords } from "@/lib/applications/keywordBooster";
 import { Button } from "@/components/ui/button";
 
 export function CoverLetterKeywordBooster({

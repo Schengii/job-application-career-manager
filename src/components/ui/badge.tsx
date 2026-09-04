@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
 // Badge-Komponente für Status-Anzeigen (Bewerbungsstatus, Unternehmensstatus...)
 // -----------------------------------------------------------------------------
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/core/utils";
 
 const COLOR_CLASSES: Record<string, string> = {
   yellow: "bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/40",

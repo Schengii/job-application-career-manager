@@ -2,9 +2,9 @@
 // GET /api/analytics -> aggregierte Kennzahlen für die Insights-Seite
 // -----------------------------------------------------------------------------
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/constants";
-import { computeTagSuccessRates, computeTechStackSuccessRates } from "@/lib/skillSuccessRates";
+import { prisma } from "@/lib/core/prisma";
+import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/core/constants";
+import { computeTagSuccessRates, computeTechStackSuccessRates } from "@/lib/interview/skillSuccessRates";
 
 const RESPONSE_STATUSES = new Set(["INTERVIEW", "OFFER", "REJECTED"]);
 

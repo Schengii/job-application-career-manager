@@ -7,7 +7,7 @@ import { GET, POST } from "./route";
 import { POST as dismissPost } from "./[id]/dismiss/route";
 import { POST as restorePost } from "./[id]/restore/route";
 import { resetDb, createTestCompany } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 
 function getRequest(query = "") {
   return new NextRequest(`http://localhost/api/jobs${query}`);

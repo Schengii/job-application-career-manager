@@ -5,9 +5,9 @@
 // Statuswechsel "Entwurf" -> "Gesendet".
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { coverLetterUpdateSchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { coverLetterUpdateSchema } from "@/lib/core/validation";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 type Params = { params: Promise<{ id: string }> };
 

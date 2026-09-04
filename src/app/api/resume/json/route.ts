@@ -2,9 +2,9 @@
 // JSON Resume Standard API Route: /api/resume/json
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
-import { exportToJsonResume, parseJsonResumeImport, JsonResumeSchema } from "@/lib/jsonResume";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { exportToJsonResume, parseJsonResumeImport, JsonResumeSchema } from "@/lib/documents/jsonResume";
 
 export const dynamic = "force-dynamic";
 

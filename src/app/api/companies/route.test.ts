@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import { GET, POST } from "./route";
 import { resetDb } from "@/test/dbTestUtils";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 
 function postRequest(body: unknown) {
   return new NextRequest("http://localhost/api/companies", {

@@ -3,9 +3,9 @@
 // POST /api/documents  -> Dokument-Metadaten anlegen (ohne Datei-Upload)
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { documentSchema } from "@/lib/validation";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { documentSchema } from "@/lib/core/validation";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 export async function GET() {
   const documents = await prisma.document.findMany({ orderBy: { createdAt: "desc" } });

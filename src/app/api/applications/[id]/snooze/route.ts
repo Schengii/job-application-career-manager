@@ -6,8 +6,8 @@
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
-import { handleApiError } from "@/lib/apiUtils";
+import { prisma } from "@/lib/core/prisma";
+import { handleApiError } from "@/lib/core/apiUtils";
 
 const snoozeSchema = z.object({
   days: z.number().int().min(1).max(90).optional(),

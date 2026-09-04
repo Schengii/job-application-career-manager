@@ -7,8 +7,8 @@
 // löschend, kein Zod-Body nötig — keine Eingabedaten außer der Methode.
 // -----------------------------------------------------------------------------
 import { NextResponse } from "next/server";
-import { handleApiError } from "@/lib/apiUtils";
-import { getAiUsageSummary, clearAiUsage } from "@/lib/aiUsageTracker";
+import { handleApiError } from "@/lib/core/apiUtils";
+import { getAiUsageSummary, clearAiUsage } from "@/lib/settings/aiUsageTracker";
 
 export async function GET() {
   try {

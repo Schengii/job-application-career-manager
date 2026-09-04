@@ -10,10 +10,10 @@ import { Sparkles, X, Plus, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea, Input, Field, Select } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
-import { fetcher, apiPost } from "@/lib/api";
-import { parseJobText, ParsedJob } from "@/lib/jobParser";
-import { computeMatchScore } from "@/lib/matching";
-import { JOB_PORTALS } from "@/lib/constants";
+import { fetcher, apiPost } from "@/lib/core/api";
+import { parseJobText, ParsedJob } from "@/lib/jobs/jobParser";
+import { computeMatchScore } from "@/lib/jobs/matching";
+import { JOB_PORTALS } from "@/lib/core/constants";
 import type { PreferencesWithProfile } from "@/types";
 
 export function JobTextParserModal({

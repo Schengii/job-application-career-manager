@@ -12,10 +12,10 @@ import {
 } from "lucide-react";
 import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { JOB_DISMISS_REASONS, type JobDismissReason } from "@/lib/constants";
+import { JOB_DISMISS_REASONS, type JobDismissReason } from "@/lib/core/constants";
 import type { JobPostingWithCompany } from "@/types";
-import { extractDismissalCandidates } from "@/lib/matching";
-import { apiPost } from "@/lib/api";
+import { extractDismissalCandidates } from "@/lib/jobs/matching";
+import { apiPost } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import { useSWRConfig } from "swr";
 

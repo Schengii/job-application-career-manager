@@ -2,7 +2,7 @@
 // GET /api/metrics -> Kennzahlen für die Metrik-Karten des Dashboards
 // -----------------------------------------------------------------------------
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/core/prisma";
 
 export async function GET() {
   const [total, draft, sent, interview, offer, rejected, withdrawn, companies, jobs] = await Promise.all([

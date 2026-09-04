@@ -7,7 +7,7 @@ import { useState, useMemo } from "react";
 import { BellRing, CheckCircle2, Copy, Send, Sparkles, X, MapPin, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { evaluateJobAlerts, type JobAlertCriteria, DEFAULT_ALERT_CRITERIA } from "@/lib/jobAlerts";
+import { evaluateJobAlerts, type JobAlertCriteria, DEFAULT_ALERT_CRITERIA } from "@/lib/jobs/jobAlerts";
 import type { JobPostingWithCompany } from "@/types";
 
 export function JobAlertModal({

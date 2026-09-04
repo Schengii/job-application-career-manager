@@ -8,7 +8,7 @@ export async function register() {
   // `middleware.ts` verwendet, und die keinen langlebigen Prozess für
   // `setInterval` hat).
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    const { startBackgroundScheduler } = await import("./lib/scheduler");
+    const { startBackgroundScheduler } = await import("./lib/settings/scheduler");
     startBackgroundScheduler();
   }
 }

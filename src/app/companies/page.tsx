@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import useSWR from "swr";
 import Link from "next/link";
 import { Plus, Building2, Briefcase, Search, X, MapPin, Network, LayoutGrid } from "lucide-react";
-import { fetcher } from "@/lib/api";
+import { fetcher } from "@/lib/core/api";
 import type { CompanyWithCounts } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Select } from "@/components/ui/form";
 import { CompanyStatusBadge } from "@/components/status-badge";
 import { CompanyFormDialog } from "@/components/companies/company-form-dialog";
 import { CompanyNetworkGraph } from "@/components/companies/company-network-graph";
-import { COMPANY_STATUSES } from "@/lib/constants";
+import { COMPANY_STATUSES } from "@/lib/core/constants";
 
 type SortOption = "NAME_ASC" | "APPS_DESC" | "UPDATED_DESC";
 
