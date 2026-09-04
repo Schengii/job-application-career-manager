@@ -101,3 +101,27 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+
+  docker-build:
+    name: Docker-Image bauen
+    runs-on: ubuntu-latest
+    # Verifiziert nur, dass das mehrstufige Dockerfile (siehe README, Abschnitt
+    # "Schnellstart & Setup" -> Docker) tatsächlich baut — kein Push, kein
+    # Registry-Login nötig. ubuntu-latest bringt Docker bereits vorinstalliert
+    # mit, unabhängig von der lokalen Docker-Desktop-Installation der
+    # Entwickler:innen.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Docker Buildx einrichten
+        uses: docker/setup-buildx-action@v3
+
+      - name: Image bauen (mit GitHub-Actions-Cache für die Build-Layer)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: job-career-manager:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

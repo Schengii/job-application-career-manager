@@ -6,7 +6,8 @@
     "node": ">=20"
   },
   "overrides": {
-    "deepmerge-ts": "^8.0.2"
+    "deepmerge-ts": "^8.0.2",
+    "mysql2": "^3.24.3"
   },
   "scripts": {
     "dev": "next dev",
