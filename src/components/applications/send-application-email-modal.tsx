@@ -7,14 +7,13 @@ import { Input, Textarea } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
 import { apiPost } from "@/lib/core/api";
 import { ApplicationDetail } from "@/types";
-import { Mail, Send, Paperclip, CheckCircle2, AlertCircle } from "lucide-react";
+import { Mail, Send, Paperclip } from "lucide-react";
 
 interface SendApplicationEmailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   application: ApplicationDetail;
   senderName?: string;
-  senderEmail?: string;
   onSent?: () => void;
 }
 
@@ -23,7 +22,6 @@ export function SendApplicationEmailModal({
   onOpenChange,
   application,
   senderName = "Alexander Schepp",
-  senderEmail,
   onSent,
 }: SendApplicationEmailModalProps) {
   const toast = useToast();

@@ -4,6 +4,13 @@ import type { PreferencesWithProfile } from "@/types";
 
 describe("jsonResume", () => {
   const mockPreferences: PreferencesWithProfile = {
+    portfolioPin: null,
+    smtpHost: null,
+    smtpPort: null,
+    smtpUser: null,
+    smtpPassword: null,
+    smtpFrom: null,
+    smtpSecure: false,
     id: "default",
     fullName: "Alexander Schepp",
     email: "alexander.schepp@example.com",

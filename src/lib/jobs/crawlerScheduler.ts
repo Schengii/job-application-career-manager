@@ -7,8 +7,8 @@
 // registrierte Browser an.
 // -----------------------------------------------------------------------------
 import { prisma } from "@/lib/core/prisma";
-import { searchLiveJobs } from "@/lib/jobs/realJobSearch";
-import { calculateMatchScore } from "@/lib/jobs/matching";
+import { searchRealJobs } from "@/lib/jobs/realJobSearch";
+import { computeMatchScore } from "@/lib/jobs/matching";
 import { sendPushToSubscription, type PushPayload } from "@/lib/settings/pushNotifications";
 import type { Preferences } from "@/types";
 
@@ -32,7 +32,7 @@ export async function runJobCrawlerTick(): Promise<CrawlJobsResult> {
   const locations = (preferences.preferredLocations || "Bonn,Dortmund,Remote").split(",").map((s) => s.trim());
   const primaryLocation = locations[0] || "Bonn";
 
-  const searchResult = await searchLiveJobs({
+  const searchResult = await searchRealJobs({
     query,
     location: primaryLocation,
     limit: 15,
@@ -55,20 +55,25 @@ export async function runJobCrawlerTick(): Promise<CrawlJobsResult> {
     if (existing) continue;
 
     // Match-Score ermitteln
-    const score = calculateMatchScore(
-      {
+    const techStackStr = Array.isArray(liveJob.techStack)
+      ? (liveJob.techStack as string[]).join(", ")
+      : String(liveJob.techStack || "");
+
+    const score = computeMatchScore({
+      job: {
         title: liveJob.title,
         description: liveJob.description,
-        techStack: liveJob.techStack.join(", "),
+        techStack: techStackStr,
         location: liveJob.location,
         remote: liveJob.remote,
       },
-      {
+      preferences: {
         techStack: preferences.techStack,
         preferredLocations: preferences.preferredLocations,
         remotePreference: preferences.remotePreference,
-      }
-    );
+        desiredRole: preferences.desiredRole,
+      },
+    });
 
     // Unternehmen anlegen oder zuordnen falls nicht vorhanden
     let company = await prisma.company.findFirst({
@@ -94,7 +99,7 @@ export async function runJobCrawlerTick(): Promise<CrawlJobsResult> {
         location: liveJob.location,
         remote: liveJob.remote,
         salaryInfo: liveJob.salaryInfo,
-        techStack: liveJob.techStack.join(", "),
+        techStack: techStackStr,
         matchScore: score,
         companyId: company.id,
       },

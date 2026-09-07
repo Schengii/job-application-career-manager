@@ -63,7 +63,7 @@ export async function POST(
               documentTitles,
             }
           : null,
-        coverLetterText: application.coverLetter?.content || null,
+        coverLetterContent: application.coverLetter?.content || null,
         documents: selectedDocs.map((doc) => ({
           name: doc.name,
           category: doc.category,

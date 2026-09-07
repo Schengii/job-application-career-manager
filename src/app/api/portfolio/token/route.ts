@@ -24,9 +24,9 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req?: Request) {
   try {
-    const body = await req.json().catch(() => ({}));
+    const body = req ? await req.json().catch(() => ({})) : {};
     await getOrCreatePreferences();
     const token = crypto.randomBytes(16).toString("hex");
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 60); // 60 Tage gültig

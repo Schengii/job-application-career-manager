@@ -6,9 +6,9 @@ import { fetcher, apiPost, apiDelete } from "@/lib/core/api";
 import { CareerProfile } from "@/types";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input, Textarea, Select } from "@/components/ui/form";
+import { Input, Select } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
-import { UserCheck, Plus, Trash2, CheckCircle2, Sparkles, Layers } from "lucide-react";
+import { Plus, Trash2, Layers } from "lucide-react";
 
 export function CareerProfilesCard() {
   const toast = useToast();
@@ -22,7 +22,6 @@ export function CareerProfilesCard() {
   const [locations, setLocations] = useState("Bonn, Köln, Remote");
   const [remote, setRemote] = useState<"ONSITE" | "HYBRID" | "REMOTE" | "ANY">("HYBRID");
   const [minSalary, setMinSalary] = useState(48000);
-  const [summary, setSummary] = useState("");
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -142,7 +141,7 @@ export function CareerProfilesCard() {
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">Remote:</label>
                 <Select
                   value={remote}
-                  onChange={(e) => setRemote(e.target.value as any)}
+                  onChange={(e) => setRemote(e.target.value as "ONSITE" | "HYBRID" | "REMOTE" | "ANY")}
                   className="text-xs"
                 >
                   <option value="HYBRID">Hybrid</option>

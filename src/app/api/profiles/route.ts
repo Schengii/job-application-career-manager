@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/core/prisma";
 import { handleApiError } from "@/lib/core/apiUtils";
+import { getOrCreatePreferences } from "@/lib/settings/preferences";
 import { z } from "zod";
 
 const careerProfileSchema = z.object({
@@ -31,6 +32,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    await getOrCreatePreferences();
     const body = await req.json();
     const data = careerProfileSchema.parse(body);
 

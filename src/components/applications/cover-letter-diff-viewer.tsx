@@ -3,8 +3,7 @@
 import { useMemo } from "react";
 import { computeTextDiff } from "@/lib/documents/diff";
 import { Button } from "@/components/ui/button";
-import { Check, X, RotateCcw } from "lucide-react";
-import { cn } from "@/lib/core/utils";
+import { Check, X } from "lucide-react";
 
 interface CoverLetterDiffViewerProps {
   originalText: string;

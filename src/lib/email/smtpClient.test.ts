@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildMimeMessage, sendApplicationEmail } from "./smtpClient";
+import { buildMimeMessage, sendApplicationEmail, SmtpConfig } from "@/lib/email/smtpClient";
 
 describe("smtpClient", () => {
   it("erstellt eine saubere MIME-Nachricht ohne Anhang", () => {
@@ -38,7 +38,7 @@ describe("smtpClient", () => {
         smtpHost: null,
         smtpUser: null,
         smtpPassword: null,
-      } as any,
+      } as SmtpConfig,
       {
         to: "hr@acme.de",
         subject: "Test",

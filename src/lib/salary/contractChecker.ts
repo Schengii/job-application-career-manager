@@ -33,10 +33,11 @@ export function auditEmploymentContractText(contractText: string): ContractAudit
   const clauses: ClauseCheckResult[] = [];
 
   // 1. Überstundenpauschale
-  const overtimePauschaleRegex = /(überstunden|mehrarbeit).*(mit dem gehalt|mit der vergütung).*(abgegolten|erledigt|abgedeckt)/i;
-  const overtimeSpecificLimit = /(bis zu\s*(\d+)\s*(stunden|std)|(\d+)\s*prozent)/i;
+  const hasOvertimeWord = /überstunden|mehrarbeit/i.test(text);
+  const hasCompWord = /abgegolten|abgedeckt|erledigt/i.test(text);
+  const overtimeSpecificLimit = /(bis zu|\d+\s*(stunden|std))/i;
 
-  if (overtimePauschaleRegex.test(text)) {
+  if (hasOvertimeWord && hasCompWord) {
     if (overtimeSpecificLimit.test(text)) {
       clauses.push({
         id: "overtime-capped",

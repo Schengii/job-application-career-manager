@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/form";
 import { useToast } from "@/components/ui/toast";
 import { apiPost } from "@/lib/core/api";
 import { ApplicationListItem } from "@/types";
-import { Eye, Save, Star, HelpCircle, Building2, CheckCircle2, Maximize2, Minimize2 } from "lucide-react";
+import { Eye, Save, Star, HelpCircle, Building2, Maximize2, Minimize2 } from "lucide-react";
 
 interface InterviewTeleprompterModalProps {
   open: boolean;

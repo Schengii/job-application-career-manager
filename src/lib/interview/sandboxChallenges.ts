@@ -145,7 +145,6 @@ export interface SandboxExecutionResult {
 export async function executeSandboxCode(userCode: string, challenge: CodingSandboxChallenge): Promise<SandboxExecutionResult> {
   try {
     // Erstelle Funktion im isolierten Scope
-    // eslint-disable-next-line @typescript-eslint/no-implied-eval
     const evaluatedFactory = new Function(`
       ${userCode}
       return ${challenge.id === "debounce" ? "debounce" : challenge.id === "deep-clone" ? "deepClone" : "flatten"};
@@ -165,7 +164,6 @@ export async function executeSandboxCode(userCode: string, challenge: CodingSand
 
     for (const t of challenge.tests) {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-implied-eval
         const testEvaluator = new Function(`return ${t.testFnString}`)();
         const testOutcome = await testEvaluator(userFunction);
         const passed = Boolean(testOutcome);

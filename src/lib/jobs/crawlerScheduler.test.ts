@@ -38,20 +38,19 @@ describe("crawlerScheduler", () => {
       techStack: "React, TypeScript, CSS",
       preferredLocations: "Bonn, Remote",
       remotePreference: "HYBRID",
-    } as any);
+    } as never);
 
-    vi.spyOn(realJobSearch, "searchLiveJobs").mockResolvedValue({
+    vi.spyOn(realJobSearch, "searchRealJobs").mockResolvedValue({
       jobs: [
         {
-          id: "job-123",
           title: "Senior React Developer",
           companyName: "Acme Tech",
           location: "Bonn",
           portalSource: "ARBEITNOW",
-          techStack: ["React", "TypeScript"],
+          techStack: "React, TypeScript",
+          requirementsProfile: "React, TypeScript, Next.js",
           description: "Tolles Team...",
           remote: true,
-          postedAt: new Date(),
           salaryInfo: "60.000 €",
           sourceUrl: "https://example.com/job-123",
         },
@@ -62,8 +61,8 @@ describe("crawlerScheduler", () => {
     });
 
     vi.mocked(prisma.jobPosting.findFirst).mockResolvedValue(null);
-    vi.mocked(prisma.company.findFirst).mockResolvedValue({ id: "comp-1", name: "Acme Tech" } as any);
-    vi.mocked(prisma.jobPosting.create).mockResolvedValue({ id: "jp-1" } as any);
+    vi.mocked(prisma.company.findFirst).mockResolvedValue({ id: "comp-1", name: "Acme Tech" } as never);
+    vi.mocked(prisma.jobPosting.create).mockResolvedValue({ id: "jp-1" } as never);
     vi.mocked(prisma.pushSubscription.findMany).mockResolvedValue([]);
 
     const res = await runJobCrawlerTick();

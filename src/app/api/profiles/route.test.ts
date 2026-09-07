@@ -34,6 +34,7 @@ describe("CareerProfiles API (/api/profiles)", () => {
   });
 
   it("aktiviert ein Profil und synchronisiert die Hauptpräferenzen", async () => {
+    await prisma.preferences.create({ data: { id: "default" } });
     const profile = await prisma.careerProfile.create({
       data: {
         name: "Frontend Junior",

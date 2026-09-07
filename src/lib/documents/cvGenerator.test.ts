@@ -4,6 +4,13 @@ import type { PreferencesWithProfile } from "@/types";
 
 describe("cvGenerator", () => {
   const dummyPreferences: PreferencesWithProfile = {
+    portfolioPin: null,
+    smtpHost: null,
+    smtpPort: null,
+    smtpUser: null,
+    smtpPassword: null,
+    smtpFrom: null,
+    smtpSecure: false,
     id: "pref-1",
     fullName: "Max Mustermann",
     email: "max@example.com",

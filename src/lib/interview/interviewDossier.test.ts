@@ -67,6 +67,13 @@ describe("interviewDossier generator", () => {
   };
 
   const mockPreferences: PreferencesWithProfile = {
+    portfolioPin: null,
+    smtpHost: null,
+    smtpPort: null,
+    smtpUser: null,
+    smtpPassword: null,
+    smtpFrom: null,
+    smtpSecure: false,
     id: "default",
     fullName: "Max Mustermann",
     email: "max@example.com",

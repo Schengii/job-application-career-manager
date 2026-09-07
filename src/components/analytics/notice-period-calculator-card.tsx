@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/form";
 import { calculateNoticePeriod, NoticePeriodRule } from "@/lib/career/noticePeriodCalculator";
-import { Calendar, Clock, Copy, Check, Sparkles } from "lucide-react";
+import { Calendar, Copy, Check } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 export function NoticePeriodCalculatorCard() {
@@ -52,7 +52,7 @@ export function NoticePeriodCalculatorCard() {
             <label className="mb-1 block font-medium text-foreground">Aktueller Status</label>
             <Select
               value={status}
-              onChange={(e) => setStatus(e.target.value as any)}
+              onChange={(e) => setStatus(e.target.value as "EMPLOYED" | "NOTICE_GIVEN" | "UNEMPLOYED_OR_STUDENT")}
               className="text-xs"
             >
               <option value="EMPLOYED">Ungekündigtes Arbeitsverhältnis</option>
@@ -65,7 +65,7 @@ export function NoticePeriodCalculatorCard() {
             <label className="mb-1 block font-medium text-foreground">Vertragliche Frist</label>
             <Select
               value={rule}
-              onChange={(e) => setRule(e.target.value as any)}
+              onChange={(e) => setRule(e.target.value as NoticePeriodRule)}
               disabled={status === "UNEMPLOYED_OR_STUDENT"}
               className="text-xs"
             >
