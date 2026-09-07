@@ -154,12 +154,19 @@ CREATE TABLE "Preferences" (
     "portfolioTokenExpiresAt" DATETIME,
     "portfolioViewCount" INTEGER NOT NULL DEFAULT 0,
     "portfolioActive" BOOLEAN NOT NULL DEFAULT true,
+    "portfolioPin" TEXT,
     "imapHost" TEXT,
     "imapPort" INTEGER,
     "imapUser" TEXT,
     "imapPassword" TEXT,
     "imapFolder" TEXT DEFAULT 'INBOX',
     "imapEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "smtpHost" TEXT,
+    "smtpPort" INTEGER DEFAULT 587,
+    "smtpUser" TEXT,
+    "smtpPassword" TEXT,
+    "smtpFrom" TEXT,
+    "smtpSecure" BOOLEAN NOT NULL DEFAULT false,
     "backgroundSchedulerEnabled" BOOLEAN NOT NULL DEFAULT true,
     "lastSchedulerErrorSource" TEXT,
     "lastSchedulerErrorMessage" TEXT,
@@ -243,6 +250,24 @@ CREATE TABLE "EmailSuggestion" (
     CONSTRAINT "EmailSuggestion_applicationId_fkey" FOREIGN KEY ("applicationId") REFERENCES "Application" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+-- CreateTable
+CREATE TABLE "CareerProfile" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "isDefault" BOOLEAN NOT NULL DEFAULT false,
+    "desiredRole" TEXT NOT NULL,
+    "techStack" TEXT NOT NULL,
+    "preferredLocations" TEXT,
+    "minSalary" INTEGER,
+    "remotePreference" TEXT NOT NULL DEFAULT 'HYBRID',
+    "profileSummary" TEXT,
+    "standardCoverLetterBody" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    "preferencesId" TEXT NOT NULL DEFAULT 'default',
+    CONSTRAINT "CareerProfile_preferencesId_fkey" FOREIGN KEY ("preferencesId") REFERENCES "Preferences" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 -- CreateIndex
 CREATE INDEX "Company_status_idx" ON "Company"("status");
 
@@ -314,4 +339,7 @@ CREATE INDEX "EmailSuggestion_applicationId_idx" ON "EmailSuggestion"("applicati
 
 -- CreateIndex
 CREATE UNIQUE INDEX "EmailSuggestion_applicationId_emailId_key" ON "EmailSuggestion"("applicationId", "emailId");
+
+-- CreateIndex
+CREATE INDEX "CareerProfile_preferencesId_idx" ON "CareerProfile"("preferencesId");
 

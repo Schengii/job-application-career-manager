@@ -41,9 +41,13 @@ export function withDecryptedImapPassword<T extends { imapPassword: string | nul
   return withDecryptedSecret(preferences, "imapPassword");
 }
 
+export function withDecryptedSmtpPassword<T extends { smtpPassword: string | null }>(preferences: T): T {
+  return withDecryptedSecret(preferences, "smtpPassword");
+}
+
 export async function getOrCreatePreferences() {
   const existing = await prisma.preferences.findUnique({ where: { id: "default" } });
-  if (existing) return withDecryptedImapPassword(withDecryptedApiKey(existing));
+  if (existing) return withDecryptedSmtpPassword(withDecryptedImapPassword(withDecryptedApiKey(existing)));
 
   return prisma.preferences.create({
     data: { id: "default" },
@@ -57,9 +61,10 @@ export async function getPreferencesWithProfile() {
     include: {
       educationEntries: { orderBy: { sortOrder: "asc" } },
       projectEntries: { orderBy: { sortOrder: "asc" } },
+      careerProfiles: { orderBy: { createdAt: "desc" } },
     },
   });
-  return withDecryptedImapPassword(withDecryptedApiKey(preferences));
+  return withDecryptedSmtpPassword(withDecryptedImapPassword(withDecryptedApiKey(preferences)));
 }
 
 // -----------------------------------------------------------------------------
@@ -78,18 +83,21 @@ export function maskSecret(secret: string | null | undefined): string | null {
 }
 
 export function toPublicPreferences<
-  T extends { aiApiKey: string | null; imapPassword: string | null },
+  T extends { aiApiKey: string | null; imapPassword: string | null; smtpPassword?: string | null },
 >(
   preferences: T
-): Omit<T, "aiApiKey" | "imapPassword"> & {
+): Omit<T, "aiApiKey" | "imapPassword" | "smtpPassword"> & {
   aiApiKey: null;
   hasAiApiKey: boolean;
   aiApiKeyPreview: string | null;
   imapPassword: null;
   hasImapPassword: boolean;
   imapPasswordPreview: string | null;
+  smtpPassword: null;
+  hasSmtpPassword: boolean;
+  smtpPasswordPreview: string | null;
 } {
-  const { aiApiKey, imapPassword, ...rest } = preferences;
+  const { aiApiKey, imapPassword, smtpPassword, ...rest } = preferences;
   return {
     ...rest,
     aiApiKey: null,
@@ -98,5 +106,8 @@ export function toPublicPreferences<
     imapPassword: null,
     hasImapPassword: Boolean(imapPassword && imapPassword.trim()),
     imapPasswordPreview: maskSecret(imapPassword),
+    smtpPassword: null,
+    hasSmtpPassword: Boolean(smtpPassword && smtpPassword.trim()),
+    smtpPasswordPreview: maskSecret(smtpPassword),
   };
 }

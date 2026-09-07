@@ -127,6 +127,10 @@ export async function runSchedulerTick(): Promise<void> {
       hadError = true;
       return recordSchedulerError("digest", error);
     });
+    // Automatischer Job-Crawler: Sucht nach neuen Angeboten und meldet Top-Matches
+    await import("@/lib/jobs/crawlerScheduler").then((m) => m.runJobCrawlerTick()).catch((error) => {
+      console.warn("scheduler: Job-Crawler Tick fehlgeschlagen.", error);
+    });
 
     if (!hadError && preferences.lastSchedulerErrorMessage) {
       await clearSchedulerError();

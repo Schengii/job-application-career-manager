@@ -248,6 +248,7 @@ model Preferences {
   portfolioTokenExpiresAt    DateTime?
   portfolioViewCount         Int       @default(0)
   portfolioActive            Boolean   @default(true)
+  portfolioPin               String?   // Optionaler 4-stelliger PIN-Schutz für Recruiter
   // E-Mail IMAP Auto-Sync
   imapHost                   String?
   imapPort                   Int?
@@ -258,6 +259,13 @@ model Preferences {
   imapPassword               String?
   imapFolder                 String?   @default("INBOX")
   imapEnabled                Boolean   @default(false)
+  // E-Mail SMTP Versand (Direktversand von Bewerbungen mit Mappen-Anhang)
+  smtpHost                   String?
+  smtpPort                   Int?      @default(587)
+  smtpUser                   String?
+  smtpPassword               String?   // Verschlüsselt at-rest (AES-256-GCM)
+  smtpFrom                   String?   // z.B. "Alexander Schepp <bewerbung@alexander-schepp.de>"
+  smtpSecure                 Boolean   @default(false) // true = SSL (Port 465), false = STARTTLS (Port 587)
   // Hintergrund-Scheduler (src/lib/scheduler.ts): läuft in-process, solange
   // der Server läuft, synct bei aktiviertem IMAP periodisch neue E-Mails und
   // verschickt fällige Push-Benachrichtigungen. Standardmäßig aktiv, hier
@@ -284,6 +292,7 @@ model Preferences {
 
   educationEntries EducationEntry[]
   projectEntries   ProjectEntry[]
+  careerProfiles   CareerProfile[]
 }
 
 // ---------------------------------------------------------------------------
@@ -396,4 +405,30 @@ model EmailSuggestion {
   @@unique([applicationId, emailId])
   @@index([status])
   @@index([applicationId])
+}
+
+// ---------------------------------------------------------------------------
+// Karriere- & Bewerbungsprofile (Multi-Profile Support)
+// ---------------------------------------------------------------------------
+// Ermöglicht das Verwalten mehrerer Rollen-Profile (z.B. "Frontend Specialist",
+// "Fullstack Engineer", "Junior / Entry").
+// ---------------------------------------------------------------------------
+model CareerProfile {
+  id                      String   @id @default(cuid())
+  name                    String   // z.B. "Frontend Developer (React/TS)", "Fullstack Node"
+  isDefault               Boolean  @default(false)
+  desiredRole             String
+  techStack               String
+  preferredLocations      String?
+  minSalary               Int?
+  remotePreference        String   @default("HYBRID")
+  profileSummary          String?
+  standardCoverLetterBody String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  preferencesId String      @default("default")
+  preferences   Preferences @relation(fields: [preferencesId], references: [id], onDelete: Cascade)
+
+  @@index([preferencesId])
 }

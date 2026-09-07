@@ -14,6 +14,7 @@ import {
   Printer,
   Target,
   Star,
+  Eye,
 } from "lucide-react";
 import { fetcher } from "@/lib/core/api";
 import { ApplicationListItem } from "@/types";
@@ -35,6 +36,7 @@ import { AudioInterviewRecorder } from "@/components/interview/audio-interview-r
 import { StarAuditModal } from "@/components/interview/star-audit-modal";
 import { generateInterviewCheatsheetHtml } from "@/lib/interview/interviewCheatsheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { InterviewTeleprompterModal } from "@/components/interview/interview-teleprompter";
 import { SkillGapAnalysisResult } from "@/lib/interview/skillGapAnalyzer";
 import { getQuizFocusRecommendations } from "@/lib/interview/skillGapToQuizFocus";
 
@@ -72,6 +74,7 @@ export default function InterviewPrepPage() {
 
   const [mockInterviewOpen, setMockInterviewOpen] = useState(false);
   const [voiceSimulatorOpen, setVoiceSimulatorOpen] = useState(false);
+  const [teleprompterOpen, setTeleprompterOpen] = useState(false);
   const [starAuditOpen, setStarAuditOpen] = useState(false);
   const [starAuditQuestion, setStarAuditQuestion] = useState("");
   const [starAuditAnswer, setStarAuditAnswer] = useState("");
@@ -182,6 +185,15 @@ export default function InterviewPrepPage() {
             title="Druckfertiges 2-Seiten Cheatsheet mit deinen Notizen erzeugen"
           >
             <Printer className="h-4 w-4 mr-1.5 text-primary" /> Spickzettel drucken
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setTeleprompterOpen(true)}
+            className="border-primary/40 text-primary hover:bg-primary-soft"
+            title="Live-Teleprompter & STAR-Spickzettel für Video-Interviews"
+          >
+            <Eye className="h-4 w-4 mr-1.5" /> Live-Teleprompter 👁️
           </Button>
           <Button
             size="sm"
@@ -502,6 +514,13 @@ export default function InterviewPrepPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <InterviewTeleprompterModal
+        open={teleprompterOpen}
+        onOpenChange={setTeleprompterOpen}
+        applications={applications || []}
+        defaultAppId={selectedAppId}
+      />
     </div>
   );
 }

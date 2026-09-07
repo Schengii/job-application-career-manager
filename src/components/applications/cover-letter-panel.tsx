@@ -14,9 +14,11 @@ import { CoverLetterStatusBadge } from "@/components/status-badge";
 import type { ApplicationDetail, CoverLetter } from "@/types";
 import { CoverLetterPrintModal } from "./cover-letter-print-modal";
 import { FollowUpEmailModal } from "./follow-up-email-modal";
+import { SendApplicationEmailModal } from "./send-application-email-modal";
 import { CoverLetterKeywordBooster } from "./cover-letter-keyword-booster";
 import { RequirementTailoringWidget } from "./requirement-tailoring-widget";
 import { CoverLetterSnippetPicker } from "./cover-letter-snippet-picker";
+import { CoverLetterDiffViewer } from "./cover-letter-diff-viewer";
 import { calculateDin5008Metrics } from "@/lib/documents/din5008Guard";
 import { generateEmlString, downloadEmlFile } from "@/lib/email/emlExport";
 import { cn } from "@/lib/core/utils";
@@ -39,12 +41,14 @@ export function CoverLetterPanel({
 
   const [printModalOpen, setPrintModalOpen] = useState(false);
   const [followUpModalOpen, setFollowUpModalOpen] = useState(false);
+  const [smtpSendModalOpen, setSmtpSendModalOpen] = useState(false);
 
   const coverLetter = application.coverLetter;
 
   const [polishing, setPolishing] = useState(false);
   const [activeVariant, setActiveVariant] = useState<"A" | "B">("A");
   const [splitScreen, setSplitScreen] = useState(false);
+  const [pendingDiff, setPendingDiff] = useState<{ original: string; modified: string } | null>(null);
 
   const din5008Metrics = useMemo(() => calculateDin5008Metrics(content), [content]);
 
@@ -97,11 +101,14 @@ export function CoverLetterPanel({
         techStack: application.jobPosting?.techStack,
       });
 
-      setContent(result.polishedContent);
+      setPendingDiff({
+        original: content,
+        modified: result.polishedContent,
+      });
       toast.success(
         result.usedAi
-          ? `Anschreiben mit ${result.modelUsed} optimiert!`
-          : "Anschreiben sprachlich geschärft (Offline-Heuristik)."
+          ? `Anschreiben mit ${result.modelUsed} optimiert! Prüfe die Änderungen im Diff.`
+          : "Anschreiben sprachlich geschärft (Offline-Heuristik). Prüfe die Änderungen im Diff."
       );
     } catch {
       toast.error("KI-Optimierung fehlgeschlagen.");
@@ -283,6 +290,17 @@ export function CoverLetterPanel({
                 type="button"
                 variant="outline"
                 size="sm"
+                onClick={() => setSmtpSendModalOpen(true)}
+                title="Bewerbung und PDF-Mappe direkt per E-Mail versenden"
+                className="text-xs card-hover-effect border-sky-500/40 text-sky-600 dark:text-sky-400"
+              >
+                <Send className="h-3.5 w-3.5 text-sky-500" /> Direkt per E-Mail versenden 🚀
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 onClick={handleExportEml}
                 title="Als .eml Datei herunterladen (direkt in Outlook/Thunderbird öffnen)"
                 className="text-xs card-hover-effect"
@@ -357,6 +375,23 @@ export function CoverLetterPanel({
               {din5008Metrics.advice}
             </p>
           </div>
+
+          {/* Diff-Viewer bei KI-Optimierung */}
+          {pendingDiff && (
+            <CoverLetterDiffViewer
+              originalText={pendingDiff.original}
+              modifiedText={pendingDiff.modified}
+              onApply={(applied) => {
+                setContent(applied);
+                setPendingDiff(null);
+                toast.success("Änderungen ins Anschreiben übernommen.");
+              }}
+              onCancel={() => {
+                setPendingDiff(null);
+                toast.info("Änderungen verworfen.");
+              }}
+            />
+          )}
 
           {splitScreen ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -439,6 +474,16 @@ export function CoverLetterPanel({
         applicationId={application.id}
         applicationDate={application.applicationDate}
         onInteractionAdded={onChange}
+      />
+
+      {/* SMTP E-Mail Direktversand Modal */}
+      <SendApplicationEmailModal
+        open={smtpSendModalOpen}
+        onOpenChange={setSmtpSendModalOpen}
+        application={application}
+        senderName={preferences?.fullName || undefined}
+        senderEmail={preferences?.email || undefined}
+        onSent={onChange}
       />
     </div>
   );

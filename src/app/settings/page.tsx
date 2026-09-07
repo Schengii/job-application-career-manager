@@ -7,6 +7,7 @@ import type { PreferencesPublic } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/core/utils";
 import { PreferencesForm } from "@/components/settings/preferences-form";
+import { CareerProfilesCard } from "@/components/settings/career-profiles-card";
 import { EducationProjectsManager } from "@/components/settings/education-projects-manager";
 import { DocumentsManager } from "@/components/settings/documents-manager";
 import { BackupManager } from "@/components/settings/backup-manager";
@@ -77,6 +78,7 @@ export default function SettingsPage() {
                   <PreferencesForm preferences={preferences} />
                 </CardContent>
               </Card>
+              <CareerProfilesCard />
               <AiUsageCard />
               <MatchingWeightsCard />
               <CoverLetterSnippetsCard />

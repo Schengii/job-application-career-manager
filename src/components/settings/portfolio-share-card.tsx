@@ -9,13 +9,14 @@ import { Globe2, Copy, Check, RefreshCw, Trash2, Eye, ShieldCheck, ExternalLink,
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { fetcher, apiPost, apiDelete } from "@/lib/core/api";
+import { fetcher, apiPost, apiDelete, apiPatch } from "@/lib/core/api";
 
 export function PortfolioShareCard() {
   const toast = useToast();
   const { mutate } = useSWRConfig();
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pinInput, setPinInput] = useState("");
 
   const { data: status, isLoading } = useSWR<{
     token: string | null;
@@ -113,6 +114,40 @@ export function PortfolioShareCard() {
                 </Button>
                 <Button size="sm" variant="danger" onClick={handleRevokeToken} disabled={loading} className="h-7 text-xs">
                   <Trash2 className="h-3 w-3 mr-1" /> Deaktivieren
+                </Button>
+              </div>
+            </div>
+
+            {/* Optionaler PIN-Schutz */}
+            <div className="rounded-lg border border-border bg-surface-hover/30 p-3 mt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <ShieldCheck className="h-3.5 w-3.5 text-indigo-400" /> Optionaler PIN-Schutz für Recruiter
+                </span>
+                <p className="text-[11px] text-muted-foreground">
+                  Schütze dein Portfolio mit einem Zugangscode (z. B. für ausgewählte Ansprechpartner).
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  maxLength={10}
+                  placeholder="PIN (z.B. 1234)"
+                  value={pinInput}
+                  onChange={(e) => setPinInput(e.target.value)}
+                  className="w-28 rounded border border-border bg-surface px-2 py-1 text-xs font-mono text-foreground"
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    await apiPatch("/api/preferences", { portfolioPin: pinInput.trim() || null });
+                    await mutate("/api/portfolio/token");
+                    toast.success(pinInput.trim() ? "PIN-Schutz aktiviert!" : "PIN-Schutz entfernt.");
+                  }}
+                  className="h-7 text-xs"
+                >
+                  Speichern
                 </Button>
               </div>
             </div>

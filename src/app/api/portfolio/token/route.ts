@@ -17,14 +17,16 @@ export async function GET() {
       active: preferences.portfolioActive,
       viewCount: preferences.portfolioViewCount,
       expiresAt: preferences.portfolioTokenExpiresAt,
+      hasPin: Boolean(preferences.portfolioPin),
     });
   } catch (error) {
     return handleApiError(error);
   }
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
+    const body = await req.json().catch(() => ({}));
     await getOrCreatePreferences();
     const token = crypto.randomBytes(16).toString("hex");
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 60); // 60 Tage gültig
@@ -35,6 +37,7 @@ export async function POST() {
         portfolioShareToken: token,
         portfolioTokenExpiresAt: expiresAt,
         portfolioActive: true,
+        portfolioPin: body.pin !== undefined ? (body.pin ? String(body.pin).trim() : null) : undefined,
       },
     });
 
@@ -42,6 +45,7 @@ export async function POST() {
       success: true,
       token: updated.portfolioShareToken,
       expiresAt: updated.portfolioTokenExpiresAt,
+      hasPin: Boolean(updated.portfolioPin),
       message: "Neuer Portfolio-Share-Link erfolgreich generiert!",
     });
   } catch (error) {

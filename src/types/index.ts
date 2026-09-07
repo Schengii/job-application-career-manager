@@ -6,6 +6,7 @@ import type {
   ApplicationInteractionModel,
   ApplicationModel,
   ApplicationStatusEventModel,
+  CareerProfileModel,
   CompanyModel,
   CoverLetterModel,
   CoverLetterSnippetModel,
@@ -22,6 +23,7 @@ import type {
 export type Application = ApplicationModel;
 export type ApplicationStatusEvent = ApplicationStatusEventModel;
 export type ApplicationInteraction = ApplicationInteractionModel;
+export type CareerProfile = CareerProfileModel;
 export type Company = CompanyModel;
 export type CoverLetter = CoverLetterModel;
 export type CoverLetterSnippet = CoverLetterSnippetModel;
@@ -75,23 +77,25 @@ export type ApplicationDetail = Application & {
 export type PreferencesWithProfile = Preferences & {
   educationEntries: EducationEntry[];
   projectEntries: ProjectEntry[];
+  careerProfiles?: CareerProfile[];
 };
 
 /**
  * Form, in der `/api/preferences` die Präferenzen an den Client zurückgibt:
- * `aiApiKey`/`imapPassword` sind immer `null` (die echten Werte verlassen den
+ * `aiApiKey`/`imapPassword`/`smtpPassword` sind immer `null` (die echten Werte verlassen den
  * Server nie), dafür gibt es `hasAiApiKey`/`aiApiKeyPreview` bzw.
- * `hasImapPassword`/`imapPasswordPreview`, um dem Nutzer zu zeigen, dass (und
- * mit welchem Suffix) bereits ein Wert hinterlegt ist (siehe
- * `toPublicPreferences()` in src/lib/preferences.ts).
+ * `hasImapPassword`/`imapPasswordPreview` und `hasSmtpPassword`/`smtpPasswordPreview`.
  */
-export type PreferencesPublic = Omit<PreferencesWithProfile, "aiApiKey" | "imapPassword"> & {
+export type PreferencesPublic = Omit<PreferencesWithProfile, "aiApiKey" | "imapPassword" | "smtpPassword"> & {
   aiApiKey: null;
   hasAiApiKey: boolean;
   aiApiKeyPreview: string | null;
   imapPassword: null;
   hasImapPassword: boolean;
   imapPasswordPreview: string | null;
+  smtpPassword: null;
+  hasSmtpPassword: boolean;
+  smtpPasswordPreview: string | null;
 };
 
 export type Metrics = {

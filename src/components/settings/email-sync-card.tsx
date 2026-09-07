@@ -48,6 +48,12 @@ export function EmailSyncCard() {
   const [passwordPreview, setPasswordPreview] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState("");
 
+  const [smtpHost, setSmtpHost] = useState("");
+  const [smtpPort, setSmtpPort] = useState(587);
+  const [smtpUser, setSmtpUser] = useState("");
+  const [smtpFrom, setSmtpFrom] = useState("");
+  const [newSmtpPassword, setNewSmtpPassword] = useState("");
+
   if (settings && !initialized) {
     setHost(settings.imapHost || "imap.strato.de");
     setPort(settings.imapPort || 993);
@@ -75,14 +81,21 @@ export function EmailSyncCard() {
       if (newPassword.trim()) {
         payload.imapPassword = newPassword.trim();
       }
-      await apiPut("/api/preferences", payload);
+      if (smtpHost.trim()) payload.smtpHost = smtpHost.trim();
+      if (smtpPort) payload.smtpPort = Number(smtpPort);
+      if (smtpUser.trim()) payload.smtpUser = smtpUser.trim();
+      if (smtpFrom.trim()) payload.smtpFrom = smtpFrom.trim();
+      if (newSmtpPassword.trim()) payload.smtpPassword = newSmtpPassword.trim();
+
+      await apiPatch("/api/preferences", payload);
       const updated = await mutate("/api/email-sync");
       if (updated) {
         setHasPassword(updated.hasImapPassword);
         setPasswordPreview(updated.imapPasswordPreview);
       }
       setNewPassword("");
-      toast.success("E-Mail Sync-Einstellungen gespeichert!");
+      setNewSmtpPassword("");
+      toast.success("E-Mail & SMTP Einstellungen gespeichert!");
     } catch {
       toast.error("Fehler beim Speichern der Einstellungen.");
     } finally {
@@ -249,6 +262,57 @@ export function EmailSyncCard() {
                       <X className="h-4 w-4" />
                     </button>
                   )}
+                </div>
+              </div>
+            </div>
+
+            {/* SMTP Konfiguration für Bewerbungs-Direktversand */}
+            <div className="border-t border-border/80 pt-4 mt-4 space-y-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 block">
+                SMTP Postausgang (Bewerbungen direkt versenden)
+              </span>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-xs">
+                <div>
+                  <label className="mb-1 block font-medium text-foreground">SMTP Host</label>
+                  <Input
+                    value={smtpHost}
+                    onChange={(e) => setSmtpHost(e.target.value)}
+                    placeholder="z.B. smtp.strato.de oder smtp.gmail.com"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block font-medium text-foreground">SMTP Port</label>
+                  <Input
+                    type="number"
+                    value={smtpPort}
+                    onChange={(e) => setSmtpPort(Number(e.target.value))}
+                    placeholder="587 oder 465"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block font-medium text-foreground">SMTP Benutzer / E-Mail</label>
+                  <Input
+                    value={smtpUser}
+                    onChange={(e) => setSmtpUser(e.target.value)}
+                    placeholder="bewerbung@alexander-schepp.de"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block font-medium text-foreground">Absendername & E-Mail</label>
+                  <Input
+                    value={smtpFrom}
+                    onChange={(e) => setSmtpFrom(e.target.value)}
+                    placeholder="Max Mustermann <max@mustermann.de>"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="mb-1 block font-medium text-foreground">SMTP Passwort</label>
+                  <Input
+                    type="password"
+                    value={newSmtpPassword}
+                    onChange={(e) => setNewSmtpPassword(e.target.value)}
+                    placeholder="Neues SMTP-Passwort eingeben (wird AES-256 verschlüsselt)"
+                  />
                 </div>
               </div>
             </div>

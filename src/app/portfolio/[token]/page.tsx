@@ -23,6 +23,9 @@ import { Button } from "@/components/ui/button";
 export default function PortfolioTokenPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
   const [tracked, setTracked] = useState(false);
+  const [enteredPin, setEnteredPin] = useState("");
+  const [pinUnlocked, setPinUnlocked] = useState(false);
+  const [pinError, setPinError] = useState(false);
 
   const { data: preferences, isLoading, error } = useSWR<PreferencesWithProfile>(
     "/api/preferences",
@@ -62,6 +65,60 @@ export default function PortfolioTokenPage({ params }: { params: Promise<{ token
           <p className="mt-2 text-sm text-slate-400">
             Dieser Portfolio-Link ist ungültig, abgelaufen oder wurde vom Bewerber deaktiviert.
           </p>
+        </Card>
+      </div>
+    );
+  }
+
+  // PIN-Schutz aktiv?
+  if (preferences.portfolioPin && !pinUnlocked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4 text-slate-200">
+        <Card className="max-w-sm border-indigo-500/30 bg-slate-900 text-center p-6 space-y-4 shadow-xl">
+          <ShieldCheck className="mx-auto h-12 w-12 text-indigo-400" />
+          <div>
+            <h2 className="text-lg font-bold text-slate-100">PIN-geschütztes Profil</h2>
+            <p className="mt-1 text-xs text-slate-400">
+              Bitte gib den 4-stelligen Zugangscode ein, den du vom Bewerber erhalten hast.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <input
+              type="password"
+              maxLength={10}
+              placeholder="PIN eingeben"
+              value={enteredPin}
+              onChange={(e) => {
+                setEnteredPin(e.target.value);
+                setPinError(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  if (enteredPin.trim() === preferences.portfolioPin) {
+                    setPinUnlocked(true);
+                  } else {
+                    setPinError(true);
+                  }
+                }
+              }}
+              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-center text-lg tracking-widest font-mono text-white focus:outline-none focus:border-indigo-500"
+            />
+            {pinError && <p className="text-xs text-rose-400">Falsche PIN. Bitte erneut versuchen.</p>}
+          </div>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => {
+              if (enteredPin.trim() === preferences.portfolioPin) {
+                setPinUnlocked(true);
+              } else {
+                setPinError(true);
+              }
+            }}
+            className="w-full"
+          >
+            Profil freischalten
+          </Button>
         </Card>
       </div>
     );

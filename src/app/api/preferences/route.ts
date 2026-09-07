@@ -11,6 +11,7 @@ import {
   toPublicPreferences,
   withDecryptedApiKey,
   withDecryptedImapPassword,
+  withDecryptedSmtpPassword,
 } from "@/lib/settings/preferences";
 import { encryptSecret } from "@/lib/core/secretCrypto";
 
@@ -43,6 +44,10 @@ export async function PATCH(request: NextRequest) {
       const trimmed = updateData.imapPassword?.trim();
       updateData.imapPassword = trimmed ? encryptSecret(trimmed) : null;
     }
+    if ("smtpPassword" in updateData) {
+      const trimmed = updateData.smtpPassword?.trim();
+      updateData.smtpPassword = trimmed ? encryptSecret(trimmed) : null;
+    }
 
     const preferences = await prisma.preferences.upsert({
       where: { id: "default" },
@@ -62,7 +67,7 @@ export async function PATCH(request: NextRequest) {
     // jedem anderen DB-Read (siehe `withDecryptedApiKey()`/
     // `withDecryptedImapPassword()` in src/lib/preferences.ts).
     return NextResponse.json(
-      toPublicPreferences(withDecryptedImapPassword(withDecryptedApiKey(preferences)))
+      toPublicPreferences(withDecryptedSmtpPassword(withDecryptedImapPassword(withDecryptedApiKey(preferences))))
     );
   } catch (error) {
     return handleApiError(error);

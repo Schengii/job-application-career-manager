@@ -22,6 +22,8 @@ import { RoiTrackerCard } from "@/components/analytics/roi-tracker-card";
 import { CurrencyRelocationCalculator } from "@/components/analytics/currency-relocation-calculator";
 import { SkillRoadmapTracker } from "@/components/analytics/skill-roadmap-tracker";
 import { VermittlungsbudgetCard } from "@/components/analytics/vermittlungsbudget-card";
+import { ContractCheckerCard } from "@/components/analytics/contract-checker-card";
+import { NoticePeriodCalculatorCard } from "@/components/analytics/notice-period-calculator-card";
 
 type Analytics = {
   statusDistribution: { status: string; label: string; color: string; count: number }[];
@@ -233,6 +235,16 @@ export default function AnalyticsPage() {
             {/* Persönliche Skill- & Lernziel-Roadmap */}
             <div className="lg:col-span-2">
               <SkillRoadmapTracker />
+            </div>
+
+            {/* Arbeitsvertrags- & Klausel-Checker */}
+            <div className="lg:col-span-2">
+              <ContractCheckerCard />
+            </div>
+
+            {/* Kündigungsfristen- & Eintrittstermin-Rechner */}
+            <div className="lg:col-span-2">
+              <NoticePeriodCalculatorCard />
             </div>
 
             {/* Multi-Währungs- & Relocation-Rechner */}
