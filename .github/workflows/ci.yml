@@ -8,8 +8,16 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.agents/**'
+      - '.gitignore'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.agents/**'
+      - '.gitignore'
 
 # Verhindert, dass mehrere Läufe für denselben Branch/PR gleichzeitig laufen —
 # ein neuer Push auf denselben PR bricht den vorherigen, noch laufenden Job ab.
