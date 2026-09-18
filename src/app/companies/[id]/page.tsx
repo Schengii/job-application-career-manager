@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 import { CompanyInfoCard } from "@/components/applications/company-info-card";
+import { CompanyPrepCard } from "@/components/companies/company-prep-card";
 import { ApplicationStatusBadge } from "@/components/status-badge";
 import { formatDate } from "@/lib/core/utils";
 
@@ -61,8 +62,9 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-1">
+        <div className="flex flex-col gap-6 lg:col-span-1">
           <CompanyInfoCard company={company} onSaved={() => mutate(`/api/companies/${id}`)} />
+          <CompanyPrepCard companyId={company.id} companyName={company.name} />
         </div>
 
         <div className="flex flex-col gap-6 lg:col-span-2">

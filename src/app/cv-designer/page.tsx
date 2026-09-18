@@ -3,17 +3,19 @@
 import { useState, useMemo } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
-import { Printer, FileText, CheckSquare, Settings, FileCode } from "lucide-react";
+import { Printer, FileText, CheckSquare, Settings, FileCode, Sparkles } from "lucide-react";
 import { fetcher } from "@/lib/core/api";
-import type { PreferencesWithProfile } from "@/types";
+import type { PreferencesWithProfile, ApplicationListItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CvLayout, generateCvHtml } from "@/lib/documents/cvGenerator";
 import { AtsScoreCard } from "@/components/cv/ats-score-card";
 import { JsonResumeModal } from "@/components/cv/json-resume-modal";
+import { CvTailorModal } from "@/components/cv/cv-tailor-modal";
 
 export default function CvDesignerPage() {
   const { data: preferences, isLoading } = useSWR<PreferencesWithProfile>("/api/preferences", fetcher);
+  const { data: applications } = useSWR<ApplicationListItem[]>("/api/applications", fetcher);
   const { mutate } = useSWRConfig();
 
   const [layout, setLayout] = useState<CvLayout>("MODERN");
@@ -21,6 +23,7 @@ export default function CvDesignerPage() {
   const [selectedEducation, setSelectedEducation] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [jsonResumeOpen, setJsonResumeOpen] = useState(false);
+  const [tailorModalOpen, setTailorModalOpen] = useState(false);
 
   // Initial alle Projekte & Ausbildungselemente aktivieren
   if (preferences && !initialized) {
@@ -88,6 +91,14 @@ export default function CvDesignerPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setTailorModalOpen(true)}
+            className="card-hover-effect border-primary/30 text-primary hover:bg-primary-soft"
+          >
+            <Sparkles className="h-4 w-4 mr-1" /> Stellen-Tailoring (1-Klick)
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setJsonResumeOpen(true)}>
             <FileCode className="h-4 w-4 mr-1 text-primary" /> JSON-Resume (Im-/Export)
           </Button>
@@ -215,6 +226,15 @@ export default function CvDesignerPage() {
           await mutate("/api/preferences");
         }}
       />
+
+      {applications && (
+        <CvTailorModal
+          open={tailorModalOpen}
+          onClose={() => setTailorModalOpen(false)}
+          preferences={preferences}
+          applications={applications}
+        />
+      )}
     </div>
   );
 }

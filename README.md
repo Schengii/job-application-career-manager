@@ -320,6 +320,42 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 - **Optionales monatliches Kostenlimit (`src/lib/settings/aiBudget.ts`)**:
   - Frei wählbare USD-Warnschwelle mit Live-Anzeige der bisherigen Kosten des laufenden Kalendermonats — bewusst nur eine Warnung, KI-Funktionen werden nicht gesperrt.
 
+---
+
+### 41. ⚖️ Angebots-Vergleichsmatrix & Decision-Scoring (`/analytics`)
+- **Objektive Nutzenwertanalyse bei vorliegenden Vertragsangeboten (`src/lib/salary/offerComparison.ts`)**:
+  - Vergleicht mehrere vorliegende Arbeitsverträge anhand flexibel gewichteter Kriterien (Gehalt/Bonus, Work-Life & Remote, Tech-Stack & Weiterbildung, Kultur & Zusatzleistungen).
+  - Berechnet Teil-Scores (0–100%) sowie einen gewichteten Gesamt-Decision-Score mit automatischer Best-Offer-Empfehlung.
+
+---
+
+### 42. 📱 Mobile Interview-Day Quick-Sheet (`/applications/[id]` & `/calendar`)
+- **Kompakte Unterwegs-Ansicht für den Tag des Gesprächs (`src/lib/interview/interviewDaySheet.ts`)**:
+  - Schneller 1-Klick-Zugriff direkt vor Ort oder im Zug: Route via Google Maps starten, Ansprechpartner per Fingertipp anrufen, Video-Meeting öffnen.
+  - Zeigt auf einen Blick die wichtigsten 6 Tech-Skills der Stelle, maßgeschneiderte Gegenfragen an das Team und persönliche Vorbereitungsnotizen.
+
+---
+
+### 43. 🎯 CV Auto-Tailoring & Stellen-Re-Ranking (`/cv-designer`)
+- **1-Klick-Anpassung des Lebenslaufs auf eine Ziel-Bewerbung (`src/lib/documents/cvTailoring.ts`)**:
+  - Gleicht das Anforderungsprofil und den Tech-Stack einer ausgewählten Bewerbung mit dem eigenen Profil ab.
+  - Sortiert relevante Tech-Skills automatisch an die erste Stelle und priorisiert Projekte mit passendem Tech-Stack ganz oben.
+  - Live Keyword-Match-Score und druckfertiger Export als abgestimmter Lebenslauf.
+
+---
+
+### 44. 🏢 Unternehmens-Kultur-Check & Vorbereitungs-Checkliste (`/companies/[id]`)
+- **Strukturierter Recherche-Leitfaden (`src/lib/companies/companyPrep.ts`)**:
+  - Interaktive Vorbereitungs-Checkliste (Website/News, Kununu-Mitarbeiterbewertungen, Testen eigener Demos, Fragen an das Team).
+  - Speichert Kununu-Score, Kultur-Notizen und bietet 1-Klick-Schnelllinks zur Firmenrecherche.
+
+---
+
+### 45. 📦 1-Klick Komplettsicherung als ZIP-Archiv (`/settings` → Backup & `/api/backup/zip`)
+- **Vollständiges portables ZIP-Backup (`JSZip`)**:
+  - Exportiert mit einem Klick alle Anwendungsdaten (Bewerbungen, Firmen, Historie, Dokumenten-Metadaten) inklusive Info-README in eine handliche `.zip`-Datei.
+  - Vollständiger 1-Klick Restore von ZIP-Archiven mit Zod-Validierung und automatischer Snapshot-Sicherheit.
+
 ## 🛠️ Tech-Stack
 
 | Bereich   | Technologie                                                              |

@@ -14,6 +14,7 @@ interface SendApplicationEmailModalProps {
   onOpenChange: (open: boolean) => void;
   application: ApplicationDetail;
   senderName?: string;
+  senderEmail?: string;
   onSent?: () => void;
 }
 
@@ -22,12 +23,15 @@ export function SendApplicationEmailModal({
   onOpenChange,
   application,
   senderName = "Alexander Schepp",
+  senderEmail,
   onSent,
 }: SendApplicationEmailModalProps) {
   const toast = useToast();
   const defaultRecipient = application.company.contactEmail || "";
   const defaultSubject = `Bewerbung als ${application.position} – ${senderName}`;
-  const defaultBody = application.coverLetter?.content || `Sehr geehrte Damen und Herren,\n\nanbei sende ich Ihnen meine vollständigen Bewerbungsunterlagen als ${application.position}.\n\nMit freundlichen Grüßen\n${senderName}`;
+  const defaultBody =
+    application.coverLetter?.content ||
+    `Sehr geehrte Damen und Herren,\n\nanbei sende ich Ihnen meine vollständigen Bewerbungsunterlagen als ${application.position}.\n\nMit freundlichen Grüßen\n${senderName}${senderEmail ? `\n${senderEmail}` : ""}`;
 
   const [recipient, setRecipient] = useState(defaultRecipient);
   const [subject, setSubject] = useState(defaultSubject);

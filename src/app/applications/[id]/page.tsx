@@ -25,10 +25,13 @@ import { CoverLetterPanel } from "@/components/applications/cover-letter-panel";
 import { VoiceMemoPanel } from "@/components/applications/voice-memo-panel";
 import { InterviewNotesEditor } from "@/components/applications/interview-notes-editor";
 import { InterviewDossierModal } from "@/components/applications/interview-dossier-modal";
+import { InterviewDaySheetModal } from "@/components/interview/interview-day-sheet-modal";
+import { buildInterviewDayData } from "@/lib/interview/interviewDaySheet";
 import { FollowUpSnoozeButtons } from "@/components/applications/follow-up-snooze-buttons";
 import { ApplicationStatusBadge } from "@/components/status-badge";
 import { parseTags, getTagStyle } from "@/lib/core/tags";
 import { apiPut } from "@/lib/core/api";
+import { Smartphone } from "lucide-react";
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -37,6 +40,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
   const { mutate } = useSWRConfig();
   const [deleting, setDeleting] = useState(false);
   const [dossierOpen, setDossierOpen] = useState(false);
+  const [daySheetOpen, setDaySheetOpen] = useState(false);
 
   const { data: application, isLoading, error } = useSWR<ApplicationDetail>(
     `/api/applications/${id}`,
@@ -83,6 +87,16 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           <ArrowLeft className="h-4 w-4" /> Zurück zu allen Bewerbungen
         </Link>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDaySheetOpen(true)}
+            className="card-hover-effect border-sky-500/30 text-sky-600 dark:text-sky-400 hover:bg-sky-500/10"
+            title="Kompakte Ansicht für den Tag des Gesprächs (Navigation, Tel, Notizen)"
+          >
+            <Smartphone className="h-4 w-4" /> Quick-Sheet (Unterwegs)
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -239,6 +253,12 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         open={dossierOpen}
         onClose={() => setDossierOpen(false)}
         application={application}
+      />
+
+      <InterviewDaySheetModal
+        open={daySheetOpen}
+        onClose={() => setDaySheetOpen(false)}
+        data={buildInterviewDayData(application)}
       />
     </div>
   );

@@ -52,6 +52,9 @@ export function BackupManager() {
     ]);
   }
 
+  const [exportingZip, setExportingZip] = useState(false);
+  const zipFileInputRef = useRef<HTMLInputElement>(null);
+
   async function handleExport() {
     setExporting(true);
     try {
@@ -66,11 +69,70 @@ export function BackupManager() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success("Vollständiges Backup wurde heruntergeladen.");
+      toast.success("Vollständiges JSON-Backup wurde heruntergeladen.");
     } catch {
       toast.error("Exportieren fehlgeschlagen.");
     } finally {
       setExporting(false);
+    }
+  }
+
+  async function handleZipExport() {
+    setExportingZip(true);
+    try {
+      const res = await fetch("/api/backup/zip");
+      if (!res.ok) throw new Error("ZIP-Export fehlgeschlagen");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `career-manager-complete-${new Date().toISOString().slice(0, 10)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Komplettes ZIP-Archiv wurde heruntergeladen.");
+    } catch {
+      toast.error("ZIP-Export fehlgeschlagen.");
+    } finally {
+      setExportingZip(false);
+    }
+  }
+
+  async function handleZipFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!confirm(`Möchtest du das ZIP-Backup „${file.name}“ einspielen? Alle Tabellen werden aktualisiert.`)) {
+      if (zipFileInputRef.current) zipFileInputRef.current.value = "";
+      return;
+    }
+
+    setRestoring(true);
+    setRestoreStats(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/backup/zip", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Wiederherstellung fehlgeschlagen");
+      }
+
+      const result = await res.json();
+      setRestoreStats(result.stats);
+      await refreshAllData();
+      toast.success("ZIP-Backup erfolgreich eingespielt!");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "ZIP-Restore fehlgeschlagen.");
+    } finally {
+      setRestoring(false);
+      if (zipFileInputRef.current) zipFileInputRef.current.value = "";
     }
   }
 
@@ -232,35 +294,65 @@ export function BackupManager() {
         </CardContent>
       </Card>
 
-      {/* 2. Datei-Export & Import */}
+      {/* 2. Datei-Export & Import (JSON & ZIP) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+        <Card className="border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-bold">
-              <ShieldCheck className="h-4 w-4 text-primary" /> Manuelle JSON-Sicherung
+              <ShieldCheck className="h-4 w-4 text-primary" /> Komplettsicherung herunterladen
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-2 space-y-3">
             <p className="text-xs text-muted-foreground">
-              Lädt alle Daten als eigenständige JSON-Datei auf deinen Computer herunter.
+              Wähle zwischen einem portablen ZIP-Archiv oder einer direkten JSON-Sicherungsdatei.
             </p>
-            <Button onClick={handleExport} disabled={exporting} size="sm" className="card-hover-effect">
-              <Download className="h-4 w-4" /> {exporting ? "Erstelle Datei …" : "Backup-JSON herunterladen"}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={handleZipExport} disabled={exportingZip} size="sm" className="card-hover-effect">
+                <Download className="h-4 w-4 mr-1" /> {exportingZip ? "Erstelle Archiv …" : "Komplett-Backup (.zip)"}
+              </Button>
+              <Button onClick={handleExport} disabled={exporting} variant="outline" size="sm" className="card-hover-effect">
+                <Download className="h-4 w-4 mr-1" /> JSON-Datei
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm font-bold text-warning">
-              <AlertTriangle className="h-4 w-4" /> Wiederherstellung aus Datei
+              <AlertTriangle className="h-4 w-4" /> Wiederherstellung aus Datei / Archiv
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-2 space-y-3">
             <p className="text-xs text-muted-foreground">
-              Importiert eine zuvor exportierte `.json`-Sicherungsdatei von deiner Festplatte.
+              Importiert eine zuvor exportierte `.zip`- oder `.json`-Sicherungsdatei.
             </p>
-            <div>
+            <div className="flex flex-wrap gap-2">
+              <input
+                ref={zipFileInputRef}
+                type="file"
+                accept=".zip,application/zip"
+                onChange={handleZipFileSelect}
+                className="hidden"
+                id="backup-zip-input"
+              />
+              <Button
+                size="sm"
+                onClick={() => zipFileInputRef.current?.click()}
+                disabled={restoring}
+                className="card-hover-effect"
+              >
+                {restoring ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin mr-1" /> Spiele ein …
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-3.5 w-3.5 mr-1" /> ZIP-Backup einspielen
+                  </>
+                )}
+              </Button>
+
               <input
                 ref={fileInputRef}
                 type="file"
@@ -276,15 +368,7 @@ export function BackupManager() {
                 disabled={restoring}
                 className="card-hover-effect"
               >
-                {restoring ? (
-                  <>
-                    <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Spiele ein …
-                  </>
-                ) : (
-                  <>
-                    <Upload className="h-3.5 w-3.5" /> Datei auswählen & einspielen
-                  </>
-                )}
+                JSON auswählen
               </Button>
             </div>
           </CardContent>

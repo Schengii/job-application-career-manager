@@ -22,6 +22,7 @@ export function CareerProfilesCard() {
   const [locations, setLocations] = useState("Bonn, Köln, Remote");
   const [remote, setRemote] = useState<"ONSITE" | "HYBRID" | "REMOTE" | "ANY">("HYBRID");
   const [minSalary, setMinSalary] = useState(48000);
+  const [summary, setSummary] = useState("");
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -41,6 +42,7 @@ export function CareerProfilesCard() {
       await mutate("/api/profiles");
       toast.success(`Profil "${name}" erfolgreich angelegt!`);
       setName("");
+      setSummary("");
       setCreating(false);
     } catch {
       toast.error("Profil konnte nicht erstellt werden.");

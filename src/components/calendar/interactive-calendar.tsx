@@ -11,11 +11,14 @@ import {
   ExternalLink,
   List,
   LayoutGrid,
+  Smartphone,
 } from "lucide-react";
 import type { ApplicationListItem } from "@/types";
 import { formatDate, cn } from "@/lib/core/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { InterviewDaySheetModal } from "@/components/interview/interview-day-sheet-modal";
+import { buildInterviewDayData, InterviewDayData } from "@/lib/interview/interviewDaySheet";
 
 type CalendarEvent = {
   id: string;
@@ -62,6 +65,7 @@ function getEventStyle(type: CalendarEvent["type"]) {
 export function InteractiveCalendar({ applications }: { applications: ApplicationListItem[] }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"MONTH" | "AGENDA">("MONTH");
+  const [activeSheetData, setActiveSheetData] = useState<InterviewDayData | null>(null);
 
   // Alle Events aus den Anwendungen mit nextStepDate extrahieren
   const events = useMemo(() => {
@@ -349,6 +353,21 @@ export function InteractiveCalendar({ applications }: { applications: Applicatio
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs text-sky-600 dark:text-sky-400 border-sky-500/30 hover:bg-sky-500/10"
+                      title="Quick-Sheet für den Interview-Tag öffnen"
+                      onClick={() => {
+                        const app = applications.find((a) => a.id === ev.applicationId);
+                        if (app) {
+                          setActiveSheetData(buildInterviewDayData(app));
+                        }
+                      }}
+                    >
+                      <Smartphone className="h-3.5 w-3.5 mr-1" /> Quick-Sheet
+                    </Button>
+
                     {ev.meetingUrl && (
                       <a
                         href={ev.meetingUrl}
@@ -372,6 +391,12 @@ export function InteractiveCalendar({ applications }: { applications: Applicatio
           </div>
         )}
       </CardContent>
+
+      <InterviewDaySheetModal
+        open={Boolean(activeSheetData)}
+        onClose={() => setActiveSheetData(null)}
+        data={activeSheetData}
+      />
     </Card>
   );
 }
