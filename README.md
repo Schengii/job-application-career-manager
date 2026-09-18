@@ -175,8 +175,9 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ---
 
-### 20. ⌨️ Command Palette Quick Actions & Modern Two-Column CV-Layout
-- **Schnellaktionen via `Strg+K / ⌘K`**: Sofortiges Anlegen neuer Bewerbungen, Starten des Tech-Quiz oder Voice-Simulators von überall in der App.
+### 20. ⌨️ Command Palette Quick Actions & Optimistic Kanban Board
+- **Erweiterte Schnellsuche via `Strg+K / ⌘K` (`CommandPalette`)**: Multi-Token-Volltextsuche (Position, Firma, Tech-Stack, Notizen, Stadt), Filter-Pills für Gruppen (Alle, Bewerbungen, Firmen, Jobs, Aktionen), Pfeiltasten-Navigation mit Auto-Scroll.
+- **Optimistisches Kanban-Board**: 0ms Status-Umschaltung bei Drag & Drop und Kontextmenü mit automatischer Fehlerabsicherung und Rollback.
 - **Modern Two-Column Layout im CV-Designer**: Stilvolle zweispaltige Vorlage mit dunkler Tech-Sidebar und übersichtlicher Werdegangs-Timeline.
 
 ---

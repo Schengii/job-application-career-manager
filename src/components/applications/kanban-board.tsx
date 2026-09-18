@@ -129,12 +129,24 @@ export function KanbanBoard({
 }) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
+  // Lokaler optimistischer Zustand für flüssiges 0ms Drag & Drop Feedback
+  const [optimisticApps, setOptimisticApps] = useState<ApplicationListItem[]>(applications);
+
+  useEffect(() => {
+    setOptimisticApps(applications);
+  }, [applications]);
+
   // Bestätigungstext für Screenreader-Nutzer: Maus-Drag&Drop liefert sonst
   // keinerlei Feedback für Assistive Technologien, dass sich der Status einer
   // Karte geändert hat.
   const [announcement, setAnnouncement] = useState("");
 
   function handleMove(app: ApplicationListItem, targetStatus: string, targetLabel: string) {
+    // 1. Sofort lokales UI optimistisch aktualisieren
+    setOptimisticApps((prev) =>
+      prev.map((item) => (item.id === app.id ? { ...item, status: targetStatus } : item))
+    );
+    // 2. An übergeordnete SWR-Mutation übergeben
     onStatusChange(app.id, targetStatus);
     setAnnouncement(`${app.company.name} nach „${targetLabel}“ verschoben.`);
   }
@@ -147,7 +159,7 @@ export function KanbanBoard({
       </div>
 
       {APPLICATION_STATUSES.map((col) => {
-        const items = applications.filter((a) => a.status === col.value);
+        const items = optimisticApps.filter((a) => a.status === col.value);
         const colStyle = COLUMN_COLORS[col.value] || COLUMN_COLORS.DRAFT;
         const wip = checkColumnWip(col.value, items.length);
 
@@ -166,7 +178,7 @@ export function KanbanBoard({
             onDrop={(e) => {
               e.preventDefault();
               setDragOverStatus(null);
-              const draggedApp = applications.find((a) => a.id === dragId);
+              const draggedApp = optimisticApps.find((a) => a.id === dragId);
               if (draggedApp) handleMove(draggedApp, col.value, col.label);
               setDragId(null);
             }}
