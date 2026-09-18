@@ -296,7 +296,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ### 37. 📋 Nachweis von Eigenbemühungen (§ 38 / § 159 SGB III, `/applications`)
 - **Amtlicher DIN A4 Monatsnachweis (`EigenbemuehungenModal`)**:
-  - Filtert alle Bewerbungen mit Datum im gewählten Monat und stellt sie als druckfertigen Nachweis für Arbeitsagentur oder Jobcenter zusammen — inkl. hinterlegter Kundennummer/BG-Nr.
+  - Filtert alle Bewerbungen mit Datum im gewählten Monat und stellt sie als druck- und downloadfertigen Nachweis für Arbeitsagentur oder Jobcenter zusammen — inkl. hinterlegter Kundennummer/BG-Nr. und 1-Klick-HTML-/PDF-Download.
 
 ---
 

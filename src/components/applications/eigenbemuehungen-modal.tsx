@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import useSWR from "swr";
-import { FileText, Printer, Calendar, User } from "lucide-react";
+import { FileText, Printer, Download, Calendar, User } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form";
@@ -64,12 +64,12 @@ export function EigenbemuehungenModal({
     }
   }
 
-  function handlePrint() {
+  function getReportHtml() {
     const address = [preferences?.street, [preferences?.postalCode, preferences?.city].filter(Boolean).join(" ")]
       .filter(Boolean)
       .join(", ");
 
-    const html = generateEigenbemuehungenHtml({
+    return generateEigenbemuehungenHtml({
       candidateName: preferences?.fullName || "Bewerber/in",
       candidateAddress: address || null,
       candidateEmail: preferences?.email || null,
@@ -78,13 +78,30 @@ export function EigenbemuehungenModal({
       periodLabel,
       applications: filtered,
     });
+  }
 
+  function handlePrint() {
+    const html = getReportHtml();
     const printWin = window.open("", "_blank");
     if (!printWin) return;
     printWin.document.write(html);
     printWin.document.close();
     printWin.focus();
     setTimeout(() => printWin.print(), 250);
+  }
+
+  function handleDownloadHtml() {
+    const html = getReportHtml();
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safePeriod = periodLabel.toLowerCase().replace(/[^a-z0-9]/g, "_");
+    a.href = url;
+    a.download = `Eigenbemuehungen_${safePeriod}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -164,9 +181,20 @@ export function EigenbemuehungenModal({
             <Button variant="outline" size="sm" onClick={onClose}>
               Schließen
             </Button>
-            <Button size="sm" onClick={handlePrint} disabled={filtered.length === 0}>
-              <Printer className="h-4 w-4 mr-1.5" /> Drucken / PDF speichern
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadHtml}
+                disabled={filtered.length === 0}
+                title="Als druckfertige HTML-/PDF-Datei herunterladen"
+              >
+                <Download className="h-4 w-4 mr-1.5 text-primary" /> Herunterladen (.html)
+              </Button>
+              <Button size="sm" onClick={handlePrint} disabled={filtered.length === 0}>
+                <Printer className="h-4 w-4 mr-1.5" /> Drucken / PDF
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
