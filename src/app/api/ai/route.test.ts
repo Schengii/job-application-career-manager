@@ -88,4 +88,67 @@ describe("POST /api/ai (End-to-End-Entschlüsselung des gespeicherten API-Keys)"
     expect(body.usedAi).toBe(false);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
+
+  it("unterstützt GENERATE_INTERVIEW_FOLLOW_UP mit KI-Antwort", async () => {
+    const plainKey = "sk-plaintext-follow-up-key";
+    await prisma.preferences.create({
+      data: {
+        id: "default",
+        aiProvider: "openai",
+        aiApiKey: encryptSecret(plainKey),
+      },
+    });
+
+    const fetchSpy = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content:
+                  "Wie hast du in diesem Szenario sichergestellt, dass asynchrone Server Actions mit optimistischem UI harmonieren?",
+              },
+            },
+          ],
+        }),
+        { status: 200 }
+      );
+    });
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const res = await POST(
+      postRequest({
+        action: "GENERATE_INTERVIEW_FOLLOW_UP",
+        question: "Wie optimierst du React-Komponenten für Performance?",
+        answer: "Ich nutze React Server Components und Server Actions für Datenmutationen.",
+        targetJobTitle: "Frontend Architect",
+      })
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.usedAi).toBe(true);
+    expect(body.followUp).toContain("Server Actions");
+    expect(fetchSpy).toHaveBeenCalled();
+  });
+
+  it("fällt für GENERATE_INTERVIEW_FOLLOW_UP ohne Key sauber auf die Offline-Heuristik zurück", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+
+    const res = await POST(
+      postRequest({
+        action: "GENERATE_INTERVIEW_FOLLOW_UP",
+        question: "Wie optimierst du React-Komponenten für Performance?",
+        answer: "Ich achte darauf, unnötigen State zu vermeiden.",
+      })
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.usedAi).toBe(false);
+    expect(body.modelUsed).toContain("Offline");
+    expect(body.followUp).toBeTruthy();
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
 });

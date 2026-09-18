@@ -16,6 +16,8 @@ import {
   Play,
   Award,
   MessageSquare,
+  Bot,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/form";
@@ -63,33 +65,15 @@ type WindowWithSpeechRecognition = Window & {
   webkitSpeechRecognition?: new () => SpeechRecognitionLike;
 };
 
-// `targetJobTitle` ist Teil der öffentlichen Komponenten-Schnittstelle
-// (interview-prep/page.tsx übergibt ihn), wird im Funktionskörper aber
-// aktuell nicht verwendet — daher bewusst nicht destrukturiert.
-export function VoiceInterviewRunner({ onFinish }: VoiceInterviewRunnerProps) {
+export function VoiceInterviewRunner({ targetJobTitle, onFinish }: VoiceInterviewRunnerProps) {
   const toast = useToast();
 
-  // 5 Fragen für den Durchlauf auswählen. Initial bewusst NICHT zufällig
-  // gemischt (nur `slice(0, 5)` in fester Reihenfolge) — der Server- und der
-  // erste Client-Render müssen exakt übereinstimmen, sonst löst
-  // `Math.random()` hier einen React-Hydration-Mismatch für den gesamten
-  // Seitenbaum aus (dieser Runner steckt immer im DOM, auch bei geschlossenem
-  // Dialog, siehe MockInterviewModal), der den kompletten Baum client-seitig
-  // neu rendert und dabei jeden bereits gesetzten UI-State (z.B. aufgeklappte
-  // Fragen im Fragenkatalog) zurücksetzt. Die eigentliche Zufallsmischung
-  // erfolgt stattdessen NACH der Hydration im Effect direkt unten.
   const [questions, setQuestions] = useState<InterviewQuestion[]>(() => INTERVIEW_QUESTIONS.slice(0, 5));
 
   useEffect(() => {
     const pool = [...INTERVIEW_QUESTIONS];
-    // Bewusste Ausnahme von react-hooks/set-state-in-effect: Dies ist genau
-    // der empfohlene Weg, echten Zufall erst NACH der Hydration einzubringen
-    // (statt im Render/useState-Initializer, wo er den Server-/Client-Render
-    // auseinanderlaufen lässt, s. Kommentar am `questions`-State oben). Kein
-    // externes System wird synchronisiert, nur einmalig beim Mount gemischt.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuestions(pool.sort(() => 0.5 - Math.random()).slice(0, 5));
-    // Nur beim ersten Mount mischen, nicht bei jedem Re-Render.
   }, []);
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -98,9 +82,11 @@ export function VoiceInterviewRunner({ onFinish }: VoiceInterviewRunnerProps) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
 
-  // Folgefrage-Zustand
+  // Intelligenter Folgefrage-Zustand
   const [followUp, setFollowUp] = useState<string | null>(null);
   const [followUpAnswer, setFollowUpAnswer] = useState("");
+  const [isLoadingFollowUp, setIsLoadingFollowUp] = useState(false);
+  const [followUpModelUsed, setFollowUpModelUsed] = useState<string | null>(null);
 
   // Ergebnisse
   const [evaluations, setEvaluations] = useState<AnswerEvaluation[]>([]);
@@ -125,13 +111,6 @@ export function VoiceInterviewRunner({ onFinish }: VoiceInterviewRunnerProps) {
     window.speechSynthesis.speak(utterance);
   }
 
-  // Frage vorlesen, wenn Index wechselt. `currentQuestion`/`speakText`
-  // bewusst NICHT in der Dependency-Liste: Beide werden bei jedem Render neu
-  // berechnet (currentQuestion aus currentIndex, speakText liest
-  // voiceEnabled), sie in die Liste aufzunehmen würde die Frage z.B. auch
-  // beim bloßen Stummschalten/Entstummen erneut vorlesen lassen — hier soll
-  // ausschließlich ein Wechsel der Frage (currentIndex) bzw. des Ende-Status
-  // (isFinished) ein erneutes Vorlesen auslösen.
   useEffect(() => {
     if (!isFinished && currentQuestion) {
       speakText(currentQuestion.question);
@@ -196,7 +175,7 @@ export function VoiceInterviewRunner({ onFinish }: VoiceInterviewRunnerProps) {
     }
   }
 
-  function handleTriggerFollowUp() {
+  async function handleTriggerFollowUp() {
     if (!userAnswer.trim()) {
       toast.warning("Bitte gib zuerst deine Hauptantwort ein.");
       return;
@@ -205,9 +184,43 @@ export function VoiceInterviewRunner({ onFinish }: VoiceInterviewRunnerProps) {
       recognitionRef.current?.stop();
       setIsRecording(false);
     }
-    const generated = generateFollowUpQuestion(currentQuestion, userAnswer);
+
+    setIsLoadingFollowUp(true);
+    let generated = "";
+    let model = "Lokale Heuristik (Offline)";
+
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "GENERATE_INTERVIEW_FOLLOW_UP",
+          question: currentQuestion.question,
+          answer: userAnswer.trim(),
+          targetJobTitle: targetJobTitle || undefined,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.followUp) {
+          generated = data.followUp;
+          model = data.modelUsed || (data.usedAi ? "KI-Modell" : "Lokale Heuristik (Offline)");
+        }
+      }
+    } catch {
+      // Fallback bei Netzwerkfehler
+    }
+
+    if (!generated) {
+      generated = generateFollowUpQuestion(currentQuestion, userAnswer);
+      model = "Lokale Heuristik (Offline)";
+    }
+
+    setIsLoadingFollowUp(false);
     setFollowUp(generated);
-    speakText(`Gute Antwort. Eine kurze Nachfrage dazu: ${generated}`);
+    setFollowUpModelUsed(model);
+    speakText(`Interessanter Punkt. Eine kurze Nachfrage dazu: ${generated}`);
   }
 
   function handleNextQuestion() {
@@ -385,30 +398,60 @@ export function VoiceInterviewRunner({ onFinish }: VoiceInterviewRunnerProps) {
         {/* Optional Follow-Up Question Section */}
         {followUp ? (
           <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/5 dark:bg-indigo-500/10 p-4 space-y-2 animate-scale-in">
-            <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5" /> Dynamische Folgefrage des Interviewers:
-            </span>
-            <p className="text-sm font-semibold text-foreground">{followUp}</p>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                <Bot className="h-4 w-4" /> Dynamische KI-Nachfrage des Interviewers:
+              </span>
+              {followUpModelUsed && (
+                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-300">
+                  {followUpModelUsed}
+                </span>
+              )}
+            </div>
+            <p className="text-sm font-semibold text-foreground leading-relaxed">{followUp}</p>
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-xs text-muted-foreground">Deine Antwort auf die Nachfrage:</span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => speakText(followUp)}
+                className="text-xs h-7 px-2"
+                title="Nachfrage nochmals vorlesen"
+              >
+                <Play className="h-3 w-3 mr-1 text-indigo-600" /> Nachfrage vorlesen
+              </Button>
+            </div>
             <Textarea
               value={followUpAnswer}
               onChange={(e) => setFollowUpAnswer(e.target.value)}
               rows={3}
-              placeholder="Antwort auf die Vertiefungsfrage …"
-              className="mt-2"
+              placeholder="Antwort auf die Vertiefungsfrage frei sprechen oder eintippen …"
+              className="mt-1"
             />
           </div>
         ) : (
-          <div className="flex justify-start">
+          <div className="flex items-center justify-between">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={handleTriggerFollowUp}
-              disabled={!userAnswer.trim() || isRecording}
+              disabled={!userAnswer.trim() || isRecording || isLoadingFollowUp}
               className="text-xs text-indigo-600 dark:text-indigo-400 border-indigo-500/30 hover:bg-indigo-500/10"
             >
-              <Sparkles className="h-3.5 w-3.5 mr-1" /> Folgefrage vom Interviewer anfordern
+              {isLoadingFollowUp ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> KI analysiert Antwort & formuliert Nachfrage …
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3.5 w-3.5 mr-1 text-indigo-500" /> KI-Nachfrage vom Interviewer anfordern 🎙️
+                </>
+              )}
             </Button>
+            <span className="text-xs text-muted-foreground">
+              {targetJobTitle ? `Fokus: ${targetJobTitle}` : "Kontextbezogene technische Vertiefung"}
+            </span>
           </div>
         )}
       </div>

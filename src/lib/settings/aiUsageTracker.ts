@@ -19,7 +19,11 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import type { AiProvider } from "@/lib/settings/aiService";
 
-export type AiUsageAction = "POLISH_COVER_LETTER" | "EVALUATE_INTERVIEW_ANSWER" | "GENERATE_OPENING_SENTENCE";
+export type AiUsageAction =
+  | "POLISH_COVER_LETTER"
+  | "EVALUATE_INTERVIEW_ANSWER"
+  | "GENERATE_OPENING_SENTENCE"
+  | "GENERATE_INTERVIEW_FOLLOW_UP";
 
 export type AiUsageEntry = {
   timestamp: string; // ISO

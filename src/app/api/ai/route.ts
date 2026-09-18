@@ -9,6 +9,7 @@ import { createApiRateLimiter } from "@/lib/core/apiRateLimit";
 import {
   polishCoverLetterWithAI,
   evaluateInterviewAnswerWithAI,
+  generateInterviewFollowUpWithAI,
 } from "@/lib/settings/aiService";
 
 // Strenger als der API-Default: Jeder Aufruf löst einen kostenpflichtigen
@@ -60,6 +61,26 @@ export async function POST(request: NextRequest) {
         question: data.question,
         answer: data.answer,
         idealAnswer: data.idealAnswer,
+        provider: preferences.aiProvider,
+        apiKey: preferences.aiApiKey,
+        model: preferences.aiModel,
+      });
+
+      return NextResponse.json(result);
+    }
+
+    if (data.action === "GENERATE_INTERVIEW_FOLLOW_UP") {
+      if (!data.question || !data.answer) {
+        return NextResponse.json(
+          { error: "question und answer sind erforderlich" },
+          { status: 400 }
+        );
+      }
+
+      const result = await generateInterviewFollowUpWithAI({
+        question: data.question,
+        answer: data.answer,
+        targetJobTitle: data.targetJobTitle,
         provider: preferences.aiProvider,
         apiKey: preferences.aiApiKey,
         model: preferences.aiModel,

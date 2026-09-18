@@ -9,7 +9,10 @@
 // Auswahlmöglichkeit in den Einstellungen stillschweigend auf die
 // Offline-Heuristik zurück, siehe `getAiCompletion()` unten).
 // -----------------------------------------------------------------------------
-import { evaluateInterviewAnswer } from "@/lib/interview/mockInterviewEngine";
+import {
+  evaluateInterviewAnswer,
+  generateFollowUpQuestion,
+} from "@/lib/interview/mockInterviewEngine";
 import { INTERVIEW_QUESTIONS } from "@/lib/interview/interviewGuide";
 import { recordAiUsage, type AiUsageAction } from "@/lib/settings/aiUsageTracker";
 
@@ -476,3 +479,81 @@ Antworte ausschließlich im folgenden JSON-Format:
     modelUsed: "Lokale Heuristik (Offline)",
   };
 }
+
+export type GenerateInterviewFollowUpParams = {
+  question: string;
+  answer: string;
+  targetJobTitle?: string;
+  provider?: AiProvider | string | null;
+  apiKey?: string | null;
+  model?: string | null;
+};
+
+export type GenerateInterviewFollowUpResult = {
+  followUp: string;
+  usedAi: boolean;
+  modelUsed: string;
+};
+
+export async function generateInterviewFollowUpWithAI(
+  params: GenerateInterviewFollowUpParams
+): Promise<GenerateInterviewFollowUpResult> {
+  const { question, answer, targetJobTitle, provider, apiKey, model } = params;
+
+  const prompt = `Du bist ein erfahrener Tech Lead / Frontend Architect in einem Fachinterview für Fachinformatiker Anwendungsentwicklung.
+Der Bewerber hat auf deine Fachfrage geantwortet.
+${targetJobTitle ? `Zielposition des Bewerbers: ${targetJobTitle}` : ""}
+
+Ausgangsfrage: "${question}"
+Antwort des Bewerbers: "${answer}"
+
+Aufgabe:
+Formuliere genau EINE prägnante, tiefgehende technische Nachfrage (1 bis maximal 2 Sätze) als direkter Gesprächspartner.
+Hake an einem konkreten Detail auf (z. B. Performance, State Management, Fehlerbehandlung, TypeScript-Typsicherheit, Revalidierung oder Teamabsprachen).
+Formuliere direkt in der Du-Form, sympathisch aber fachlich anspruchsvoll.
+Antworte AUSSCHLIESSLICH mit der Nachfrage als reiner Text (keine Anführungszeichen, keine Einleitungsfloskeln wie "Hier ist meine Frage").`;
+
+  const completion = await getAiCompletion({
+    provider,
+    apiKey,
+    model,
+    prompt,
+    jsonMode: false,
+    action: "GENERATE_INTERVIEW_FOLLOW_UP",
+  });
+
+  if (completion && completion.content.trim()) {
+    const cleaned = completion.content
+      .replace(/^["„“]|["“]$/g, "")
+      .replace(/^(Interviewer:|Tech Lead:|Nachfrage:)\s*/i, "")
+      .trim();
+
+    if (cleaned.length > 10) {
+      return {
+        followUp: cleaned,
+        usedAi: true,
+        modelUsed: completion.modelUsed,
+      };
+    }
+  }
+
+  // 100% Offline-Fallback:
+  const foundQuestion =
+    INTERVIEW_QUESTIONS.find((q) => q.question.trim().toLowerCase() === question.trim().toLowerCase()) || {
+      id: "custom",
+      category: "FRONTEND_REACT" as const,
+      categoryLabel: "Fachfrage",
+      question,
+      answerSummary: "",
+      keywords: [],
+    };
+
+  const fallbackFollowUp = generateFollowUpQuestion(foundQuestion, answer);
+
+  return {
+    followUp: fallbackFollowUp,
+    usedAi: false,
+    modelUsed: "Lokale Heuristik (Offline)",
+  };
+}
+

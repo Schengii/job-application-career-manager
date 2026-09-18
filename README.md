@@ -60,8 +60,8 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
   - Der KI-Interviewer liest Fragen natürlich vor (`SpeechSynthesis`). Eigene Antworten werden über die Web Speech API in Echtzeit transkribiert.
 - **Rhetorik- & Füllwort-Analyse**:
   - Erkennt Füllwörter (*"äh", "quasi", "sozusagen"*) und misst Sprechtempo (WPM).
-- **Dynamische KI-Follow-ups**:
-  - Hakt bei oberflächlichen Antworten gezielt technisch nach.
+- **Dynamische KI-Follow-ups & Kontextbezogene Nachfragen**:
+  - Generiert situative Nachfragen auf Tech-Lead-Niveau über konfigurierte KI-Provider (OpenAI, Anthropic, OpenRouter, Ollama) oder intelligente Offline-Heuristik mit direktem Audio-Vorlesen und Zielstellen-Bezug.
 
 ---
 

@@ -399,7 +399,11 @@ export const pushUnsubscribeSchema = z.object({
 });
 
 export const aiRequestSchema = z.object({
-  action: z.enum(["POLISH_COVER_LETTER", "EVALUATE_INTERVIEW_ANSWER"]),
+  action: z.enum([
+    "POLISH_COVER_LETTER",
+    "EVALUATE_INTERVIEW_ANSWER",
+    "GENERATE_INTERVIEW_FOLLOW_UP",
+  ]),
   coverLetter: z.string().optional(),
   jobTitle: z.string().optional(),
   jobDescription: z.string().optional(),
@@ -407,4 +411,5 @@ export const aiRequestSchema = z.object({
   question: z.string().optional(),
   answer: z.string().optional(),
   idealAnswer: z.string().optional(),
+  targetJobTitle: z.string().optional(),
 });
