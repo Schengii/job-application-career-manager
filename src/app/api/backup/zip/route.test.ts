@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
-import { GET, POST } from "@/app/api/backup/zip/route";
+import { describe, expect, it } from "vitest";
+import { GET } from "@/app/api/backup/zip/route";
 import JSZip from "jszip";
 
 describe("/api/backup/zip", () => {

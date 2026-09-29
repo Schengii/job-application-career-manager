@@ -3,20 +3,14 @@
 // -----------------------------------------------------------------------------
 // Company Prep & Culture Insights Card
 // -----------------------------------------------------------------------------
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   CheckSquare,
-  Building,
   Star,
-  Sparkles,
   Search,
   ExternalLink,
-  ThumbsUp,
-  ThumbsDown,
-  Check,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   DEFAULT_COMPANY_PREP_CHECKLIST,
   CompanyPrepItem,

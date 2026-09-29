@@ -4,7 +4,7 @@
 // Gehalts- & Benefit-Vergleichsmatrix mit Decision-Scoring (Nutzenwertanalyse)
 // -----------------------------------------------------------------------------
 import { useState } from "react";
-import { Plus, Trash2, Trophy, Coins, Home, Calendar, Sliders, CheckCircle, Sparkles } from "lucide-react";
+import { Plus, Trash2, Trophy, Coins, Home, Calendar, Sliders, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -402,6 +402,17 @@ export function OfferComparisonMatrix() {
                 <option value="4">4 Sterne (Sympathisches Team)</option>
                 <option value="3">3 Sterne (Neutral / Bürokratisch)</option>
               </select>
+            </div>
+            <div>
+              <label className="text-[11px] text-muted-foreground font-medium">Pendelzeit (Min. einfach)</label>
+              <input
+                type="number"
+                min="0"
+                max="180"
+                value={commute}
+                onChange={(e) => setCommute(Number(e.target.value))}
+                className="mt-1 w-full rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-foreground"
+              />
             </div>
             <div className="flex items-end">
               <Button

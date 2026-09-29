@@ -4,13 +4,13 @@
 // CV Tailor & Snapshot Modal
 // -----------------------------------------------------------------------------
 import { useState, useMemo } from "react";
-import { Sparkles, CheckCircle2, ArrowUpDown, FileText, Check, AlertCircle, Printer } from "lucide-react";
+import { Sparkles, ArrowUpDown, Check, Printer } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/form";
 import type { PreferencesWithProfile, ApplicationListItem } from "@/types";
 import { tailorCvToJob, TailoringResult } from "@/lib/documents/cvTailoring";
-import { CvLayout, generateCvHtml } from "@/lib/documents/cvGenerator";
+import { generateCvHtml } from "@/lib/documents/cvGenerator";
 
 export function CvTailorModal({
   open,
@@ -24,7 +24,6 @@ export function CvTailorModal({
   applications: ApplicationListItem[];
 }) {
   const [selectedAppId, setSelectedAppId] = useState<string>(applications[0]?.id || "");
-  const [applied, setApplied] = useState(false);
 
   const selectedApp = useMemo(
     () => applications.find((a) => a.id === selectedAppId),
@@ -84,10 +83,7 @@ export function CvTailorModal({
             </label>
             <Select
               value={selectedAppId}
-              onChange={(e) => {
-                setSelectedAppId(e.target.value);
-                setApplied(false);
-              }}
+              onChange={(e) => setSelectedAppId(e.target.value)}
               className="w-full"
             >
               {applications.map((app) => (
@@ -156,7 +152,7 @@ export function CvTailorModal({
                   <ArrowUpDown className="h-3 w-3 text-primary" /> Angepasste Projekt-Reihenfolge im CV:
                 </span>
                 <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                  {tailoringResult.reorderedProjectIds.slice(0, 3).map((id, idx) => {
+                  {tailoringResult.reorderedProjectIds.slice(0, 3).map((id) => {
                     const proj = preferences.projectEntries.find((p) => p.id === id);
                     if (!proj) return null;
                     return (

@@ -21,8 +21,6 @@ import {
   PartyPopper,
   Users,
   FileText,
-  Phone,
-  Mail,
 } from "lucide-react";
 import type { ApplicationListItem } from "@/types";
 import { getTodayOverview } from "@/lib/applications/todayOverview";

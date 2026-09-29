@@ -8,15 +8,13 @@ import {
   Phone,
   Mail,
   Video,
-  ExternalLink,
   HelpCircle,
   Sparkles,
   Navigation,
   FileText,
   Clock,
-  Building2,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { InterviewDayData } from "@/lib/interview/interviewDaySheet";
 import { formatDate } from "@/lib/core/utils";

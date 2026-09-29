@@ -131,10 +131,12 @@ export function KanbanBoard({
   const [dragOverStatus, setDragOverStatus] = useState<string | null>(null);
   // Lokaler optimistischer Zustand für flüssiges 0ms Drag & Drop Feedback
   const [optimisticApps, setOptimisticApps] = useState<ApplicationListItem[]>(applications);
+  const [prevApplications, setPrevApplications] = useState<ApplicationListItem[]>(applications);
 
-  useEffect(() => {
+  if (applications !== prevApplications) {
+    setPrevApplications(applications);
     setOptimisticApps(applications);
-  }, [applications]);
+  }
 
   // Bestätigungstext für Screenreader-Nutzer: Maus-Drag&Drop liefert sonst
   // keinerlei Feedback für Assistive Technologien, dass sich der Status einer
