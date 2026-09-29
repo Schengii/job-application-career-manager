@@ -3,7 +3,9 @@
 Eine vollständige, moderne Fullstack-Web-Anwendung zur professionellen Steuerung der gesamten Jobsuche als **Fachinformatiker für
 Anwendungsentwicklung** (Schwerpunkt Frontend: TypeScript, JavaScript, CSS, React, Next.js – Region
 Bonn/Dortmund/Remote). Alle Daten – Unternehmen, Stellenangebote, Bewerbungen, Präferenzen,
-Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe und Recruiter-Portfolios – werden in einer echten SQLite-Datenbank via Prisma 7 gespeichert.
+Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe und Recruiter-Portfolios – werden in einer PostgreSQL-Datenbank (Neon Serverless) via Prisma 7 gespeichert.
+
+**Live-Demo:** [job-application-career-manager.vercel.app](https://job-application-career-manager.vercel.app)
 
 ---
 
@@ -310,7 +312,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ### 39. 🩺 System-Diagnose & Status-Dashboard (Einstellungen)
 - **Live-Statusprüfung aller technischen Teilsysteme (`SystemHealthCard`, `/api/health`)**:
-  - Zeigt auf einen Blick, ob SQLite-Datenbank, Web-Push (VAPID), konfigurierter KI-Provider und Hintergrund-Scheduler funktionsfähig sind — inkl. des letzten Scheduler-Fehlers, falls vorhanden.
+  - Zeigt auf einen Blick, ob Neon-Datenbankverbindung, Web-Push (VAPID), konfigurierter KI-Provider und Hintergrund-Scheduler funktionsfähig sind — inkl. des letzten Scheduler-Fehlers, falls vorhanden.
 
 ---
 
@@ -359,19 +361,20 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ## 🛠️ Tech-Stack
 
-| Bereich   | Technologie                                                              |
-| --------- | ------------------------------------------------------------------------- |
-| Frontend  | Next.js 16 (App Router, Turbopack), React 19, TypeScript, Tailwind CSS v4 |
-| Backend   | Next.js Route Handler (REST-API unter `/api/*`), Zod-Validierung          |
-| Datenbank | SQLite via Prisma 7 ORM (Adapter: `better-sqlite3`)                       |
-| State     | SWR (clientseitiges Caching + automatische Revalidierung)                 |
-| E-Mail    | `imapflow` + `mailparser` für echten IMAP/TLS-Postfachabruf (`src/lib/email/imapClient.ts`) |
-| Push      | Web Push API + VAPID (`web-push`, `src/lib/settings/pushNotifications.ts`), Hintergrund-Scheduler via `src/instrumentation.ts` |
-| Audio     | Web Speech API (SpeechSynthesis für TTS & webkitSpeechRecognition für STT)|
-| Extension | Chrome/Edge Manifest V3 (Content Script, Popup UI, Background Worker)     |
-| Testing   | Vitest (498 automatisierte Tests: Unit-/API-Integrationstests, s. `vitest.global-setup.ts`, sowie Komponenten-Tests mit React Testing Library, s. `src/test/setupTests.ts`) + Playwright E2E-Tests (15 End-to-End-Flows gegen eine eigene SQLite-Testdatenbank, s. `playwright.config.mts`) |
-| CI/CD     | GitHub Actions (`.github/workflows/ci.yml`) für automatisierte Test- & Build-Pipelines |
-| Deployment | Docker (mehrstufiges `Dockerfile` + `docker-compose.yml`) für reproduzierbares Self-Hosting außerhalb von Vercel, siehe Abschnitt „Schnellstart & Setup" |
+| Bereich    | Technologie                                                              |
+| ---------- | ------------------------------------------------------------------------- |
+| Frontend   | Next.js 16 (App Router, Turbopack), React 19, TypeScript, Tailwind CSS v4 |
+| Backend    | Next.js Route Handler (REST-API unter `/api/*`), Zod-Validierung          |
+| Datenbank  | **Neon PostgreSQL** (Serverless) via Prisma 7 ORM (Adapter: `PrismaNeonHttp`) |
+| Datei-Upload | **Vercel Blob** für persistente Datei-Uploads in Production             |
+| Hosting    | **Vercel** (Serverless Functions, Vercel Cron für Hintergrund-Jobs)      |
+| State      | SWR (clientseitiges Caching + automatische Revalidierung)                 |
+| E-Mail     | `imapflow` + `mailparser` für echten IMAP/TLS-Postfachabruf              |
+| Push       | Web Push API + VAPID (`web-push`), Hintergrund-Scheduler via `src/instrumentation.ts` (lokal) / Vercel Cron (Production) |
+| Audio      | Web Speech API (SpeechSynthesis für TTS & webkitSpeechRecognition für STT)|
+| Extension  | Chrome/Edge Manifest V3 (Content Script, Popup UI, Background Worker)    |
+| Testing    | Vitest (Unit-/API-Integrationstests) + Playwright E2E-Tests              |
+| CI/CD      | GitHub Actions (`.github/workflows/ci.yml`) für automatisierte Test- & Build-Pipelines |
 
 ---
 
@@ -419,58 +422,64 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ## ⚡ Schnellstart & Setup
 
-Voraussetzung: **Node.js ≥ 20**.
+Voraussetzung: **Node.js ≥ 20** + eine **Neon PostgreSQL**-Datenbank (kostenloser Tier ausreichend).
 
 ```bash
 # 1. Abhängigkeiten installieren
 npm install
 
-# 2. .env aus Vorlage anlegen (DATABASE_URL="file:./dev.db")
+# 2. .env aus Vorlage anlegen und Neon-Connection-String eintragen
 cp .env.example .env
+# DATABASE_URL und DIRECT_URL aus dem Neon-Dashboard eintragen
 
-# 3. Datenbank anlegen & Schema migrieren
+# 3. Prisma-Client generieren
+npx prisma generate
+
+# 4. Schema auf Neon deployen
 npx prisma db push
 
-# 4. Beispieldaten laden
+# 5. Beispieldaten laden (optional)
 npx prisma db seed
 
-# 5. Entwicklungsserver starten
+# 6. Entwicklungsserver starten
 npm run dev
 ```
 
 Die Anwendung läuft anschließend unter **http://localhost:3000**.
 
-### 🐳 Alternative: Docker (Self-Hosting außerhalb von Vercel)
-
-Für reproduzierbares Self-Hosting auf einem eigenen Server statt lokalem `npm run dev`:
+### ☁️ Vercel Deployment
 
 ```bash
-# .env-Variablen optional in docker-compose.yml eintragen (APP_PASSWORD, ENCRYPTION_KEY, …)
-docker compose up -d --build
+# Vercel CLI installieren
+npm i -g vercel
+
+# Projekt verlinken & deployen
+vercel link
+vercel env add DATABASE_URL production   # Neon Pooler-URL
+vercel env add DIRECT_URL production     # Neon Direct-URL (für Migrationen)
+vercel --prod
 ```
 
-Baut das mehrstufige `Dockerfile` (Node 20, native `better-sqlite3`-Kompilierung), synct beim Start
-automatisch das Prisma-Schema und mountet `./prisma`, `./public/uploads` sowie `./backups` als
-persistente Bind-Mounts. Details siehe Kommentare in `Dockerfile`/`docker-compose.yml` sowie den
-Abschnitt „Sicherheit" unten.
+Für automatische Push-Notifications zusätzlich `VAPID_PUBLIC_KEY` und `VAPID_PRIVATE_KEY` setzen.
+Für Datei-Uploads `BLOB_READ_WRITE_TOKEN` aus dem Vercel Blob Store eintragen.
 
 ---
 
 ## 🧪 Nützliche Befehle
 
-| Befehl                    | Zweck                                                          |
-| -------------------------- | ---------------------------------------------------------------- |
-| `npm run dev`               | Entwicklungsserver (Turbopack) starten                            |
-| `npm run build`             | Produktions-Build erstellen (inkl. TypeScript-Check)               |
-| `npm run lint`               | ESLint ausführen                                                    |
-| `npm run test`                | Testsuite (Vitest, 498 Tests) einmalig ausführen                    |
-| `npm run test:e2e`            | E2E-Tests (Playwright, 15 Flows) ausführen — startet den Dev-Server automatisch gegen `prisma/e2e.db` |
-| `npm run test:e2e:ui`         | E2E-Tests im interaktiven Playwright-UI-Modus ausführen             |
-| `npm run test:watch`           | Testsuite im Watch-Modus ausführen                                    |
-| `npm run test:db:regenerate`   | SQL-Fixture für die Test-DB neu generieren (nach Schema-Änderungen) |
-| `npx prisma studio`          | Datenbank-Inhalte im Browser ansehen/bearbeiten                     |
-| `npx prisma db push`         | Schema-Änderungen direkt auf SQLite anwenden                        |
-| `npx prisma generate`         | Prisma-Client nach Schema-Änderung neu generieren                    |
+| Befehl                  | Zweck                                                                   |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `npm run dev`           | Entwicklungsserver (Turbopack) starten                                  |
+| `npm run build`         | Produktions-Build erstellen (inkl. TypeScript-Check)                    |
+| `npm run lint`          | ESLint ausführen                                                        |
+| `npm run test`          | Testsuite (Vitest) einmalig ausführen                                   |
+| `npm run test:e2e`      | E2E-Tests (Playwright) ausführen                                        |
+| `npm run test:watch`    | Testsuite im Watch-Modus ausführen                                      |
+| `npx prisma studio`     | Datenbank-Inhalte im Browser ansehen/bearbeiten                         |
+| `npx prisma db push`    | Schema-Änderungen auf Neon PostgreSQL anwenden                          |
+| `npx prisma generate`   | Prisma-Client nach Schema-Änderung neu generieren                       |
+| `vercel env pull`       | Production-Umgebungsvariablen lokal in `.env.local` ziehen              |
+| `vercel --prod`         | Production-Deploy auf Vercel anstoßen                                   |
 
 ---
 
