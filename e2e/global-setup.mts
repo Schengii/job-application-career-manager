@@ -2,14 +2,16 @@
 // Playwright Global Setup — einmalig vor der gesamten E2E-Suite ausgeführt
 // (siehe playwright.config.mts -> globalSetup).
 // -----------------------------------------------------------------------------
-// Legt `prisma/e2e.db` frisch aus dem aktuellen Prisma-Schema an, BEVOR der
-// Next.js-Dev-Server (playwright.config.mts -> webServer) startet und darauf
-// zugreift. So laufen die E2E-Tests gegen eine echte, aber garantiert leere
-// Datenbank statt gegen die persönliche dev.db.
+// Setzt die E2E-Testdatenbank zurück via `prisma db push --force-reset`.
+// Die DATABASE_URL wird über playwright.config.mts -> webServer.env gesetzt.
 // -----------------------------------------------------------------------------
-import { resetSqliteDatabase } from "../src/test/sqliteTestDb.mts";
-import { E2E_DB_PATH } from "./env.mts";
+import { execFileSync } from "node:child_process";
+import { E2E_DATABASE_URL } from "./env.mts";
 
 export default function globalSetup() {
-  resetSqliteDatabase(E2E_DB_PATH);
+  execFileSync(
+    "npx",
+    ["prisma", "db", "push", "--force-reset", "--skip-generate", "--accept-data-loss"],
+    { stdio: "inherit", env: { ...process.env, DATABASE_URL: E2E_DATABASE_URL } },
+  );
 }

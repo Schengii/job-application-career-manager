@@ -71,20 +71,25 @@ export async function createApplicationZipPackage(data: ApplicationPackageData):
   ].join("\n");
   folder.file("Uebersicht.txt", summary);
 
-  // 3. Reale Dateien aus public/uploads hinzufügen
+  // 3. Dateien aus Vercel Blob (absolute HTTPS-URL) oder lokalem Pfad laden
   const docsFolder = folder.folder("Unterlagen") ?? folder;
   for (const doc of data.documents) {
     if (!doc.fileUrl) continue;
     try {
-      // fileUrl ist z.B. "/uploads/123-lebenslauf.pdf"
-      const relativePath = doc.fileUrl.startsWith("/") ? doc.fileUrl.slice(1) : doc.fileUrl;
-      const absolutePath = path.join(process.cwd(), "public", relativePath);
-
-      const fileBuffer = await fs.readFile(absolutePath);
-      const fileName = doc.fileName || path.basename(absolutePath) || `${sanitizeName(doc.name)}.pdf`;
+      let fileBuffer: Buffer;
+      if (doc.fileUrl.startsWith("http://") || doc.fileUrl.startsWith("https://")) {
+        const res = await fetch(doc.fileUrl);
+        if (!res.ok) continue;
+        fileBuffer = Buffer.from(await res.arrayBuffer());
+      } else {
+        // Fallback für lokale Entwicklung ohne Vercel Blob
+        const relativePath = doc.fileUrl.startsWith("/") ? doc.fileUrl.slice(1) : doc.fileUrl;
+        fileBuffer = await fs.readFile(path.join(process.cwd(), "public", relativePath));
+      }
+      const fileName = doc.fileName || path.basename(doc.fileUrl) || `${sanitizeName(doc.name)}.pdf`;
       docsFolder.file(fileName, fileBuffer);
     } catch {
-      // Falls eine Datei lokal nicht existiert, wird sie übersprungen
+      // Falls eine Datei nicht abrufbar ist, wird sie übersprungen
     }
   }
 

@@ -2,12 +2,12 @@
 // POST /api/documents/upload  (multipart/form-data)
 // -----------------------------------------------------------------------------
 // Nimmt eine Datei (Lebenslauf, Zeugnis, Referenz, ...) entgegen, speichert
-// sie unter /public/uploads und legt den zugehörigen Document-Eintrag in der
-// Datenbank an. Erwartete Felder: file, name, category, description?
+// sie auf Vercel Blob (BLOB_READ_WRITE_TOKEN erforderlich) und legt den
+// zugehörigen Document-Eintrag in der Datenbank an.
+// Erwartete Felder: file, name, category, description?
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
+import { put } from "@vercel/blob";
 import { prisma } from "@/lib/core/prisma";
 import { handleApiError } from "@/lib/core/apiUtils";
 import {
@@ -18,7 +18,6 @@ import {
 } from "@/lib/core/constants";
 import { analyzeDocumentContent } from "@/lib/documents/documentParser";
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 function sanitizeFileName(name: string): string {
@@ -74,11 +73,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
-
-    const uniqueName = `${Date.now()}-${sanitizeFileName(file.name)}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await fs.writeFile(path.join(UPLOAD_DIR, uniqueName), buffer);
+    const uniqueName = `uploads/${Date.now()}-${sanitizeFileName(file.name)}`;
+    const blob = await put(uniqueName, file, {
+      access: "public",
+      contentType: file.type,
+    });
 
     const insights = analyzeDocumentContent(file.name, description);
 
@@ -88,7 +87,7 @@ export async function POST(request: NextRequest) {
         category,
         description: description || insights.summary,
         fileName: file.name,
-        fileUrl: `/uploads/${uniqueName}`,
+        fileUrl: blob.url,
         mimeType: file.type || null,
         fileSize: file.size,
       },

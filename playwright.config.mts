@@ -15,9 +15,8 @@
 // Verhältnis zum Nutzen für ein Einzelnutzer-Portfolio-Projekt.
 //
 // `fullyParallel: false` + `workers: 1`: Alle Tests teilen sich dieselbe
-// SQLite-Datei (prisma/e2e.db) ohne Transaktions-Rollback pro Test — parallele
-// Worker würden sich mit "database is locked"-Fehlern blockieren (dieselbe
-// Einschränkung wie bei den Vitest-API-Tests, siehe vitest.config.mts).
+// Testdatenbank ohne Transaktions-Rollback pro Test — parallele Worker
+// würden sich mit Race-Conditions blockieren.
 // -----------------------------------------------------------------------------
 import { defineConfig, devices } from "@playwright/test";
 import { E2E_BASE_URL, E2E_DATABASE_URL, E2E_PORT } from "./e2e/env.mts";
@@ -46,7 +45,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
-      DATABASE_URL: E2E_DATABASE_URL,
+      DATABASE_URL: process.env.E2E_DATABASE_URL ?? E2E_DATABASE_URL,
       // Leerer String statt "undefined lassen": überschreibt deterministisch
       // ein eventuell in der Host-Umgebung gesetztes APP_PASSWORD, damit die
       // Tests nie unerwartet auf HTTP-Basic-Auth treffen (middleware.ts

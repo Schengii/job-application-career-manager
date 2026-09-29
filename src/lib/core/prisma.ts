@@ -1,35 +1,28 @@
 // -----------------------------------------------------------------------------
-// Prisma Client Singleton
+// Prisma Client Singleton — Neon (PostgreSQL, serverless)
 // -----------------------------------------------------------------------------
-// Prisma 7 verwendet für SQLite einen "driver adapter" statt der eingebauten
-// Query-Engine. Wir nutzen `better-sqlite3` (synchron, sehr schnell, ideal für
-// lokale Entwicklung). Der Singleton verhindert, dass im Next.js-Dev-Modus
-// (Hot Reload) bei jedem Request eine neue DB-Verbindung aufgebaut wird.
+// Nutzt den @prisma/adapter-neon Adapter für Vercel-kompatibles serverless
+// PostgreSQL via Neon. Der Singleton verhindert im Next.js-Dev-Modus
+// (Hot Reload) mehrfache Verbindungen.
 // -----------------------------------------------------------------------------
 import { PrismaClient } from "@/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaNeon } from "@prisma/adapter-neon";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { Pool } = require("@neondatabase/serverless") as typeof import("@neondatabase/serverless");
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
 function createPrismaClient() {
-  // better-sqlite3 erwartet einen Dateipfad, kein "file:"-URI-Präfix.
-  const rawUrl = process.env.DATABASE_URL ?? "file:./dev.db";
-  const filePath = rawUrl.startsWith("file:") ? rawUrl.slice(5) : rawUrl;
-  const adapter = new PrismaBetterSqlite3({ url: filePath, timeout: 5000 });
-  const client = new PrismaClient({ adapter });
-
-  if (filePath !== ":memory:") {
-    try {
-      client.$executeRawUnsafe("PRAGMA journal_mode = WAL;").catch(() => {});
-      client.$executeRawUnsafe("PRAGMA synchronous = NORMAL;").catch(() => {});
-    } catch {
-      // Ignorieren bei isolierten Test-Umgebungen
-    }
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL environment variable is not set");
   }
-
-  return client;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pool = new Pool({ connectionString }) as any;
+  const adapter = new PrismaNeon(pool);
+  return new PrismaClient({ adapter });
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();

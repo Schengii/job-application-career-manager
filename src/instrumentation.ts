@@ -1,13 +1,13 @@
 // -----------------------------------------------------------------------------
 // Next.js Instrumentation Hook: `register()` läuft einmal beim Start einer
 // neuen Server-Instanz (siehe node_modules/next/dist/docs/01-app/02-guides/instrumentation.md).
-// Startet hier den in-process Hintergrund-Scheduler (src/lib/scheduler.ts).
+// Startet den in-process Hintergrund-Scheduler für lokale Entwicklung.
+// Auf Vercel übernimmt der Cron Job (/api/cron/tick, vercel.json) diese Aufgabe —
+// dort wird der Scheduler hier NICHT gestartet, um doppelte Ausführungen
+// in mehreren serverless Function-Instanzen zu vermeiden.
 // -----------------------------------------------------------------------------
 export async function register() {
-  // Nur im Node.js-Runtime starten (nicht in der Edge-Runtime, die z.B.
-  // `middleware.ts` verwendet, und die keinen langlebigen Prozess für
-  // `setInterval` hat).
-  if (process.env.NEXT_RUNTIME === "nodejs") {
+  if (process.env.NEXT_RUNTIME === "nodejs" && !process.env.VERCEL) {
     const { startBackgroundScheduler } = await import("./lib/settings/scheduler");
     startBackgroundScheduler();
   }

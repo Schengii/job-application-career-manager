@@ -19,7 +19,8 @@ import { existsSync, mkdirSync, copyFileSync, readFileSync } from "fs";
 import path from "path";
 import XLSX from "xlsx";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaNeon } from "@prisma/adapter-neon";
+import { Pool } from "@neondatabase/serverless";
 import { generateCoverLetter } from "../src/lib/documents/coverLetterGenerator";
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
@@ -81,9 +82,11 @@ function loadProfileData(): ProfileData {
 // da dieses Skript außerhalb des Next.js-Bundlers läuft und Pfad-Aliase wie
 // "@/..." dort nicht aufgelöst werden).
 // ---------------------------------------------------------------------------
-const rawUrl = process.env.DATABASE_URL ?? "file:./dev.db";
-const dbFilePath = rawUrl.startsWith("file:") ? rawUrl.slice(5) : rawUrl;
-const prisma = new PrismaClient({ adapter: new PrismaBetterSqlite3({ url: dbFilePath }) });
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error("DATABASE_URL ist nicht gesetzt");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const pool = new Pool({ connectionString }) as any;
+const prisma = new PrismaClient({ adapter: new PrismaNeon(pool) });
 
 // ---------------------------------------------------------------------------
 // Portal-Name (aus der Excel-Spalte "Anzeigeportal") -> JOB_PORTAL-Wert

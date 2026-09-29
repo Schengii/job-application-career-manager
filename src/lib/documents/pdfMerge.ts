@@ -189,13 +189,17 @@ async function appendImagePage(merged: PDFDocument, bytes: Buffer): Promise<void
 
 async function readUploadedFile(fileUrl: string): Promise<Buffer | null> {
   try {
-    // fileUrl ist z.B. "/uploads/123-lebenslauf.pdf" (siehe zipPackage.ts)
+    if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) {
+      // Vercel Blob: absolute HTTPS-URL
+      const res = await fetch(fileUrl);
+      if (!res.ok) return null;
+      return Buffer.from(await res.arrayBuffer());
+    }
+    // Fallback für lokale Entwicklung ohne Vercel Blob
     const relativePath = fileUrl.startsWith("/") ? fileUrl.slice(1) : fileUrl;
     const absolutePath = path.join(process.cwd(), "public", relativePath);
     return await fs.readFile(absolutePath);
   } catch {
-    // Datei lokal nicht (mehr) vorhanden -> wird beim Merge übersprungen,
-    // statt das gesamte Paket scheitern zu lassen.
     return null;
   }
 }

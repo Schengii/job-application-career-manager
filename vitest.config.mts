@@ -13,16 +13,15 @@ export default defineConfig({
     // und automatisches Unmounting nach jedem Test global — unschädlich für
     // Lib-/API-Tests, die keine Komponenten rendern (siehe setupTests.ts).
     setupFiles: ["./src/test/setupTests.ts"],
-    // API-Integrationstests schreiben in eine gemeinsame SQLite-Testdatei
-    // (siehe vitest.global-setup.ts). Parallele Test-Worker-Prozesse würden
-    // sich dabei gegenseitig mit "database is locked"-Fehlern blockieren,
-    // daher laufen alle Testdateien sequenziell in einem Prozess. Die
-    // Gesamtsuite ist klein genug (<100 Tests), dass das keinen spürbaren
-    // Performance-Nachteil hat.
+    // API-Integrationstests laufen sequenziell, damit sie sich nicht
+    // gegenseitig in der Testdatenbank stören.
     fileParallelism: false,
     globalSetup: ["./vitest.global-setup.ts"],
     env: {
-      DATABASE_URL: "file:./prisma/test.db",
+      // Für lokale Tests: TEST_DATABASE_URL in .env.test setzen,
+      // z.B. eine separate Neon-Branch oder lokale Postgres-Instanz.
+      // Fallback auf DATABASE_URL (wird dann force-reset).
+      DATABASE_URL: process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL ?? "",
     },
   },
   resolve: {

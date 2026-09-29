@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
+import { del } from "@vercel/blob";
 import { prisma } from "@/lib/core/prisma";
 import { documentUpdateSchema } from "@/lib/core/validation";
 import { handleApiError } from "@/lib/core/apiUtils";
@@ -34,10 +35,16 @@ export async function DELETE(_request: NextRequest, { params }: Params) {
     const { id } = await params;
     const document = await prisma.document.delete({ where: { id } });
 
-    // Zugehörige Datei aus dem Upload-Verzeichnis entfernen (falls vorhanden)
-    if (document.fileUrl?.startsWith("/uploads/")) {
-      const filePath = path.join(process.cwd(), "public", document.fileUrl);
-      await fs.unlink(filePath).catch(() => {});
+    // Zugehörige Datei löschen
+    if (document.fileUrl) {
+      if (document.fileUrl.startsWith("http://") || document.fileUrl.startsWith("https://")) {
+        // Vercel Blob
+        await del(document.fileUrl).catch(() => {});
+      } else if (document.fileUrl.startsWith("/uploads/")) {
+        // Fallback: lokales Dateisystem (Entwicklung ohne Vercel Blob)
+        const filePath = path.join(process.cwd(), "public", document.fileUrl);
+        await fs.unlink(filePath).catch(() => {});
+      }
     }
 
     return NextResponse.json({ success: true });

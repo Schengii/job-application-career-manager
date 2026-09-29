@@ -10,6 +10,8 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // DATABASE_URL: Neon Pooler-URL (für Laufzeit-Queries via @neondatabase/serverless)
+    // DIRECT_URL: Neon direkte Verbindung (für Migrationen via prisma db push
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });

@@ -23,7 +23,7 @@ const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""};
   style-src 'self' 'unsafe-inline';
-  img-src 'self' blob: data:;
+  img-src 'self' blob: data: https://*.vercel-storage.com;
   font-src 'self';
   connect-src 'self';
   worker-src 'self';
@@ -59,22 +59,6 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/(.*)", headers: securityHeaders },
-      {
-        // Hochgeladene Bewerbungsunterlagen (`/api/documents/upload`) landen
-        // unter `/public/uploads/` und werden von Next.js als statische
-        // Dateien ausgeliefert. `DocumentPreviewModal` zeigt PDFs/Bilder
-        // bewusst inline per <iframe>/<img> an — ein
-        // `Content-Disposition: attachment` würde diese Inline-Vorschau
-        // brechen (Browser laden die Datei dann als Download statt sie zu
-        // rendern) und wird daher NICHT gesetzt. Der eigentliche Schutz
-        // gegen aktiven Code in Uploads ist die MIME-/Endungs-Allowlist beim
-        // Upload selbst (siehe src/app/api/documents/upload/route.ts), die
-        // z.B. `.html`/`.svg`/`.js`-Dateien von vornherein ablehnt —
-        // `X-Content-Type-Options: nosniff` oben greift bereits global,
-        // diese Regel bleibt nur als Dokumentation der Absicht stehen.
-        source: "/uploads/:path*",
-        headers: [{ key: "X-Content-Type-Options", value: "nosniff" }],
-      },
     ];
   },
 };

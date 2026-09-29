@@ -8,13 +8,16 @@
 // -----------------------------------------------------------------------------
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaNeon } from "@prisma/adapter-neon";
+import { Pool } from "@neondatabase/serverless";
 import { computeMatchScore } from "../src/lib/jobs/matching";
 import { generateCoverLetter } from "../src/lib/documents/coverLetterGenerator";
 
-const rawUrl = process.env.DATABASE_URL ?? "file:./dev.db";
-const filePath = rawUrl.startsWith("file:") ? rawUrl.slice(5) : rawUrl;
-const adapter = new PrismaBetterSqlite3({ url: filePath });
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error("DATABASE_URL ist nicht gesetzt");
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const pool = new Pool({ connectionString }) as any;
+const adapter = new PrismaNeon(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {

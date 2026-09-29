@@ -1,10 +1,10 @@
 // ---------------------------------------------------------------------------
 // Prisma Schema — Job Application & Career Manager
 // ---------------------------------------------------------------------------
-// Datenbank: SQLite (lokale Datei, siehe .env -> DATABASE_URL).
-// SQLite unterstützt in Prisma keine nativen Enums, daher werden Status- und
-// Kategorie-Felder als String abgebildet und auf Anwendungsebene über
-// TypeScript-Literal-Unions + Zod validiert (siehe src/lib/constants.ts).
+// Datenbank: PostgreSQL (Neon serverless, Vercel-Hosting).
+// Status- und Kategorie-Felder bleiben als String abgebildet und werden auf
+// Anwendungsebene über TypeScript-Literal-Unions + Zod validiert
+// (siehe src/lib/constants.ts).
 // ---------------------------------------------------------------------------
 
 generator client {
@@ -13,7 +13,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // ---------------------------------------------------------------------------
