@@ -8,18 +8,32 @@
 // per setInterval ausgelöst und dieser Endpunkt nicht genutzt.
 // -----------------------------------------------------------------------------
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { runSchedulerTick } from "@/lib/settings/scheduler";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
+  const isVercel = !!process.env.VERCEL;
 
-  // Auf Vercel erzwingt das Framework die Header-Prüfung — lokal ist
-  // CRON_SECRET nicht gesetzt, daher ist der Endpunkt ohne Auth erreichbar.
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!cronSecret) {
+    // Auf Vercel muss CRON_SECRET gesetzt sein — ohne Secret fail-closed.
+    if (isVercel) {
+      console.error("cron/tick: CRON_SECRET ist nicht konfiguriert.");
+      return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+    }
+    // Lokal ohne Secret: Endpunkt ohne Auth erreichbar (Dev-Convenience).
+  } else {
+    const authHeader = request.headers.get("authorization") ?? "";
+    const expected = `Bearer ${cronSecret}`;
+    // Timing-sicherer Vergleich verhindert Timing-Angriffe auf den Secret.
+    const valid =
+      authHeader.length === expected.length &&
+      timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected));
+    if (!valid) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
   try {
