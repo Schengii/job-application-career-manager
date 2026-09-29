@@ -7,8 +7,12 @@
 // -----------------------------------------------------------------------------
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaNeon } from "@prisma/adapter-neon";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { Pool } = require("@neondatabase/serverless") as typeof import("@neondatabase/serverless");
+import { neonConfig, Pool } from "@neondatabase/serverless";
+import ws from "ws";
+
+// Neon serverless benötigt WebSockets außerhalb der Browser-Umgebung
+// (Node.js / Vercel Serverless Functions).
+neonConfig.webSocketConstructor = ws;
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
