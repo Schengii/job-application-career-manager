@@ -1,6 +1,67 @@
+# Claude Ignore List
+# Ignoriert temporäre Build-Dateien, Logs, Datenbanken und sensible Artefakte für Claude
+
+# Dependencies
 node_modules/
-dist/
+.pnp
+.pnp.js
+
+# Next.js Build-Outputs & Caches
+.next/
+out/
 build/
-*.log
-coverage/
+dist/
+
+# Git & IDEs
 .git/
+.vscode/
+.idea/
+
+# Testing & Coverage
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Umgebungsdateien & Geheimnisse
+.env
+.env.local
+.env.production
+.env.development
+.env*.local
+.encryption-key
+.vapid-keys.json
+.ai-usage.json
+
+# SQLite Datenbankdateien
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+prisma/*.db
+prisma/*.db-journal
+prisma/*.db-wal
+prisma/*.db-shm
+
+# Prisma generierter Client (sehr groß, stattdessen schema.prisma betrachten)
+src/generated/prisma/
+
+# Uploads & Backups & private Unterlagen
+public/uploads/*
+!public/uploads/.gitkeep
+backups/
+Bewerbungsunterlagen final/
+scripts/profile-data.local.json
+
+# Sonstige Caches & Temp
+.turbo/
+.cache/
+.temp/
+.tmp/
