@@ -1,21 +1,14 @@
 // -----------------------------------------------------------------------------
-// Prisma Client Singleton — Neon (PostgreSQL, serverless)
+// Prisma Client Singleton — Neon (PostgreSQL, serverless via HTTP)
 // -----------------------------------------------------------------------------
-// Nutzt den @prisma/adapter-neon Adapter für Vercel-kompatibles serverless
-// PostgreSQL via Neon. Neon serverless verwendet auf Vercel HTTP-Fetch
-// (kein WebSocket nötig — Vercel's fetch-Implementierung reicht aus).
+// Nutzt PrismaNeonHttp für Vercel-kompatibles serverless PostgreSQL via Neon.
+// HTTP-Transport vermeidet WebSocket-Probleme in serverless Umgebungen und
+// funktioniert zuverlässig auf Vercel mit Node.js 22+.
 // Der Singleton verhindert im Next.js-Dev-Modus (Hot Reload) mehrfache
-// Verbindungen.
+// Instanzen.
 // -----------------------------------------------------------------------------
 import { PrismaClient } from "@/generated/prisma/client";
-import { PrismaNeon } from "@prisma/adapter-neon";
-import { neonConfig, Pool } from "@neondatabase/serverless";
-
-// Lokal (Node.js ohne native fetch): WebSocket-Polyfill für Neon
-if (typeof WebSocket === "undefined") {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  neonConfig.webSocketConstructor = require("ws");
-}
+import { PrismaNeonHttp } from "@prisma/adapter-neon";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -26,9 +19,7 @@ function createPrismaClient() {
   if (!connectionString) {
     throw new Error("DATABASE_URL environment variable is not set");
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pool = new Pool({ connectionString }) as any;
-  const adapter = new PrismaNeon(pool);
+  const adapter = new PrismaNeonHttp(connectionString, {});
   return new PrismaClient({ adapter });
 }
 
