@@ -19,7 +19,7 @@ export async function GET(
     include: {
       company: true,
       coverLetter: true,
-      documents: true,
+      documents: { include: { document: true } },
     },
   });
 
@@ -35,10 +35,10 @@ export async function GET(
       applicationDate: app.applicationDate,
       notes: app.notes,
       documents: app.documents.map((d) => ({
-        name: d.name,
-        fileName: d.fileName,
-        fileUrl: d.fileUrl,
-        category: d.category,
+        name: d.document.name,
+        fileName: d.document.fileName,
+        fileUrl: d.document.fileUrl,
+        category: d.document.category,
       })),
     });
 

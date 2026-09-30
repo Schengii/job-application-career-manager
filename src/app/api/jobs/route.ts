@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/core/prisma";
 import { jobPostingSchema } from "@/lib/core/validation";
-import { handleApiError, parsePagination, toPaginatedResult } from "@/lib/core/apiUtils";
+import { handleApiError, parsePagination, toDateOrNull, toPaginatedResult } from "@/lib/core/apiUtils";
 import { computeMatchScore } from "@/lib/jobs/matching";
 import { getOrCreatePreferences } from "@/lib/settings/preferences";
 
