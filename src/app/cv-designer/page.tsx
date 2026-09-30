@@ -3,12 +3,13 @@
 import { useState, useMemo } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
-import { Printer, FileText, CheckSquare, Settings, FileCode, Sparkles, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
+import { Printer, FileText, CheckSquare, Settings, FileCode, Sparkles, ArrowUpDown, ChevronUp, ChevronDown, BookOpen } from "lucide-react";
 import { fetcher } from "@/lib/core/api";
 import type { PreferencesWithProfile, ApplicationListItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CvLayout, CvSection, generateCvHtml } from "@/lib/documents/cvGenerator";
+import { generateProjectPortfolioHtml } from "@/lib/documents/portfolioPdfGenerator";
 import { AtsScoreCard } from "@/components/cv/ats-score-card";
 import { JsonResumeModal } from "@/components/cv/json-resume-modal";
 import { CvTailorModal } from "@/components/cv/cv-tailor-modal";
@@ -109,6 +110,25 @@ export default function CvDesignerPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (!preferences) return;
+              const html = generateProjectPortfolioHtml(preferences);
+              const win = window.open("", "_blank");
+              if (win) {
+                win.document.write(html);
+                win.document.close();
+                win.focus();
+                setTimeout(() => win.print(), 350);
+              }
+            }}
+            className="card-hover-effect border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10"
+            title="Druckfertiges DIN-A4 Praxis-Portfolio aller Referenzprojekte erzeugen"
+          >
+            <BookOpen className="h-4 w-4 mr-1" /> Praxis-Portfolio (A4)
+          </Button>
           <Button
             variant="outline"
             size="sm"

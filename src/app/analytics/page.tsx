@@ -28,6 +28,7 @@ import { CommuteCalculatorCard } from "@/components/analytics/commute-calculator
 import { ToneEfficiencyCard } from "@/components/analytics/tone-efficiency-card";
 import { SalaryHistoryCard } from "@/components/analytics/salary-history-card";
 import { TaxExpenseReportCard } from "@/components/analytics/tax-expense-report-card";
+import { CounterOfferAssistantCard } from "@/components/analytics/counter-offer-assistant-card";
 import type { ToneSuccessRate } from "@/lib/applications/toneSuccessRates";
 import type { SalaryDataPoint } from "@/lib/salary/salaryHistoryTracker";
 
@@ -240,6 +241,11 @@ export default function AnalyticsPage() {
             {/* Historischer Gehaltstrend & Entwicklung */}
             <div className="lg:col-span-2">
               <SalaryHistoryCard salaryTrends={data.salaryTrends} />
+            </div>
+
+            {/* Gegenangebots- & Nachverhandlungs-Assistent */}
+            <div className="lg:col-span-2">
+              <CounterOfferAssistantCard />
             </div>
 
             {/* Total Compensation & Benefit-Rechner */}

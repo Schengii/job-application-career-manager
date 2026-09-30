@@ -488,6 +488,23 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 - **Direktverknüpfung zu Google Maps & Deutscher Bahn (`CompanyInfoCard`)**:
   - Neuer Schnellzugriff auf vorbereitete Google-Maps-Routen (Auto/Fahrrad) und DB-Reiseauskunft direkt unter der Firmenadresse für Vor-Ort-Interviews.
 
+---
+
+### 65. 🤝 KI-Verhandlungs- & Gegenangebots-Assistent (`/analytics`)
+- **Taktische Gehalts-Nachverhandlung & Gegenangebot-Berechnung (`CounterOfferAssistantCard`, `src/lib/salary/counterOfferGenerator.ts`)**:
+  - Analysiert Angebote im Vergleich zum Wunschgehalt und bewertet Verhandlungsspielräume (Direktannahme vs. Nachverhandlung).
+  - Berechnet psychologisch fundierte Gegenangebots-Beträge und liefert konkrete Verhandlungshebel (z. B. automatischer Gehaltssprung nach der Probezeit, Zusatz-Remote-Tage, jährliches Weiterbildungsbudget, variable Boni).
+  - Formuliert per 1-Klick eine professionelle, wertschätzende Gegenangebots-E-Mail zur direkten Übernahme.
+
+---
+
+### 66. 📄 Druckbares DIN-A4 Praxis-Projektportfolio (`/cv-designer`)
+- **Visuelles Developer-Showcase & Projektmappe (`src/lib/documents/portfolioPdfGenerator.ts`)**:
+  - Generiert per 1-Klick ein druckfertiges DIN-A4 Projektportfolio der hinterlegten Praxis- und GitHub-Projekte.
+  - Mit sauberem typografischem A4-Layout, Projektbeschreibungen, Tech-Badges, Rollenbezeichnungen und Live-Links zur optimalen Ergänzung des Lebenslaufs.
+
+---
+
 ## 🛠️ Tech-Stack
 
 | Bereich    | Technologie                                                              |
