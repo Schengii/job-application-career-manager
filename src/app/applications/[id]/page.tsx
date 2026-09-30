@@ -31,9 +31,10 @@ import { FollowUpSnoozeButtons } from "@/components/applications/follow-up-snooz
 import { ApplicationStatusBadge } from "@/components/status-badge";
 import { parseTags, getTagStyle } from "@/lib/core/tags";
 import { apiPut } from "@/lib/core/api";
-import { Smartphone, Mail } from "lucide-react";
+import { Smartphone, Mail, Calendar } from "lucide-react";
 import { InterviewStageTracker } from "@/components/applications/interview-stage-tracker";
 import { SendApplicationEmailModal } from "@/components/applications/send-application-email-modal";
+import { generateIcsContent, downloadIcsFile } from "@/lib/settings/ical";
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -98,6 +99,32 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             title="Bewerbung direkt per E-Mail inkl. PDF-Mappe an das Unternehmen versenden"
           >
             <Mail className="h-4 w-4" /> E-Mail versenden
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const startDate = application.nextStepDate ? new Date(application.nextStepDate) : new Date();
+              const isInterview = application.status === "INTERVIEW";
+              const ics = generateIcsContent({
+                title: isInterview
+                  ? `Gespräch: ${application.position} (${application.company.name})`
+                  : `${application.nextStep || "Frist/Wiedervorlage"}: ${application.company.name}`,
+                description: `Bewerbung: ${application.position} bei ${application.company.name}\nAnsprechpartner: ${application.company.contactName || "—"}\nMeeting: ${application.meetingUrl || "—"}\nNotizen: ${application.notes || "—"}`,
+                location: application.meetingUrl || application.company.city || "Online / Vor Ort",
+                startDate,
+                durationMinutes: isInterview ? 60 : 30,
+                url: application.meetingUrl || undefined,
+              });
+              const safeName = application.company.name.toLowerCase().replace(/[^a-z0-9]/g, "-");
+              downloadIcsFile(`termin-${safeName}.ics`, ics);
+              toast.success("Kalender-Termin (.ics) heruntergeladen!");
+            }}
+            className="card-hover-effect border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10"
+            title="Diesen Termin als .ics-Kalenderdatei herunterladen und in Google/Apple/Outlook öffnen"
+          >
+            <Calendar className="h-4 w-4" /> Termin (.ics)
           </Button>
 
           <Button

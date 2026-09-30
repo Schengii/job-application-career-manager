@@ -32,6 +32,18 @@ describe("getFollowUpStatus", () => {
     expect(statusSentFresh.isFollowUpSuggested).toBe(false);
   });
 
+  it("schlägt Reaktivierung für TALENT_POOL Bewerbungen nach 90 Tagen vor", () => {
+    const oldDate = new Date();
+    oldDate.setDate(oldDate.getDate() - 95);
+
+    const statusTalentPool = getFollowUpStatus({
+      status: "TALENT_POOL",
+      applicationDate: oldDate,
+    });
+    expect(statusTalentPool.isFollowUpSuggested).toBe(true);
+    expect(statusTalentPool.daysSinceApplication).toBeGreaterThanOrEqual(90);
+  });
+
   it("erkennt überfällige und bevorstehende Termine", () => {
     const pastDate = new Date();
     pastDate.setDate(pastDate.getDate() - 2);

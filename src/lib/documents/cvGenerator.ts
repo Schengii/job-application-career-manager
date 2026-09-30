@@ -8,11 +8,14 @@ import type { PreferencesWithProfile } from "@/types";
 
 export type CvLayout = "MODERN" | "CLASSIC" | "COMPACT" | "ATS_MINIMAL" | "MODERN_TWO_COLUMN";
 
+export type CvSection = "PROFILE" | "EDUCATION" | "PROJECTS" | "SKILLS";
+
 export type CvOptions = {
   layout: CvLayout;
   showPhotoPlaceholder?: boolean;
   selectedProjectIds?: string[];
   selectedEducationIds?: string[];
+  sectionOrder?: CvSection[];
 };
 
 export function formatMonthYear(dateString?: Date | string | null): string {
@@ -137,6 +140,72 @@ export function generateCvHtml(preferences: PreferencesWithProfile, options: CvO
     `.trim();
   }
 
+  const sectionOrder: CvSection[] = options.sectionOrder || ["PROFILE", "EDUCATION", "PROJECTS", "SKILLS"];
+
+  const renderedSections = sectionOrder
+    .map((sec) => {
+      switch (sec) {
+        case "PROFILE":
+          return preferences.profileSummary
+            ? `<div class="profile-summary">${escapeHtml(preferences.profileSummary)}</div>`
+            : "";
+        case "EDUCATION":
+          return `
+            <div class="section">
+              <div class="section-title">Ausbildung & Werdegang</div>
+              ${eduList
+                .map(
+                  (e) => `
+                <div class="entry">
+                  <div class="entry-header">
+                    <span>${escapeHtml(e.title)}</span>
+                    <span style="font-size: 11px; font-weight: normal; color: #64748b;">
+                      ${formatMonthYear(e.startDate)} – ${formatMonthYear(e.endDate)}
+                    </span>
+                  </div>
+                  ${e.institution ? `<div class="entry-inst">${escapeHtml(e.institution)}</div>` : ""}
+                  ${e.description ? `<div class="entry-desc">${escapeHtml(e.description)}</div>` : ""}
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+          `;
+        case "PROJECTS":
+          return `
+            <div class="section">
+              <div class="section-title">Praxisprojekte & Referenzen</div>
+              ${projList
+                .map(
+                  (p) => `
+                <div class="entry">
+                  <div class="entry-header">
+                    <span>${escapeHtml(p.title)}</span>
+                    ${p.role ? `<span style="font-size: 11px; font-weight: normal; color: #64748b;">${escapeHtml(p.role)}</span>` : ""}
+                  </div>
+                  ${p.description ? `<div class="entry-desc">${escapeHtml(p.description)}</div>` : ""}
+                  ${p.techStack ? `<div style="font-size: 11px; color: #4f46e5; margin-top: 2px;">Tech-Stack: ${escapeHtml(p.techStack)}</div>` : ""}
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+          `;
+        case "SKILLS":
+          return `
+            <div class="section">
+              <div class="section-title">Kenntnisse & Tech-Stack</div>
+              <div class="skills-grid">
+                ${skills.map((s) => `<span class="skill-tag">${escapeHtml(s)}</span>`).join("")}
+              </div>
+            </div>
+          `;
+        default:
+          return "";
+      }
+    })
+    .join("\n");
+
   return `
 <!DOCTYPE html>
 <html lang="de">
@@ -187,52 +256,7 @@ export function generateCvHtml(preferences: PreferencesWithProfile, options: CvO
     </div>
   </div>
 
-  ${preferences.profileSummary ? `<div class="profile-summary">${escapeHtml(preferences.profileSummary)}</div>` : ""}
-
-  <div class="section">
-    <div class="section-title">Ausbildung & Werdegang</div>
-    ${eduList
-      .map(
-        (e) => `
-      <div class="entry">
-        <div class="entry-header">
-          <span>${escapeHtml(e.title)}</span>
-          <span style="font-size: 11px; font-weight: normal; color: #64748b;">
-            ${formatMonthYear(e.startDate)} – ${formatMonthYear(e.endDate)}
-          </span>
-        </div>
-        ${e.institution ? `<div class="entry-inst">${escapeHtml(e.institution)}</div>` : ""}
-        ${e.description ? `<div class="entry-desc">${escapeHtml(e.description)}</div>` : ""}
-      </div>
-    `
-      )
-      .join("")}
-  </div>
-
-  <div class="section">
-    <div class="section-title">Praxisprojekte & Referenzen</div>
-    ${projList
-      .map(
-        (p) => `
-      <div class="entry">
-        <div class="entry-header">
-          <span>${escapeHtml(p.title)}</span>
-          ${p.role ? `<span style="font-size: 11px; font-weight: normal; color: #64748b;">${escapeHtml(p.role)}</span>` : ""}
-        </div>
-        ${p.description ? `<div class="entry-desc">${escapeHtml(p.description)}</div>` : ""}
-        ${p.techStack ? `<div style="font-size: 11px; color: #4f46e5; margin-top: 2px;">Tech-Stack: ${escapeHtml(p.techStack)}</div>` : ""}
-      </div>
-    `
-      )
-      .join("")}
-  </div>
-
-  <div class="section">
-    <div class="section-title">Kenntnisse & Tech-Stack</div>
-    <div class="skills-grid">
-      ${skills.map((s) => `<span class="skill-tag">${escapeHtml(s)}</span>`).join("")}
-    </div>
-  </div>
+  ${renderedSections}
 </body>
 </html>
   `.trim();

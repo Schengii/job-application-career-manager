@@ -395,6 +395,33 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
   - Erkennt beim Öffnen des Popups auf StepStone, Indeed oder LinkedIn sofort, ob das Unternehmen bereits in der Datenbank existiert, und warnt vor versehentlichen Mehrfachbewerbungen.
   - Tastaturkürzel `Alt+C` öffnet den Web-Clipper blitzschnell ohne Maus-Klick.
 
+---
+
+### 51. 🤝 Talent-Pool & On-Hold Status mit Reaktivierungs-Timer (`/applications`)
+- **Status `TALENT_POOL` mit automatischem 90-Tage-Follow-Up (`src/lib/applications/followUp.ts`)**:
+  - Eigener Status für Bewerbungen, die im Unternehmens-Talent-Pool geparkt wurden.
+  - Berechnet nach 90 Tagen automatisch einen fälligen Reaktivierungs-Reminder und bietet eine maßgeschneiderte E-Mail-Vorlage zur Wiederaufnahme des Kontakts.
+
+---
+
+### 52. 📈 Anschreiben-Tonalität & Stil-Effizienz-Analyse (`/analytics`)
+- **Stil-Effizienz-Matrix (`ToneEfficiencyCard`, `src/lib/applications/toneSuccessRates.ts`)**:
+  - Wertet aus, welche Anschreiben-Tonalität (`MODERN`, `CLASSIC`, `STARTUP`, `DETAILED`) prozentual die höchste Einladungs- und Zusagequote erzielt.
+  - Schärft die Bewerbungsstrategie datenbasiert nach Arbeitgebersegment.
+
+---
+
+### 53. 📄 Dynamische Lebenslauf-Abschnitts-Reihenfolge (`/cv-designer`)
+- **Freie Sektions-Reihenfolge (`CvSection`, `src/lib/documents/cvGenerator.ts`)**:
+  - Erlaubt das beliebige Umordnen von *Kurzprofil*, *Ausbildung & Werdegang*, *Praxisprojekte* und *Tech-Stack* per Auf-/Ab-Buttons in der Sidebar.
+  - Passt die Druckansicht und den PDF-Export in Echtzeit an.
+
+---
+
+### 54. 📅 1-Klick .ICS Einzel-Kalenderexport (`/applications/[id]`)
+- **Direktdownload für Kalender-Apps (`src/lib/settings/ical.ts`)**:
+  - Neuer Button *„Termin (.ics)“* im Kopf jeder Bewerbung lädt ein Einzel-Event mit Datum, Gesprächspartner, Adresse und Video-Meeting-Link herunter und öffnet es direkt in Apple Kalender, Google Kalender oder Outlook.
+
 ## 🛠️ Tech-Stack
 
 | Bereich    | Technologie                                                              |

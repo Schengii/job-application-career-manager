@@ -25,6 +25,8 @@ import { VermittlungsbudgetCard } from "@/components/analytics/vermittlungsbudge
 import { ContractCheckerCard } from "@/components/analytics/contract-checker-card";
 import { NoticePeriodCalculatorCard } from "@/components/analytics/notice-period-calculator-card";
 import { CommuteCalculatorCard } from "@/components/analytics/commute-calculator-card";
+import { ToneEfficiencyCard } from "@/components/analytics/tone-efficiency-card";
+import type { ToneSuccessRate } from "@/lib/applications/toneSuccessRates";
 
 type Analytics = {
   statusDistribution: { status: string; label: string; color: string; count: number }[];
@@ -34,6 +36,7 @@ type Analytics = {
   funnel?: { stage: string; count: number; rate: number }[];
   tagSuccessRates?: SkillSuccessRate[];
   techStackSuccessRates?: SkillSuccessRate[];
+  toneSuccessRates?: ToneSuccessRate[];
   successRate: number | null;
   avgResponseDays: number | null;
   totalApplications: number;
@@ -217,6 +220,13 @@ export default function AnalyticsPage() {
               tagData={data.tagSuccessRates ?? []}
               techStackData={data.tagSuccessRates ?? []}
             />
+
+            {/* Anschreiben-Tonalität & Stil-Effizienz */}
+            {data.toneSuccessRates && data.toneSuccessRates.length > 0 && (
+              <div className="lg:col-span-2">
+                <ToneEfficiencyCard data={data.toneSuccessRates} />
+              </div>
+            )}
 
             {/* Gehalts-Benchmarking & Marktvergleich */}
             <div className="lg:col-span-2">

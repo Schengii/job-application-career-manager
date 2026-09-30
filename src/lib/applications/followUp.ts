@@ -45,11 +45,14 @@ export function getFollowUpStatus(app: {
     }
   }
 
-  // Nachfassen wird nur für versendete Bewerbungen ohne Folgestatus (DRAFT, INTERVIEW, OFFER, REJECTED, WITHDRAWN) empfohlen
+  // Nachfassen wird für versendete Bewerbungen (>14 Tage) oder Talent-Pool (>90 Tage) empfohlen
   const isFollowUpSuggested =
-    app.status === "SENT" &&
-    daysSinceApplication !== null &&
-    daysSinceApplication >= FOLLOW_UP_THRESHOLD_DAYS;
+    (app.status === "SENT" &&
+      daysSinceApplication !== null &&
+      daysSinceApplication >= FOLLOW_UP_THRESHOLD_DAYS) ||
+    (app.status === "TALENT_POOL" &&
+      daysSinceApplication !== null &&
+      daysSinceApplication >= 90);
 
   return {
     daysSinceApplication,
@@ -64,7 +67,8 @@ export type FollowUpScenario =
   | "AFTER_APPLICATION"
   | "AFTER_INTERVIEW"
   | "AFTER_TECH_TASK"
-  | "FEEDBACK_REQUEST";
+  | "FEEDBACK_REQUEST"
+  | "TALENT_POOL_REACTIVATION";
 
 export type FollowUpEmailParams = {
   scenario: FollowUpScenario;
@@ -133,6 +137,26 @@ Vor einigen Tagen habe ich meine Bearbeitung der Coding Challenge für die Posit
 Ich stehe Ihnen gerne jederzeit für ein kurzes Review-Gespräch zur Verfügung.
 
 Mit freundlichen Grüßen
+${applicant}${phonePart}`,
+      };
+
+    case "TALENT_POOL_REACTIVATION":
+      return {
+        scenario: "TALENT_POOL_REACTIVATION",
+        scenarioTitle: "Reaktivierung aus dem Talent-Pool (nach 2–3 Monaten)",
+        recommendedTiming: "Ca. 60–90 Tage nach Aufnahme in den Talent-Pool",
+        subject: `Initiative Nachfrage & Update – Bewerberprofil ${params.position} (${applicant})`,
+        body: `${salutation}
+
+ich hoffe, es geht Ihnen und dem Team von ${params.companyName} gut.
+
+Vor einigen Monaten hatten wir uns über die Position als ${params.position} ausgetauscht und vereinbart, im Kontakt zu bleiben. Da ich die Entwicklung von ${params.companyName} weiterhin mit großem Interesse verfolge, wollte ich mich kurz nach aktuellen Opportunitäten in Ihrem Entwickler-Team erkundigen.
+
+In der Zwischenzeit habe ich meine Kenntnisse in moderner Frontend-Entwicklung (TypeScript, React/Next.js) vertieft und neue Praxisprojekte umgesetzt.
+
+Gibt es bei Ihnen derzeit oder in absehbarer Zeit wieder offene Vakanzen, bei denen mein Profil passen könnte? Ich würde mich über einen kurzen Austausch sehr freuen.
+
+Mit besten Grüßen
 ${applicant}${phonePart}`,
       };
 

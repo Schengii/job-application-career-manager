@@ -5,12 +5,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/core/prisma";
 import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/core/constants";
 import { computeTagSuccessRates, computeTechStackSuccessRates } from "@/lib/interview/skillSuccessRates";
+import { computeToneSuccessRates } from "@/lib/applications/toneSuccessRates";
 
 const RESPONSE_STATUSES = new Set(["INTERVIEW", "OFFER", "REJECTED"]);
 
 export async function GET() {
   const applications = await prisma.application.findMany({
     include: {
+      company: { select: { preferredTone: true } },
       statusEvents: { orderBy: { changedAt: "asc" } },
       jobPosting: { select: { techStack: true } },
     },
@@ -115,6 +117,7 @@ export async function GET() {
   // gut ankommt.
   const tagSuccessRates = computeTagSuccessRates(applications);
   const techStackSuccessRates = computeTechStackSuccessRates(applications);
+  const toneSuccessRates = computeToneSuccessRates(applications);
 
   return NextResponse.json({
     statusDistribution,
@@ -124,6 +127,7 @@ export async function GET() {
     rejectionDistribution,
     tagSuccessRates,
     techStackSuccessRates,
+    toneSuccessRates,
     successRate,
     avgResponseDays,
     totalApplications: applications.length,

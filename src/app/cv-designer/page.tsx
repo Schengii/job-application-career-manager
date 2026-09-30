@@ -3,12 +3,12 @@
 import { useState, useMemo } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import Link from "next/link";
-import { Printer, FileText, CheckSquare, Settings, FileCode, Sparkles } from "lucide-react";
+import { Printer, FileText, CheckSquare, Settings, FileCode, Sparkles, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
 import { fetcher } from "@/lib/core/api";
 import type { PreferencesWithProfile, ApplicationListItem } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CvLayout, generateCvHtml } from "@/lib/documents/cvGenerator";
+import { CvLayout, CvSection, generateCvHtml } from "@/lib/documents/cvGenerator";
 import { AtsScoreCard } from "@/components/cv/ats-score-card";
 import { JsonResumeModal } from "@/components/cv/json-resume-modal";
 import { CvTailorModal } from "@/components/cv/cv-tailor-modal";
@@ -21,6 +21,12 @@ export default function CvDesignerPage() {
   const [layout, setLayout] = useState<CvLayout>("MODERN");
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [selectedEducation, setSelectedEducation] = useState<string[]>([]);
+  const [sectionOrder, setSectionOrder] = useState<CvSection[]>([
+    "PROFILE",
+    "EDUCATION",
+    "PROJECTS",
+    "SKILLS",
+  ]);
   const [initialized, setInitialized] = useState(false);
   const [jsonResumeOpen, setJsonResumeOpen] = useState(false);
   const [tailorModalOpen, setTailorModalOpen] = useState(false);
@@ -38,8 +44,19 @@ export default function CvDesignerPage() {
       layout,
       selectedProjectIds: selectedProjects,
       selectedEducationIds: selectedEducation,
+      sectionOrder,
     });
-  }, [preferences, layout, selectedProjects, selectedEducation]);
+  }, [preferences, layout, selectedProjects, selectedEducation, sectionOrder]);
+
+  function moveSection(index: number, direction: "UP" | "DOWN") {
+    const targetIndex = direction === "UP" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= sectionOrder.length) return;
+    const nextOrder = [...sectionOrder];
+    const temp = nextOrder[index];
+    nextOrder[index] = nextOrder[targetIndex];
+    nextOrder[targetIndex] = temp;
+    setSectionOrder(nextOrder);
+  }
 
   function handlePrint() {
     const printWindow = window.open("", "_blank");
@@ -195,6 +212,53 @@ export default function CvDesignerPage() {
                   </label>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Reihenfolge der Abschnitte sortieren */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <ArrowUpDown className="h-4 w-4 text-primary" /> Reihenfolge der Abschnitte
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-1.5">
+              {sectionOrder.map((sec, idx) => {
+                const labels: Record<CvSection, string> = {
+                  PROFILE: "Kurzprofil / Intro",
+                  EDUCATION: "Ausbildung & Werdegang",
+                  PROJECTS: "Praxisprojekte & Referenzen",
+                  SKILLS: "Kenntnisse & Tech-Stack",
+                };
+                return (
+                  <div
+                    key={sec}
+                    className="flex items-center justify-between rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs"
+                  >
+                    <span className="font-medium text-foreground">{labels[sec]}</span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={() => moveSection(idx, "UP")}
+                        className="rounded p-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground disabled:opacity-30"
+                        title="Nach oben verschieben"
+                      >
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={idx === sectionOrder.length - 1}
+                        onClick={() => moveSection(idx, "DOWN")}
+                        className="rounded p-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground disabled:opacity-30"
+                        title="Nach unten verschieben"
+                      >
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         </div>

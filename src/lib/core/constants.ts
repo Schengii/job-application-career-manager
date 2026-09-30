@@ -13,6 +13,7 @@ export const APPLICATION_STATUSES = [
   { value: "SENT", label: "Gesendet (Offen)", color: "yellow" },
   { value: "INTERVIEW", label: "Vorstellungsgespräch", color: "blue" },
   { value: "OFFER", label: "Zusage", color: "green" },
+  { value: "TALENT_POOL", label: "Talent Pool / On Hold", color: "purple" },
   { value: "REJECTED", label: "Absage", color: "red" },
   { value: "WITHDRAWN", label: "Zurückgezogen", color: "gray" },
 ] as const;
