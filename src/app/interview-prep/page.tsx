@@ -43,10 +43,12 @@ import { CustomQuestionModal } from "@/components/interview/custom-question-moda
 import { InterviewFeedbackCard } from "@/components/interview/interview-feedback-card";
 import { ElevatorPitchCard } from "@/components/interview/elevator-pitch-card";
 import { loadCustomQuestions } from "@/lib/interview/customQuestionStorage";
+import { StarStoryBuilderCard } from "@/components/interview/star-story-builder-card";
 import { Plus } from "lucide-react";
 
 const TABS = [
   { id: "questions", label: "Fachfragen-Katalog & Leitfaden" },
+  { id: "star_builder", label: "STAR-Story Builder 🌟" },
   { id: "elevator_pitch", label: "60s Elevator-Pitch 🎤" },
   { id: "tech_quiz", label: "Tech- & Coding-Quiz ⚡ (React 19 / TS)" },
   { id: "coding_canvas", label: "Live-Coding Challenges 💻" },
@@ -283,6 +285,8 @@ export default function InterviewPrepPage() {
 
       {activeTab === "negotiation" ? (
         <SalaryNegotiationTrainer />
+      ) : activeTab === "star_builder" ? (
+        <StarStoryBuilderCard />
       ) : activeTab === "elevator_pitch" ? (
         <ElevatorPitchCard
           defaultCompany={selectedApp?.company?.name}

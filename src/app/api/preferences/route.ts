@@ -49,15 +49,18 @@ export async function PATCH(request: NextRequest) {
       updateData.smtpPassword = trimmed ? encryptSecret(trimmed) : null;
     }
 
-    const preferences = await prisma.preferences.upsert({
+    const existingPref = await prisma.preferences.findUnique({
       where: { id: "default" },
-      update: updateData,
-      create: { id: "default", ...updateData },
-      include: {
-        educationEntries: { orderBy: { sortOrder: "asc" } },
-        projectEntries: { orderBy: { sortOrder: "asc" } },
-      },
     });
+
+    const preferences = existingPref
+      ? await prisma.preferences.update({
+          where: { id: "default" },
+          data: updateData,
+        })
+      : await prisma.preferences.create({
+          data: { id: "default", ...updateData },
+        });
 
     // `preferences.aiApiKey`/`imapPassword` sind an dieser Stelle der frisch
     // verschlüsselte Chiffretext aus dem `upsert()` oben (Prisma gibt exakt

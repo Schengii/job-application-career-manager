@@ -29,8 +29,10 @@ import { ToneEfficiencyCard } from "@/components/analytics/tone-efficiency-card"
 import { SalaryHistoryCard } from "@/components/analytics/salary-history-card";
 import { TaxExpenseReportCard } from "@/components/analytics/tax-expense-report-card";
 import { CounterOfferAssistantCard } from "@/components/analytics/counter-offer-assistant-card";
+import { ResponseHeatmapCard } from "@/components/analytics/response-heatmap-card";
 import type { ToneSuccessRate } from "@/lib/applications/toneSuccessRates";
 import type { SalaryDataPoint } from "@/lib/salary/salaryHistoryTracker";
+import type { TimingAnalyticsResult } from "@/lib/analytics/responseHeatmap";
 
 type Analytics = {
   statusDistribution: { status: string; label: string; color: string; count: number }[];
@@ -42,6 +44,7 @@ type Analytics = {
   techStackSuccessRates?: SkillSuccessRate[];
   toneSuccessRates?: ToneSuccessRate[];
   salaryTrends?: SalaryDataPoint[];
+  timingAnalytics?: TimingAnalyticsResult;
   successRate: number | null;
   avgResponseDays: number | null;
   totalApplications: number;
@@ -215,6 +218,11 @@ export default function AnalyticsPage() {
                 </div>
               </CardContent>
             </Card>
+            {/* Bewerbungs-Timing & Response-Heatmap */}
+            <div className="lg:col-span-2">
+              <ResponseHeatmapCard timingData={data.timingAnalytics} />
+            </div>
+
             {/* Markt-Nachfrage & Skill-Gap Matrix */}
             <div className="lg:col-span-2">
               <SkillGapCard />

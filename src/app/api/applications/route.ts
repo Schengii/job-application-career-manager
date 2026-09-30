@@ -82,14 +82,25 @@ export async function POST(request: NextRequest) {
         source: data.source ?? null,
         companyId: data.companyId,
         jobPostingId: data.jobPostingId || null,
-        statusEvents: {
-          create: { status: data.status ?? "DRAFT", note: "Bewerbung angelegt" },
-        },
       },
-      include: { company: true, jobPosting: true, statusEvents: true },
+      include: { company: true, jobPosting: true },
     });
 
-    return NextResponse.json(application, { status: 201 });
+    const statusEvent = await prisma.applicationStatusEvent.create({
+      data: {
+        applicationId: application.id,
+        status: data.status ?? "DRAFT",
+        note: "Bewerbung angelegt",
+      },
+    });
+
+    return NextResponse.json(
+      {
+        ...application,
+        statusEvents: [statusEvent],
+      },
+      { status: 201 }
+    );
   } catch (error) {
     return handleApiError(error);
   }

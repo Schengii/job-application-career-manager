@@ -89,11 +89,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const { dismissedAt, ...jobData } = rest;
     const job = await prisma.jobPosting.create({
-      data: { ...rest, companyId },
-      include: { company: true },
+      data: {
+        ...jobData,
+        companyId,
+        dismissedAt: toDateOrNull(dismissedAt) ?? null,
+      },
     });
-    return NextResponse.json(job, { status: 201 });
+
+    const company = companyId ? await prisma.company.findUnique({ where: { id: companyId } }) : null;
+
+    return NextResponse.json({ ...job, company }, { status: 201 });
   } catch (error) {
     return handleApiError(error);
   }

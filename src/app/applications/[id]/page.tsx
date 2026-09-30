@@ -31,7 +31,7 @@ import { FollowUpSnoozeButtons } from "@/components/applications/follow-up-snooz
 import { ApplicationStatusBadge } from "@/components/status-badge";
 import { parseTags, getTagStyle } from "@/lib/core/tags";
 import { apiPut } from "@/lib/core/api";
-import { Smartphone, Mail, Calendar } from "lucide-react";
+import { Smartphone, Mail, Calendar, Archive } from "lucide-react";
 import { InterviewStageTracker } from "@/components/applications/interview-stage-tracker";
 import { SendApplicationEmailModal } from "@/components/applications/send-application-email-modal";
 import { generateIcsContent, downloadIcsFile } from "@/lib/settings/ical";
@@ -136,6 +136,15 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           >
             <Smartphone className="h-4 w-4" /> Quick-Sheet (Unterwegs)
           </Button>
+
+          <a
+            href={`/api/applications/${application.id}/package/zip`}
+            download
+            className="inline-flex items-center gap-1.5 rounded-md border border-amber-500/30 bg-surface px-3 py-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 card-hover-effect transition-colors"
+            title="Komplette Mappe (Anschreiben, Übersicht & Dokumente) als .zip herunterladen"
+          >
+            <Archive className="h-4 w-4" /> ZIP-Paket
+          </a>
 
           <Button
             variant="outline"

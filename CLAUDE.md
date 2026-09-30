@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # CLAUDE.md - Projekt-Leitfaden für Claude Code / Claude Desktop
 
 Dieses Dokument dient als Kontext- und Architektur-Leitfaden für Claude bei der Arbeit im Projekt **Job Application & Career Manager**.
@@ -13,9 +17,10 @@ Dieses Dokument dient als Kontext- und Architektur-Leitfaden für Claude bei der
 - **Wichtige Module:**
   - **Dashboard & Kanban:** Statusverwaltung für Bewerbungen und Kontakte.
   - **Browser-Extension / Web-Clipper (Manifest V3):** Erfassung von Stellen per Klick (`public/extension/`).
-  - **KI-Verhandlungs-Coach & Roleplay:** Gehalt- & Interviewtraining (`/interview-prep`).
+  - **KI-Verhandlungs-Coach & Roleplay:** Gehalt- & Interviewtraining (`/interview-prep`), inkl. STAR-Story-Builder (`src/lib/interview/starStoryBuilder.ts`).
   - **Anschreiben- & Dossier-Generator:** Automatisierte Bewerbungstexte (`src/lib/documents/coverLetterGenerator.ts`).
   - **Job-Portal-Simulator & Matcher:** Scoring von Stellen (`src/lib/jobs/matching.ts`).
+  - **Analytics:** Bewerbungsanalysen inkl. Response-Heatmap (`src/lib/analytics/`, `src/components/analytics/`).
 
 ---
 
@@ -46,9 +51,11 @@ Dieses Dokument dient als Kontext- und Architektur-Leitfaden für Claude bei der
 npm run dev
 
 # Tests ausführen
-npm run test           # Vitest einmalig
-npm run test:watch     # Vitest im Watch-Modus
-npm run test:e2e       # Playwright E2E-Tests
+npm run test                          # Vitest einmalig
+npm run test:watch                    # Vitest im Watch-Modus
+npx vitest run src/lib/interview/     # Einzelne Datei/Verzeichnis testen
+npm run test:e2e                      # Playwright E2E-Tests (headless)
+npm run test:e2e:ui                   # Playwright mit interaktivem UI
 
 # Linting & Code-Qualität
 npm run lint
@@ -92,7 +99,7 @@ vercel --prod          # Production-Deploy
 ├── vercel.json              # Vercel Cron-Konfiguration (täglich 8 Uhr UTC)
 ├── e2e/                     # Playwright End-to-End Tests
 ├── public/                  # Statische Assets & Browser-Extension
-└── scripts/                 # Hilfs- und Import-Skripte
+└── scripts/                 # Hilfs- und Import-Skripte (z. B. import-bewerbungsliste.ts)
 ```
 
 ---

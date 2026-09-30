@@ -7,6 +7,7 @@ import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/core/constants";
 import { computeTagSuccessRates, computeTechStackSuccessRates } from "@/lib/interview/skillSuccessRates";
 import { computeToneSuccessRates } from "@/lib/applications/toneSuccessRates";
 import { aggregateSalaryTrends } from "@/lib/salary/salaryHistoryTracker";
+import { computeResponseTimingAnalytics } from "@/lib/analytics/responseHeatmap";
 
 const RESPONSE_STATUSES = new Set(["INTERVIEW", "OFFER", "REJECTED"]);
 
@@ -120,6 +121,7 @@ export async function GET() {
   const techStackSuccessRates = computeTechStackSuccessRates(applications);
   const toneSuccessRates = computeToneSuccessRates(applications);
   const salaryTrends = aggregateSalaryTrends(applications);
+  const timingAnalytics = computeResponseTimingAnalytics(applications);
 
   return NextResponse.json({
     statusDistribution,
@@ -131,6 +133,7 @@ export async function GET() {
     techStackSuccessRates,
     toneSuccessRates,
     salaryTrends,
+    timingAnalytics,
     successRate,
     avgResponseDays,
     totalApplications: applications.length,

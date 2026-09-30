@@ -20,19 +20,16 @@ export function handleApiError(error: unknown): NextResponse {
       return NextResponse.json({ error: "Datensatz wurde nicht gefunden" }, { status: 404 });
     }
 
-    // P2003: Fremdschlüsselverletzung (z. B. eine companyId/jobPostingId, die
-    // nicht existiert). Ohne diese Behandlung landete das als roher 500er
-    // inkl. Prisma-Fehlerdetails beim Client statt einer sauberen 400-Antwort.
-    if (code === "P2003") {
+    // P2003 (Prisma) / 23503 (PostgreSQL native): Fremdschlüsselverletzung
+    if (code === "P2003" || code === "23503") {
       return NextResponse.json(
         { error: "Ungültige Referenz: Ein verknüpfter Datensatz (z. B. Unternehmen oder Stellenangebot) existiert nicht." },
         { status: 400 },
       );
     }
 
-    // P2002: Unique-Constraint-Verletzung (z. B. doppelte Anlage eines
-    // Singleton-Datensatzes wie CoverLetter zu einer Application).
-    if (code === "P2002") {
+    // P2002 (Prisma) / 23505 (PostgreSQL native): Unique-Constraint-Verletzung
+    if (code === "P2002" || code === "23505") {
       return NextResponse.json(
         { error: "Ein Datensatz mit diesem eindeutigen Wert existiert bereits." },
         { status: 409 },
