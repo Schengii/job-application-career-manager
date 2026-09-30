@@ -442,6 +442,27 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
   - Visualisiert die Gehaltsentwicklung der letzten 6 Monate anhand von Zielgehältern, Angeboten und Notizen.
   - Zeigt Durchschnitts-, Minimal- und Maximalgehälter für den eigenen Marktwert im Zeitverlauf.
 
+---
+
+### 58. 📑 Steuerbericht & Werbungskosten-Rechner (`/analytics`)
+- **Finanzamt-konforme Bewerbungskosten-Aufstellung (`TaxExpenseReportCard`, `src/lib/salary/taxReportCalculator.ts`)**:
+  - Erfasst Fahrtkosten zu Vorstellungsgesprächen nach Entfernungskilometern (0,30 €/km), Pauschalen für Bewerbungen, Bewerbungsfotos und Fachzertifikate.
+  - Mit 1-Klick CSV-Export (`steuerbericht-werbungskosten-YYYY.csv`) als fertige Anlage für die Einkommensteuererklärung (§ 9 EStG).
+
+---
+
+### 59. 🛡️ E-Mail Zustellbarkeits- & Spam-Checker (`/settings`)
+- **Deliverability-Audit für Bewerber-E-Mails (`EmailDeliverabilityCard`, `src/lib/email/deliverabilityChecker.ts`)**:
+  - Prüft Absenderadressen und Domains auf Score, Reputation bei HR-Mail-Gateways, SPF/DKIM/DMARC-Best-Practices und Spam-Muster.
+  - Hilft sicherzustellen, dass ausgehende Bewerbungsmails zuverlässig im Posteingang des Recruiters landen.
+
+---
+
+### 60. 🎙️ Post-Interview Sprachmemo- & Feedback-Audit (`/interview-prep`)
+- **Voice-Transkription & Stärken/Schwächen-Audit (`InterviewFeedbackCard`, `src/lib/interview/interviewAudioFeedback.ts`)**:
+  - Direkt nach dem Gespräch per Web Speech API Sprachnotizen frei einsprechen oder Notizen erfassen.
+  - Automatische Identifikation von positiven Signalen, Wissenslücken, besprochenen Tech-Themen und maßgeschneiderter Dankes-E-Mail-Follow-up-Strategie.
+
 ## 🛠️ Tech-Stack
 
 | Bereich    | Technologie                                                              |

@@ -14,6 +14,7 @@ import { BackupManager } from "@/components/settings/backup-manager";
 import { MatchingWeightsCard } from "@/components/settings/matching-weights-card";
 import { PortfolioShareCard } from "@/components/settings/portfolio-share-card";
 import { EmailSyncCard } from "@/components/settings/email-sync-card";
+import { EmailDeliverabilityCard } from "@/components/settings/email-deliverability-card";
 import { BrowserExtensionCard } from "@/components/settings/browser-extension-card";
 import { PushNotificationsCard } from "@/components/settings/push-notifications-card";
 import { WebhooksCard } from "@/components/settings/webhooks-card";
@@ -87,7 +88,12 @@ export default function SettingsPage() {
           )}
           {tab === "extension" && <BrowserExtensionCard />}
           {tab === "portfolio" && <PortfolioShareCard />}
-          {tab === "emailsync" && <EmailSyncCard />}
+          {tab === "emailsync" && (
+            <div className="space-y-6">
+              <EmailSyncCard />
+              <EmailDeliverabilityCard />
+            </div>
+          )}
           {tab === "automation" && (
             <div className="space-y-6">
               <PushNotificationsCard />

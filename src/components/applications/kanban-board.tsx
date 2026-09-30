@@ -5,7 +5,7 @@
 // -----------------------------------------------------------------------------
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, UploadCloud } from "lucide-react";
 import { APPLICATION_STATUSES } from "@/lib/core/constants";
 import { formatDate, cn } from "@/lib/core/utils";
 import { checkColumnWip, detectGhosting } from "@/lib/applications/kanbanWip";
@@ -276,9 +276,17 @@ export function KanbanBoard({
               );
             })}
               {items.length === 0 && (
-                <p className="py-6 text-center text-xs text-muted-foreground/60">
-                  Keine Bewerbungen
-                </p>
+                <div className="py-6 text-center text-xs text-muted-foreground/60 flex flex-col items-center gap-1.5">
+                  {col.value === "DRAFT" ? (
+                    <div className="rounded-lg border border-dashed border-border/80 p-3 w-full text-center hover:border-primary/50 transition-colors">
+                      <UploadCloud className="h-5 w-5 mx-auto mb-1 text-muted-foreground/50" />
+                      <p className="font-medium text-[11px] text-foreground">Stellenanzeige ablegen</p>
+                      <p className="text-[10px] text-muted-foreground">PDF oder Notiz als Entwurf erfassen</p>
+                    </div>
+                  ) : (
+                    "Keine Bewerbungen"
+                  )}
+                </div>
               )}
             </div>
           </div>

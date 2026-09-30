@@ -27,6 +27,7 @@ import { NoticePeriodCalculatorCard } from "@/components/analytics/notice-period
 import { CommuteCalculatorCard } from "@/components/analytics/commute-calculator-card";
 import { ToneEfficiencyCard } from "@/components/analytics/tone-efficiency-card";
 import { SalaryHistoryCard } from "@/components/analytics/salary-history-card";
+import { TaxExpenseReportCard } from "@/components/analytics/tax-expense-report-card";
 import type { ToneSuccessRate } from "@/lib/applications/toneSuccessRates";
 import type { SalaryDataPoint } from "@/lib/salary/salaryHistoryTracker";
 
@@ -274,6 +275,11 @@ export default function AnalyticsPage() {
             {/* Pendelzeit-, Fahrtkosten- & Remote-Netto-Rechner */}
             <div className="lg:col-span-2">
               <CommuteCalculatorCard />
+            </div>
+
+            {/* Steuerbericht & Bewerbungskosten */}
+            <div className="lg:col-span-2">
+              <TaxExpenseReportCard />
             </div>
 
             {/* Gehalts- & Benefit-Vergleichsmatrix */}

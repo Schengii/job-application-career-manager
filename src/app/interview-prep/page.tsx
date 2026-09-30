@@ -40,6 +40,7 @@ import { InterviewTeleprompterModal } from "@/components/interview/interview-tel
 import { SkillGapAnalysisResult } from "@/lib/interview/skillGapAnalyzer";
 import { getQuizFocusRecommendations } from "@/lib/interview/skillGapToQuizFocus";
 import { CustomQuestionModal } from "@/components/interview/custom-question-modal";
+import { InterviewFeedbackCard } from "@/components/interview/interview-feedback-card";
 import { loadCustomQuestions } from "@/lib/interview/customQuestionStorage";
 import { Plus } from "lucide-react";
 
@@ -496,6 +497,10 @@ export default function InterviewPrepPage() {
                 </Card>
               );
             })}
+          </div>
+          {/* Post-Interview Voice Feedback & Memo Audit */}
+          <div className="pt-2">
+            <InterviewFeedbackCard />
           </div>
         </>
       )}
