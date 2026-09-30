@@ -41,6 +41,11 @@ export function CompanyPrepCard({
     return localStorage.getItem(`${storageKey}_kununu`) || "4.2";
   });
 
+  const [glassdoorScore, setGlassdoorScore] = useState<string>(() => {
+    if (typeof window === "undefined") return "4.1";
+    return localStorage.getItem(`${storageKey}_glassdoor`) || "4.1";
+  });
+
   const [cultureNotes, setCultureNotes] = useState<string>(() => {
     if (typeof window === "undefined") return "";
     return localStorage.getItem(`${storageKey}_notes`) || "";
@@ -65,6 +70,15 @@ export function CompanyPrepCard({
     }
   }
 
+  function handleGlassdoorScoreChange(val: string) {
+    setGlassdoorScore(val);
+    try {
+      localStorage.setItem(`${storageKey}_glassdoor`, val);
+    } catch {
+      // Ignore
+    }
+  }
+
   function handleNotesChange(val: string) {
     setCultureNotes(val);
     try {
@@ -76,6 +90,7 @@ export function CompanyPrepCard({
 
   const { completed, total, progressPct } = calculatePrepProgress(items);
   const kununuSearchUrl = `https://www.kununu.com/de/search?q=${encodeURIComponent(companyName)}`;
+  const glassdoorSearchUrl = `https://www.glassdoor.de/Bewertungen/index.htm?keyword=${encodeURIComponent(companyName)}`;
   const googleNewsUrl = `https://www.google.com/search?q=${encodeURIComponent(companyName + " News")}&tbm=nws`;
 
   return (
@@ -88,7 +103,7 @@ export function CompanyPrepCard({
           <div>
             <CardTitle className="text-sm font-bold">Unternehmens-Vorbereitung & Kultur-Check</CardTitle>
             <p className="text-[11px] text-muted-foreground">
-              Recherche-Checkliste & Kununu-Notizen für das Vorstellungsgespräch
+              Recherche-Checkliste, Kununu- & Glassdoor-Notizen für das Vorstellungsgespräch
             </p>
           </div>
         </div>
@@ -115,6 +130,14 @@ export function CompanyPrepCard({
             className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface px-2.5 py-1.5 font-medium text-foreground hover:bg-surface-hover transition-colors text-[11px]"
           >
             <Star className="h-3 w-3 text-amber-500 fill-current" /> Kununu Bewertungen <ExternalLink className="h-3 w-3 ml-0.5 text-muted-foreground" />
+          </a>
+          <a
+            href={glassdoorSearchUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface px-2.5 py-1.5 font-medium text-foreground hover:bg-surface-hover transition-colors text-[11px]"
+          >
+            <Star className="h-3 w-3 text-emerald-500 fill-current" /> Glassdoor Bewertungen <ExternalLink className="h-3 w-3 ml-0.5 text-muted-foreground" />
           </a>
           <a
             href={googleNewsUrl}
@@ -154,17 +177,29 @@ export function CompanyPrepCard({
           </div>
         </div>
 
-        {/* Kununu Score & Kultur-Notizen */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* Kununu & Glassdoor Score & Kultur-Notizen */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           <div>
             <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
-              Kununu Score (1.0 - 5.0)
+              Kununu (1.0 - 5.0)
             </label>
             <input
               type="text"
               value={kununuScore}
               onChange={(e) => handleScoreChange(e.target.value)}
               placeholder="z.B. 4.3"
+              className="w-full rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-foreground"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
+              Glassdoor (1.0 - 5.0)
+            </label>
+            <input
+              type="text"
+              value={glassdoorScore}
+              onChange={(e) => handleGlassdoorScoreChange(e.target.value)}
+              placeholder="z.B. 4.1"
               className="w-full rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-foreground"
             />
           </div>

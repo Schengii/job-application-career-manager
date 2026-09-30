@@ -505,6 +505,28 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 
 ---
 
+### 67. 🎤 Interaktiver 60-Sekunden Elevator-Pitch Generator (`/interview-prep`)
+- **Strukturierte Eröffnungs-Präsentation (`ElevatorPitchCard`, `src/lib/interview/elevatorPitchGenerator.ts`)**:
+  - Maßgeschneiderter Generator für die klassische Eröffnungsfrage *„Erzählen Sie kurz etwas über sich!“* mit Zeitabschätzung (60–90s Sprechdauer).
+  - 4 optimierte Schwerpunkte: *Frontend & UI/UX Spezialist*, *Fullstack & Pragmatiker*, *Fachinformatiker & Praxiserprobt*, *Code-Qualität, Testing & Performance*.
+  - 4-Stufen-Struktur (*Hook & Eröffnung*, *Kern-Story*, *Praxis-Beweis*, *Unternehmens-Motivation*) inkl. Praxistipps und 1-Klick-Kopierfunktion.
+
+---
+
+### 68. ⭐ Glassdoor- & Kununu-Kombinations-Audit (`/companies/[id]`)
+- **Erweitertes Arbeitgeber-Kultur- & Reputations-Audit (`CompanyPrepCard`)**:
+  - Schnellsuch-Integration für Kununu- und Glassdoor-Bewertungen direkt im Firmenprofil.
+  - Dedizierte Score-Felder für Kununu (1.0–5.0) und Glassdoor (1.0–5.0) zur vergleichenden Gegenüberstellung von Mitarbeiterzufriedenheit und Unternehmenskultur.
+
+---
+
+### 69. ⏰ Akute Interview-Countdown-Erinnerung (60–90 Min. Vorwarnzeit)
+- **High-Priority Termin-Alerts (`src/lib/applications/notifications.ts`)**:
+  - Erkennt anstehende Gesprächstermine am selben Tag innerhalb der nächsten 90 Minuten.
+  - Sendet eine akute High-Priority-Benachrichtigung mit Minutencountdown, um Spickzettel, Notizen und Video-Link rechtzeitig bereitzuhalten.
+
+---
+
 ## 🛠️ Tech-Stack
 
 | Bereich    | Technologie                                                              |

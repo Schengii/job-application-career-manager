@@ -41,11 +41,13 @@ import { SkillGapAnalysisResult } from "@/lib/interview/skillGapAnalyzer";
 import { getQuizFocusRecommendations } from "@/lib/interview/skillGapToQuizFocus";
 import { CustomQuestionModal } from "@/components/interview/custom-question-modal";
 import { InterviewFeedbackCard } from "@/components/interview/interview-feedback-card";
+import { ElevatorPitchCard } from "@/components/interview/elevator-pitch-card";
 import { loadCustomQuestions } from "@/lib/interview/customQuestionStorage";
 import { Plus } from "lucide-react";
 
 const TABS = [
   { id: "questions", label: "Fachfragen-Katalog & Leitfaden" },
+  { id: "elevator_pitch", label: "60s Elevator-Pitch 🎤" },
   { id: "tech_quiz", label: "Tech- & Coding-Quiz ⚡ (React 19 / TS)" },
   { id: "coding_canvas", label: "Live-Coding Challenges 💻" },
   { id: "negotiation", label: "Gehaltsverhandlungs-Coach (Roleplay)" },
@@ -281,6 +283,11 @@ export default function InterviewPrepPage() {
 
       {activeTab === "negotiation" ? (
         <SalaryNegotiationTrainer />
+      ) : activeTab === "elevator_pitch" ? (
+        <ElevatorPitchCard
+          defaultCompany={selectedApp?.company?.name}
+          defaultRole={selectedApp?.position}
+        />
       ) : activeTab === "tech_quiz" ? (
         <TechQuizSimulator
           key={quizSkillFocus?.join(",") ?? "all"}

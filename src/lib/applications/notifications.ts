@@ -181,6 +181,28 @@ export function getNotificationsFromApplications(
       }
     }
 
+    // 1.5 Dringender Interview-Countdown (in den nächsten 60-120 Min. heute)
+    if (app.nextStepDate && !followUp.isOverdue) {
+      const stepTime = new Date(app.nextStepDate).getTime();
+      const diffMinutes = Math.round((stepTime - Date.now()) / (1000 * 60));
+      if (diffMinutes > 0 && diffMinutes <= 90) {
+        const notifId = `interview-soon-${app.id}-${toDateKey(app.nextStepDate)}`;
+        if (!dismissedIds.includes(notifId)) {
+          notifications.push({
+            id: notifId,
+            applicationId: app.id,
+            type: "INTERVIEW",
+            title: `Gespräch startet in ~${diffMinutes} Min! ⏰`,
+            message: `${app.nextStep || "Vorstellungsgespräch"} bei ${app.company.name} steht kurz bevor. Spickzettel & Notizen bereithalten!`,
+            companyName: app.company.name,
+            position: app.position,
+            date: new Date(app.nextStepDate).toISOString(),
+            priority: "high",
+          });
+        }
+      }
+    }
+
     // 2. Anstehender Termin in den nächsten 48h
     if (followUp.isDueSoon && !followUp.isOverdue && app.nextStepDate) {
       const notifId = `duesoon-${app.id}-${toDateKey(app.nextStepDate)}`;

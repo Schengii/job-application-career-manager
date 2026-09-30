@@ -144,6 +144,21 @@ describe("notifications", () => {
 
     expect(notifs.some((n) => n.type === "OFFER")).toBe(false);
   });
+
+  it("erzeugt eine akute INTERVIEW-Benachrichtigung für Termine innerhalb von 90 Minuten", () => {
+    const soonDate = new Date(Date.now() + 45 * 60 * 1000); // in 45 Minuten
+    const app = dummyApp({
+      nextStep: "Technisches Fachgespräch",
+      nextStepDate: soonDate,
+      status: "INTERVIEW",
+    });
+
+    const notifs = getNotificationsFromApplications([app]);
+    const urgentNotif = notifs.find((n) => n.id.startsWith("interview-soon-"));
+    expect(urgentNotif).toBeDefined();
+    expect(urgentNotif?.priority).toBe("high");
+    expect(urgentNotif?.title).toContain("Gespräch startet in ~");
+  });
 });
 
 describe("getEmailSuggestionNotifications", () => {
