@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
-import { Sparkles, Key, ShieldCheck, X, Ban, Tag, Code2, Plus, Building2 } from "lucide-react";
+import { Sparkles, Key, ShieldCheck, X, Ban, Tag, Code2, Plus, Building2, UploadCloud, Share2 } from "lucide-react";
 import { apiPatch } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { REMOTE_PREFERENCES, AI_PROVIDERS } from "@/lib/core/constants";
+import { parseLinkedInJsonProfile, parseLinkedInTextProfile } from "@/lib/documents/socialProfileParser";
 import type { PreferencesPublic } from "@/types";
 
 export function PreferencesForm({ preferences }: { preferences: PreferencesPublic }) {
@@ -158,6 +159,54 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {/* 1-Klick LinkedIn & XING Profil-Import */}
+      <div className="rounded-xl border border-border/80 bg-surface-hover/30 p-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
+            <Share2 className="h-5 w-5" />
+          </div>
+          <div>
+            <span className="text-xs font-semibold text-foreground block">
+              LinkedIn & XING Profil-Daten importieren
+            </span>
+            <span className="text-[11px] text-muted-foreground block">
+              Füge Profildaten (JSON oder Text) ein, um Name, Zielrolle und Tech-Stack automatisch zu befüllen.
+            </span>
+          </div>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="text-xs h-8"
+          onClick={() => {
+            const raw = prompt("Füge hier deinen LinkedIn-Profiltext oder den LinkedIn-JSON-Export ein:");
+            if (!raw) return;
+
+            let parsed = parseLinkedInJsonProfile(raw);
+            if (!parsed.fullName && parsed.extractedSkills.length === 0) {
+              parsed = parseLinkedInTextProfile(raw);
+            }
+
+            if (parsed.fullName || parsed.extractedSkills.length > 0) {
+              setForm((prev) => ({
+                ...prev,
+                fullName: parsed.fullName || prev.fullName,
+                desiredRole: parsed.headline || prev.desiredRole,
+                techStack: parsed.extractedSkills.length > 0 ? parsed.extractedSkills.join(", ") : prev.techStack,
+                profileSummary: parsed.summary || prev.profileSummary,
+              }));
+              toast.success("Profil-Daten erfolgreich aus LinkedIn/XING übernommen!");
+            } else {
+              toast.error("Keine Profildaten erkannt. Bitte überprüfe den Text.");
+            }
+          }}
+        >
+          <UploadCloud className="h-3.5 w-3.5 mr-1" />
+          Profil importieren
+        </Button>
+      </div>
+
       <section>
         <h3 className="mb-3 text-sm font-semibold text-foreground">Kontaktdaten (für Anschreiben & Lebenslauf)</h3>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

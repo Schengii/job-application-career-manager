@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
 import Link from "next/link";
-import { Pencil, X, Globe, Mail, Phone, MapPin, ExternalLink } from "lucide-react";
+import { Pencil, X, Globe, Mail, Phone, MapPin, ExternalLink, Navigation, Train } from "lucide-react";
 import { apiPatch } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -156,14 +156,43 @@ export function CompanyInfoCard({ company, onSaved }: { company: Company; onSave
         </div>
 
         {(company.street || company.city) && (
-          <p className="flex items-start gap-2 text-muted-foreground">
-            <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>
-              {company.street}
-              {company.street && <br />}
-              {[company.postalCode, company.city].filter(Boolean).join(" ")}
-            </span>
-          </p>
+          <div className="space-y-1.5">
+            <p className="flex items-start gap-2 text-muted-foreground">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+              <span>
+                {company.street}
+                {company.street && <br />}
+                {[company.postalCode, company.city].filter(Boolean).join(" ")}
+              </span>
+            </p>
+            <div className="flex items-center gap-2 pt-1 pl-6">
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                  [company.street, company.postalCode, company.city].filter(Boolean).join(", ")
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                title="Route in Google Maps planen (Auto, ÖPNV, Fahrrad)"
+              >
+                <Navigation className="h-3 w-3" />
+                Route planen
+              </a>
+              <span className="text-muted-foreground/40">•</span>
+              <a
+                href={`https://www.bahn.de/buchung/fahrplan/suche#sts=true&so=Bonn&zo=${encodeURIComponent(
+                  company.city || "Köln"
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
+                title="Bahn- & ÖPNV-Verbindung aufrufen"
+              >
+                <Train className="h-3 w-3" />
+                ÖPNV / Bahn
+              </a>
+            </div>
+          </div>
         )}
         {company.contactName && <p className="text-muted-foreground">Ansprechpartner: {company.contactName}</p>}
         {company.contactEmail && (

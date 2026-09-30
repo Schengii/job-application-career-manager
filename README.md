@@ -463,6 +463,31 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
   - Direkt nach dem Gespräch per Web Speech API Sprachnotizen frei einsprechen oder Notizen erfassen.
   - Automatische Identifikation von positiven Signalen, Wissenslücken, besprochenen Tech-Themen und maßgeschneiderter Dankes-E-Mail-Follow-up-Strategie.
 
+---
+
+### 61. ⚖️ Anschreiben A/B-Split-Testing & Varianten-Vergleich (`/cv-designer`)
+- **Stil- & Schwerpunktvergleich nebeneinander (`CoverLetterAbCard`, `src/lib/documents/coverLetterAbTesting.ts`)**:
+  - Generiert für dieselbe Stelle zwei alternative Entwürfe: *Variante A* (Architektur & Tech-Exzellenz) vs. *Variante B* (Produkt-Impact & agiler Teamplayer).
+  - Erlaubt die direkte Gegenüberstellung und 1-Klick-Übernahme in die Bewerbungsmappe.
+
+---
+
+### 62. 🔗 LinkedIn & XING Profil-Import (`/settings` &rarr; Profil & Präferenzen)
+- **1-Klick Profil-Übernahme (`src/lib/documents/socialProfileParser.ts`)**:
+  - Parst LinkedIn-JSON-Exporte oder Profil-Texte und überträgt Name, Zielrolle, Tech-Skills und Werdegang automatisch in die Karrierepräferenzen.
+
+---
+
+### 63. 📜 IT-Zertifikate & Ablauf-Erinnerungen (`/settings` &rarr; Ausbildung & Werdegang)
+- **Zertifikats-Lebenszyklus-Manager (`CertificationTrackerCard`, `src/lib/documents/certificationTracker.ts`)**:
+  - Verwalte IHK-Abschlüsse, AWS-, Azure- oder Scrum-Zertifikate mit automatischer 90-Tage Ablaufwarnung (`EXPIRING_SOON`) zur rechtzeitigen Rezertifizierung.
+
+---
+
+### 64. 🗺️ 1-Klick Routen- & ÖPNV-Fahrplanauskunft (`/applications/[id]`)
+- **Direktverknüpfung zu Google Maps & Deutscher Bahn (`CompanyInfoCard`)**:
+  - Neuer Schnellzugriff auf vorbereitete Google-Maps-Routen (Auto/Fahrrad) und DB-Reiseauskunft direkt unter der Firmenadresse für Vor-Ort-Interviews.
+
 ## 🛠️ Tech-Stack
 
 | Bereich    | Technologie                                                              |

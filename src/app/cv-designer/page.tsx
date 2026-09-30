@@ -12,6 +12,7 @@ import { CvLayout, CvSection, generateCvHtml } from "@/lib/documents/cvGenerator
 import { AtsScoreCard } from "@/components/cv/ats-score-card";
 import { JsonResumeModal } from "@/components/cv/json-resume-modal";
 import { CvTailorModal } from "@/components/cv/cv-tailor-modal";
+import { CoverLetterAbCard } from "@/components/cv/cover-letter-ab-card";
 
 export default function CvDesignerPage() {
   const { data: preferences, isLoading } = useSWR<PreferencesWithProfile>("/api/preferences", fetcher);
@@ -132,6 +133,14 @@ export default function CvDesignerPage() {
 
       {/* ATS Compatibility Score */}
       <AtsScoreCard preferences={preferences} />
+
+      {/* Anschreiben A/B-Split-Testing */}
+      <CoverLetterAbCard
+        companyName={applications && applications.length > 0 ? applications[0].company.name : "Tech-Unternehmen"}
+        position={applications && applications.length > 0 ? applications[0].position : preferences.desiredRole || "Frontend Entwickler"}
+        techStack={preferences.techStack}
+        applicantName={preferences.fullName}
+      />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Konfiguration */}

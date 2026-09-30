@@ -13,6 +13,7 @@ import { DocumentsManager } from "@/components/settings/documents-manager";
 import { BackupManager } from "@/components/settings/backup-manager";
 import { MatchingWeightsCard } from "@/components/settings/matching-weights-card";
 import { PortfolioShareCard } from "@/components/settings/portfolio-share-card";
+import { CertificationTrackerCard } from "@/components/settings/certification-tracker-card";
 import { EmailSyncCard } from "@/components/settings/email-sync-card";
 import { EmailDeliverabilityCard } from "@/components/settings/email-deliverability-card";
 import { BrowserExtensionCard } from "@/components/settings/browser-extension-card";
@@ -102,7 +103,12 @@ export default function SettingsPage() {
               <SystemHealthCard />
             </div>
           )}
-          {tab === "education" && <EducationProjectsManager preferences={preferences} />}
+          {tab === "education" && (
+            <div className="space-y-6">
+              <EducationProjectsManager preferences={preferences} />
+              <CertificationTrackerCard />
+            </div>
+          )}
           {tab === "documents" && <DocumentsManager />}
           {tab === "backup" && <BackupManager />}
         </>
