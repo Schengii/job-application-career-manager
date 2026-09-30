@@ -1,6 +1,9 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
 
+import { config } from "dotenv";
+config();
+
 export default defineConfig({
   test: {
     // Standard-Umgebung für Lib-/API-Tests bleibt "node" (schneller, kein
@@ -16,11 +19,10 @@ export default defineConfig({
     // API-Integrationstests laufen sequenziell, damit sie sich nicht
     // gegenseitig in der Testdatenbank stören.
     fileParallelism: false,
-    globalSetup: ["./vitest.global-setup.ts"],
+    globalSetup: process.env.TEST_DATABASE_URL ? ["./vitest.global-setup.ts"] : [],
     env: {
       // Für lokale Tests: TEST_DATABASE_URL in .env.test setzen,
       // z.B. eine separate Neon-Branch oder lokale Postgres-Instanz.
-      // Fallback auf DATABASE_URL (wird dann force-reset).
       DATABASE_URL: process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL ?? "",
     },
   },

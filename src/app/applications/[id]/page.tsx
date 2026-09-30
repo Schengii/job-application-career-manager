@@ -31,7 +31,9 @@ import { FollowUpSnoozeButtons } from "@/components/applications/follow-up-snooz
 import { ApplicationStatusBadge } from "@/components/status-badge";
 import { parseTags, getTagStyle } from "@/lib/core/tags";
 import { apiPut } from "@/lib/core/api";
-import { Smartphone } from "lucide-react";
+import { Smartphone, Mail } from "lucide-react";
+import { InterviewStageTracker } from "@/components/applications/interview-stage-tracker";
+import { SendApplicationEmailModal } from "@/components/applications/send-application-email-modal";
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -41,6 +43,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
   const [deleting, setDeleting] = useState(false);
   const [dossierOpen, setDossierOpen] = useState(false);
   const [daySheetOpen, setDaySheetOpen] = useState(false);
+  const [sendEmailOpen, setSendEmailOpen] = useState(false);
 
   const { data: application, isLoading, error } = useSWR<ApplicationDetail>(
     `/api/applications/${id}`,
@@ -87,6 +90,16 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           <ArrowLeft className="h-4 w-4" /> Zurück zu allen Bewerbungen
         </Link>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSendEmailOpen(true)}
+            className="card-hover-effect border-sky-500/30 text-sky-600 dark:text-sky-400 hover:bg-sky-500/10"
+            title="Bewerbung direkt per E-Mail inkl. PDF-Mappe an das Unternehmen versenden"
+          >
+            <Mail className="h-4 w-4" /> E-Mail versenden
+          </Button>
+
           <Button
             variant="outline"
             size="sm"
@@ -174,6 +187,13 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         </div>
       </header>
 
+      {/* Visueller Interview-Phasen-Tracker */}
+      <InterviewStageTracker
+        applicationId={application.id}
+        currentStage={application.interviewStage}
+        onStageChanged={refresh}
+      />
+
       {/* Absage-Banner */}
       {application.status === "REJECTED" && (
         <div className="flex items-start gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-rose-700 dark:text-rose-300">
@@ -259,6 +279,13 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         open={daySheetOpen}
         onClose={() => setDaySheetOpen(false)}
         data={buildInterviewDayData(application)}
+      />
+
+      <SendApplicationEmailModal
+        open={sendEmailOpen}
+        onOpenChange={setSendEmailOpen}
+        application={application}
+        onSent={refresh}
       />
     </div>
   );

@@ -39,6 +39,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { InterviewTeleprompterModal } from "@/components/interview/interview-teleprompter";
 import { SkillGapAnalysisResult } from "@/lib/interview/skillGapAnalyzer";
 import { getQuizFocusRecommendations } from "@/lib/interview/skillGapToQuizFocus";
+import { CustomQuestionModal } from "@/components/interview/custom-question-modal";
+import { loadCustomQuestions } from "@/lib/interview/customQuestionStorage";
+import { Plus } from "lucide-react";
 
 const TABS = [
   { id: "questions", label: "Fachfragen-Katalog & Leitfaden" },
@@ -80,6 +83,8 @@ export default function InterviewPrepPage() {
   const [starAuditAnswer, setStarAuditAnswer] = useState("");
   const [activeTab, setActiveTab] = useState<PrepTab>("questions");
   const [quizSkillFocus, setQuizSkillFocus] = useState<string[] | undefined>(undefined);
+  const [customQuestionsModalOpen, setCustomQuestionsModalOpen] = useState(false);
+  const [customQuestions, setCustomQuestions] = useState<InterviewQuestion[]>(() => loadCustomQuestions());
 
   const quizFocusRecommendations = useMemo(() => {
     if (!skillGapAnalysis?.highDemandMissing) return [];
@@ -97,7 +102,7 @@ export default function InterviewPrepPage() {
   );
 
   const relevantQuestions = useMemo(() => {
-    let list: InterviewQuestion[] = INTERVIEW_QUESTIONS;
+    let list: InterviewQuestion[] = [...customQuestions, ...INTERVIEW_QUESTIONS];
 
     if (selectedApp?.jobPosting?.techStack) {
       const stack = selectedApp.jobPosting.techStack.toLowerCase();
@@ -125,7 +130,7 @@ export default function InterviewPrepPage() {
     }
 
     return list;
-  }, [selectedApp, selectedCategory, searchQuery]);
+  }, [selectedApp, selectedCategory, searchQuery, customQuestions]);
 
   function toggleCheck(id: string) {
     setCheckedQuestions((prev) => {
@@ -178,6 +183,15 @@ export default function InterviewPrepPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setCustomQuestionsModalOpen(true)}
+            className="border-primary/40 text-primary hover:bg-primary-soft"
+            title="Eigene Frage aus einem Vorstellungsgespräch eintragen"
+          >
+            <Plus className="h-4 w-4 mr-1.5" /> Eigene Frage
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -520,6 +534,14 @@ export default function InterviewPrepPage() {
         onOpenChange={setTeleprompterOpen}
         applications={applications || []}
         defaultAppId={selectedAppId}
+      />
+
+      <CustomQuestionModal
+        open={customQuestionsModalOpen}
+        onClose={() => setCustomQuestionsModalOpen(false)}
+        onAdded={(newQ) => {
+          setCustomQuestions((prev) => [newQ, ...prev]);
+        }}
       />
     </div>
   );

@@ -250,6 +250,22 @@ export function SalaryNegotiationTrainer() {
                     <>
                       <span>{selectedScenario.personaName}</span>
                       <span>• {m.timestamp}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                            window.speechSynthesis.cancel();
+                            const u = new SpeechSynthesisUtterance(m.text);
+                            u.lang = "de-DE";
+                            u.rate = 1.0;
+                            window.speechSynthesis.speak(u);
+                          }
+                        }}
+                        className="ml-1 rounded p-0.5 text-muted-foreground hover:text-primary hover:bg-surface-hover transition-colors"
+                        title="Antwort vorlesen 🔊"
+                      >
+                        🔊
+                      </button>
                     </>
                   )}
                 </div>

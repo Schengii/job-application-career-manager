@@ -17,6 +17,15 @@
     "default_popup": "popup.html",
     "default_title": "Job in Career Manager speichern"
   },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+C",
+        "mac": "Alt+C"
+      },
+      "description": "Career Manager Clipper öffnen"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

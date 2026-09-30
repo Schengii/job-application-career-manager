@@ -37,12 +37,46 @@ document.addEventListener("DOMContentLoaded", async () => {
         contactEmailInput.value = response.contactEmail || "";
         techStackInput.value = response.techStack || "";
         currentDescription = response.description || "";
+
+        if (response.companyName) {
+          checkDuplicateCompany(response.companyName);
+        }
       });
     }
   } catch {
     statusDiv.className = "status error";
     statusDiv.textContent = "Fehler beim Lesen des Tabs.";
   }
+
+  // Dubletten-Check Funktion
+  async function checkDuplicateCompany(name) {
+    const warningDiv = document.getElementById("duplicate-warning");
+    if (!warningDiv || !name || name.length < 3) return;
+
+    try {
+      const res = await fetch(`${backendUrl}/api/companies`);
+      if (!res.ok) return;
+      const companies = await res.json();
+      const norm = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const match = companies.find((c) => {
+        const cNorm = c.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+        return cNorm.includes(norm) || norm.includes(cNorm);
+      });
+
+      if (match) {
+        warningDiv.style.display = "block";
+        warningDiv.innerHTML = `⚠️ <strong>Bereits gelistet:</strong> „${match.name}“ existiert schon in deiner Datenbank!`;
+      } else {
+        warningDiv.style.display = "none";
+      }
+    } catch {
+      // Ignoriere Netzwerkfehler beim Check
+    }
+  }
+
+  companyInput.addEventListener("blur", () => {
+    checkDuplicateCompany(companyInput.value.trim());
+  });
 
   // 2. Klick-Handler zum Speichern in der lokalen REST-API
   saveBtn.addEventListener("click", async () => {

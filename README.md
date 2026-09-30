@@ -359,6 +359,42 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
   - Exportiert mit einem Klick alle Anwendungsdaten (Bewerbungen, Firmen, Historie, Dokumenten-Metadaten) inklusive Info-README in eine handliche `.zip`-Datei.
   - Vollständiger 1-Klick Restore von ZIP-Archiven mit Zod-Validierung und automatischer Snapshot-Sicherheit.
 
+---
+
+### 46. 🚗 Pendelzeit-, Fahrtkosten- & Remote-Netto-Rechner (`/analytics`)
+- **Echte Mobilitäts- und Stundenlohnanalyse (`src/lib/salary/commuteCalculator.ts`)**:
+  - Berechnet für Angebote in der Region Rheinland/NRW (Bonn, Köln, Düsseldorf, Ruhrgebiet) oder Remote die realen Mobilitätskosten (PKW-Sprit & Verschleiß vs. Deutschlandticket).
+  - Ermittelt den tatsächlichen monatlichen Zeitverlust im Pendelverkehr und das reale Netto nach Mobilitätskosten.
+  - Berechnet den **effektiven Stundenlohn** bezogen auf Arbeitszeit plus Reisezeit inklusive automatischer Handlungsempfehlung für Gehalts- und Home-Office-Verhandlungen.
+
+---
+
+### 47. 🎯 Interaktiver Multi-Stage Interview-Phasen-Tracker (`/applications/[id]`)
+- **Visuelle Pipeline für Bewerbungs-Etappen (`InterviewStageTracker`, `src/lib/applications/interviewStages.ts`)**:
+  - Visualisiert auf jeder Bewerbungsdetailseite die 5 Kernstufen des Einstellungsprozesses (*1. HR Screening ➔ 2. Coding Challenge ➔ 3. Tech Deep Dive ➔ 4. Final Round ➔ 5. Vertragsangebot*).
+  - Ermöglicht 1-Klick-Aktualisierung der Phase, zeigt typische Zeitfenster (z. B. 20–30 Min. vs. 2–4 Std. Challenge) und den aktuellen Fortschritt an.
+
+---
+
+### 48. ❓ Eigene Interviewfragen & Real-World Fragen-Katalog (`/interview-prep`)
+- **Individuelle Fragensammlung (`CustomQuestionModal`, `src/lib/interview/customQuestionStorage.ts`)**:
+  - Ermöglicht das Festhalten und Trainieren realer Fragen aus Vorstellungsgesprächen mit individueller Antwort, Kategorie, Keywords und Praxistipps.
+  - Wird nahtlos in den bestehenden Fragenkatalog, das Spickzettel-Drucksystem und den Vorbereitungs-Fortschritt integriert.
+
+---
+
+### 49. ✉️ Direkter E-Mail-Versand von Bewerbungsmappen (`/api/applications/[id]/send-email`)
+- **Direktversand via SMTP mit generiertem Mappen-Anhang (`SendApplicationEmailModal`, `src/lib/email/smtpClient.ts`)**:
+  - Versendet fertige Bewerbungen inkl. Anschreiben und auf Knopfdruck generierter PDF-Gesamtmappe direkt aus der App an Arbeitgeber.
+  - Protokolliert die Aktion sofort als E-Mail-Interaktion in der Historie und aktualisiert den Status bei Entwürfen automatisch auf `SENT`.
+
+---
+
+### 50. 🔍 Dubletten-Prüfung & Tastaturkürzel in der Browser-Extension (`public/extension`)
+- **Smart Duplicate Warning & Shortcut `Alt+C`**:
+  - Erkennt beim Öffnen des Popups auf StepStone, Indeed oder LinkedIn sofort, ob das Unternehmen bereits in der Datenbank existiert, und warnt vor versehentlichen Mehrfachbewerbungen.
+  - Tastaturkürzel `Alt+C` öffnet den Web-Clipper blitzschnell ohne Maus-Klick.
+
 ## 🛠️ Tech-Stack
 
 | Bereich    | Technologie                                                              |

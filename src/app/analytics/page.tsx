@@ -24,6 +24,7 @@ import { SkillRoadmapTracker } from "@/components/analytics/skill-roadmap-tracke
 import { VermittlungsbudgetCard } from "@/components/analytics/vermittlungsbudget-card";
 import { ContractCheckerCard } from "@/components/analytics/contract-checker-card";
 import { NoticePeriodCalculatorCard } from "@/components/analytics/notice-period-calculator-card";
+import { CommuteCalculatorCard } from "@/components/analytics/commute-calculator-card";
 
 type Analytics = {
   statusDistribution: { status: string; label: string; color: string; count: number }[];
@@ -250,6 +251,11 @@ export default function AnalyticsPage() {
             {/* Multi-Währungs- & Relocation-Rechner */}
             <div className="lg:col-span-2">
               <CurrencyRelocationCalculator />
+            </div>
+
+            {/* Pendelzeit-, Fahrtkosten- & Remote-Netto-Rechner */}
+            <div className="lg:col-span-2">
+              <CommuteCalculatorCard />
             </div>
 
             {/* Gehalts- & Benefit-Vergleichsmatrix */}
