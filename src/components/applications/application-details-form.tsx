@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useSWRConfig } from "swr";
-import { Calendar, Video, Tag, Hourglass } from "lucide-react";
+import { Calendar, Video, Tag, Hourglass, Sparkles } from "lucide-react";
 import { apiPatch } from "@/lib/core/api";
 import { useToast } from "@/components/ui/toast";
 import { Field, Input, Select, Textarea } from "@/components/ui/form";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { APPLICATION_STATUSES, REJECTION_REASONS, INTERVIEW_STAGES } from "@/lib/core/constants";
 import { toDateInputValue } from "@/lib/core/utils";
 import { generateIcsContent, downloadIcsFile } from "@/lib/settings/ical";
+import { generateSuggestedTags } from "@/lib/applications/autoTagging";
 import type { ApplicationDetail } from "@/types";
 
 export function ApplicationDetailsForm({
@@ -212,9 +213,41 @@ export function ApplicationDetailsForm({
       )}
 
       <Field label="Tags (kommasepariert)" htmlFor="detail-tags" hint="z.B. Prio1, Remote, React19">
-        <div className="relative">
-          <Tag className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input id="detail-tags" className="pl-8" placeholder="Prio1, Frontend, Empfehlung" value={tags} onChange={(e) => setTags(e.target.value)} />
+        <div className="space-y-2">
+          <div className="relative">
+            <Tag className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input id="detail-tags" className="pl-8" placeholder="Prio1, Frontend, Empfehlung" value={tags} onChange={(e) => setTags(e.target.value)} />
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Vorschläge:</span>
+            <button
+              type="button"
+              onClick={() => {
+                const suggested = generateSuggestedTags({
+                  position,
+                  techStack: application.jobPosting?.techStack,
+                  remote: application.jobPosting?.remote,
+                  location: application.company?.city,
+                });
+                if (suggested.length === 0) {
+                  toast.info("Keine weiteren Tag-Vorschläge gefunden.");
+                  return;
+                }
+                const currentSet = new Set(
+                  tags.split(",").map((t) => t.trim()).filter(Boolean)
+                );
+                for (const st of suggested) {
+                  currentSet.add(st);
+                }
+                setTags(Array.from(currentSet).join(", "));
+                toast.success(`${suggested.length} Tags ergänzt!`);
+              }}
+              className="inline-flex items-center gap-1 text-primary hover:underline font-medium cursor-pointer"
+            >
+              <Sparkles className="h-3 w-3" />
+              Auto-Tags generieren
+            </button>
+          </div>
         </div>
       </Field>
 

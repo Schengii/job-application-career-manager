@@ -37,6 +37,11 @@ const COLUMN_COLORS: Record<string, { header: string; dot: string; cardBorder: s
     dot: "bg-rose-500",
     cardBorder: "border-l-4 border-l-rose-500",
   },
+  TALENT_POOL: {
+    header: "bg-purple-500/15 text-purple-700 dark:text-purple-300",
+    dot: "bg-purple-500",
+    cardBorder: "border-l-4 border-l-purple-500",
+  },
   WITHDRAWN: {
     header: "bg-gray-500/10 text-gray-700 dark:text-gray-300",
     dot: "bg-gray-400",
@@ -227,6 +232,11 @@ export function KanbanBoard({
 
                     {/* Sub-Status / Phase Badges & Ghosting */}
                     <div className="mt-1.5 flex flex-wrap gap-1">
+                      {app.status === "TALENT_POOL" && (
+                        <span className="rounded bg-purple-500/15 border border-purple-500/30 px-1.5 py-0.2 text-[9.5px] font-bold text-purple-600 dark:text-purple-400">
+                          ⏳ 90-Tage Reaktivierung
+                        </span>
+                      )}
                       {ghosting.isGhosting && (
                         <span
                           className="rounded bg-rose-500/15 border border-rose-500/30 px-1.5 py-0.2 text-[9.5px] font-bold text-rose-600 dark:text-rose-400"

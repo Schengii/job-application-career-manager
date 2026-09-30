@@ -26,7 +26,9 @@ import { ContractCheckerCard } from "@/components/analytics/contract-checker-car
 import { NoticePeriodCalculatorCard } from "@/components/analytics/notice-period-calculator-card";
 import { CommuteCalculatorCard } from "@/components/analytics/commute-calculator-card";
 import { ToneEfficiencyCard } from "@/components/analytics/tone-efficiency-card";
+import { SalaryHistoryCard } from "@/components/analytics/salary-history-card";
 import type { ToneSuccessRate } from "@/lib/applications/toneSuccessRates";
+import type { SalaryDataPoint } from "@/lib/salary/salaryHistoryTracker";
 
 type Analytics = {
   statusDistribution: { status: string; label: string; color: string; count: number }[];
@@ -37,6 +39,7 @@ type Analytics = {
   tagSuccessRates?: SkillSuccessRate[];
   techStackSuccessRates?: SkillSuccessRate[];
   toneSuccessRates?: ToneSuccessRate[];
+  salaryTrends?: SalaryDataPoint[];
   successRate: number | null;
   avgResponseDays: number | null;
   totalApplications: number;
@@ -231,6 +234,11 @@ export default function AnalyticsPage() {
             {/* Gehalts-Benchmarking & Marktvergleich */}
             <div className="lg:col-span-2">
               <SalaryBenchmarkCard />
+            </div>
+
+            {/* Historischer Gehaltstrend & Entwicklung */}
+            <div className="lg:col-span-2">
+              <SalaryHistoryCard salaryTrends={data.salaryTrends} />
             </div>
 
             {/* Total Compensation & Benefit-Rechner */}

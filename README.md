@@ -422,6 +422,26 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 - **Direktdownload für Kalender-Apps (`src/lib/settings/ical.ts`)**:
   - Neuer Button *„Termin (.ics)“* im Kopf jeder Bewerbung lädt ein Einzel-Event mit Datum, Gesprächspartner, Adresse und Video-Meeting-Link herunter und öffnet es direkt in Apple Kalender, Google Kalender oder Outlook.
 
+---
+
+### 55. 🔔 Discord & Slack Webhook-Integration (`/settings` & `/api/settings/webhooks/test`)
+- **Echtzeit-Push in Team- & Private-Channels (`src/lib/settings/webhookNotifier.ts`)**:
+  - Informiert bei Statuswechseln (z. B. Einladung zum Vorstellungsgespräch, Angebot, Talent-Pool) unmittelbar über angebundene Discord- oder Slack-Webhooks.
+  - Inklusive Farbcodes, Metadaten (Firma, Position, Interviewlink) und interaktivem Test-Button in den Einstellungen.
+
+---
+
+### 56. 💡 Automatische Tag-Vorschläge (`src/lib/applications/autoTagging.ts`)
+- **1-Klick Tag-Generator im Bewerbungsformular**:
+  - Analysiert Position, verknüpften Tech-Stack, Remote-Status und Arbeitsort und schlägt per Knopfdruck relevante Tags vor (z. B. `#Frontend`, `#Remote`, `#Nextjs`, `#TypeScript`, `#High-Salary`).
+
+---
+
+### 57. 📊 Historischer Gehaltstrend & Marktwert-Entwicklung (`/analytics`)
+- **Zeitreihen-Aggregator (`SalaryHistoryCard`, `src/lib/salary/salaryHistoryTracker.ts`)**:
+  - Visualisiert die Gehaltsentwicklung der letzten 6 Monate anhand von Zielgehältern, Angeboten und Notizen.
+  - Zeigt Durchschnitts-, Minimal- und Maximalgehälter für den eigenen Marktwert im Zeitverlauf.
+
 ## 🛠️ Tech-Stack
 
 | Bereich    | Technologie                                                              |

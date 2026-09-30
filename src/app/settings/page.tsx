@@ -16,6 +16,7 @@ import { PortfolioShareCard } from "@/components/settings/portfolio-share-card";
 import { EmailSyncCard } from "@/components/settings/email-sync-card";
 import { BrowserExtensionCard } from "@/components/settings/browser-extension-card";
 import { PushNotificationsCard } from "@/components/settings/push-notifications-card";
+import { WebhooksCard } from "@/components/settings/webhooks-card";
 import { BackgroundSchedulerCard } from "@/components/settings/background-scheduler-card";
 import { CoverLetterSnippetsCard } from "@/components/settings/cover-letter-snippets-card";
 import { AiUsageCard } from "@/components/settings/ai-usage-card";
@@ -90,6 +91,7 @@ export default function SettingsPage() {
           {tab === "automation" && (
             <div className="space-y-6">
               <PushNotificationsCard />
+              <WebhooksCard />
               <BackgroundSchedulerCard preferences={preferences} />
               <SystemHealthCard />
             </div>

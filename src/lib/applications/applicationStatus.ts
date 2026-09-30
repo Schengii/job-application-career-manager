@@ -22,5 +22,20 @@ export async function applyApplicationStatusChange(applicationId: string, status
   // (siehe src/lib/pushNotifications.ts). Bewusst NICHT awaited.
   void sendDueNotifications();
 
+  // Webhook-Benachrichtigung (Discord / Slack) falls konfiguriert
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL || process.env.SLACK_WEBHOOK_URL;
+  if (webhookUrl) {
+    const { sendWebhookNotification } = await import("@/lib/settings/webhookNotifier");
+    void sendWebhookNotification(webhookUrl, {
+      title: `Status-Update: ${application.position}`,
+      description: note || `Status wurde auf ${status} geändert.`,
+      companyName: application.company.name,
+      position: application.position,
+      status,
+      nextStep: application.nextStep,
+      meetingUrl: application.meetingUrl,
+    });
+  }
+
   return application;
 }

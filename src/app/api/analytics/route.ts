@@ -6,6 +6,7 @@ import { prisma } from "@/lib/core/prisma";
 import { APPLICATION_STATUSES, JOB_PORTALS } from "@/lib/core/constants";
 import { computeTagSuccessRates, computeTechStackSuccessRates } from "@/lib/interview/skillSuccessRates";
 import { computeToneSuccessRates } from "@/lib/applications/toneSuccessRates";
+import { aggregateSalaryTrends } from "@/lib/salary/salaryHistoryTracker";
 
 const RESPONSE_STATUSES = new Set(["INTERVIEW", "OFFER", "REJECTED"]);
 
@@ -14,7 +15,7 @@ export async function GET() {
     include: {
       company: { select: { preferredTone: true } },
       statusEvents: { orderBy: { changedAt: "asc" } },
-      jobPosting: { select: { techStack: true } },
+      jobPosting: { select: { techStack: true, salaryInfo: true } },
     },
   });
 
@@ -118,6 +119,7 @@ export async function GET() {
   const tagSuccessRates = computeTagSuccessRates(applications);
   const techStackSuccessRates = computeTechStackSuccessRates(applications);
   const toneSuccessRates = computeToneSuccessRates(applications);
+  const salaryTrends = aggregateSalaryTrends(applications);
 
   return NextResponse.json({
     statusDistribution,
@@ -128,6 +130,7 @@ export async function GET() {
     tagSuccessRates,
     techStackSuccessRates,
     toneSuccessRates,
+    salaryTrends,
     successRate,
     avgResponseDays,
     totalApplications: applications.length,
