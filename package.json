@@ -10,6 +10,7 @@
     "mysql2": "^3.24.3"
   },
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
