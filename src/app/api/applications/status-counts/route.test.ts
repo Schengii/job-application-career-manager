@@ -26,6 +26,7 @@ describe("GET /api/applications/status-counts", () => {
       SENT: 0,
       INTERVIEW: 0,
       OFFER: 0,
+      TALENT_POOL: 0,
       REJECTED: 0,
       WITHDRAWN: 0,
     });

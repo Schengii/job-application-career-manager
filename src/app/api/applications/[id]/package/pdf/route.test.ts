@@ -31,7 +31,13 @@ describe("GET /api/applications/:id/package/pdf", () => {
       data: {
         position: "Frontend Entwickler",
         companyId: company.id,
-        coverLetter: { create: { content: "Sehr geehrte Damen und Herren,\n\nTestinhalt.", status: "DRAFT" } },
+      },
+    });
+    await prisma.coverLetter.create({
+      data: {
+        applicationId: application.id,
+        content: "Sehr geehrte Damen und Herren,\n\nTestinhalt.",
+        status: "DRAFT",
       },
     });
 

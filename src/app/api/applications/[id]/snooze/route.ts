@@ -44,22 +44,21 @@ export async function POST(
 
     const dateFormatted = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" }).format(nextDate);
 
-    // Update Application and create Interaction log
-    const [updatedApp] = await prisma.$transaction([
-      prisma.application.update({
-        where: { id },
-        data: { nextStepDate: nextDate },
-      }),
-      prisma.applicationInteraction.create({
-        data: {
-          applicationId: id,
-          type: "NOTE",
-          title: `Wiedervorlage verschoben (${days ? `+${days} Tage` : "Individuell"})`,
-          summary: note || `Nächster Schritt / Nachfassen verschoben auf den ${dateFormatted}.`,
-          interactionDate: new Date(),
-        },
-      }),
-    ]);
+    // Update Application and create Interaction log sequentially (Neon HTTP mode compatible)
+    const updatedApp = await prisma.application.update({
+      where: { id },
+      data: { nextStepDate: nextDate },
+    });
+
+    await prisma.applicationInteraction.create({
+      data: {
+        applicationId: id,
+        type: "NOTE",
+        title: `Wiedervorlage verschoben (${days ? `+${days} Tage` : "Individuell"})`,
+        summary: note || `Nächster Schritt / Nachfassen verschoben auf den ${dateFormatted}.`,
+        interactionDate: new Date(),
+      },
+    });
 
     return NextResponse.json({
       success: true,

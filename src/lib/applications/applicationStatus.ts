@@ -9,12 +9,23 @@ import { prisma } from "@/lib/core/prisma";
 import { sendDueNotifications } from "@/lib/settings/pushNotifications";
 
 export async function applyApplicationStatusChange(applicationId: string, status: string, note?: string | null) {
-  const application = await prisma.application.update({
+  // Update status first
+  await prisma.application.update({
     where: { id: applicationId },
+    data: { status },
+  });
+
+  // Create status event entry separately (avoids nested transaction error on Neon HTTP)
+  await prisma.applicationStatusEvent.create({
     data: {
+      applicationId,
       status,
-      statusEvents: { create: { status, note: note ?? null } },
+      note: note ?? null,
     },
+  });
+
+  const application = await prisma.application.findUniqueOrThrow({
+    where: { id: applicationId },
     include: { company: true, jobPosting: true, statusEvents: { orderBy: { changedAt: "desc" } } },
   });
 

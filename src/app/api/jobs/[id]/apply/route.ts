@@ -43,17 +43,15 @@ type Params = { params: Promise<{ id: string }> };
  * dieser Funktion fehlgeschlagen ist).
  */
 async function ensureStandardPackage(application: Application & { company: Company; jobPosting: JobPosting | null }) {
-  const [defaultDocuments, alreadyAttached, existingCoverLetter] = await Promise.all([
-    prisma.document.findMany({ where: { isDefault: true }, select: { id: true } }),
-    prisma.applicationDocument.findMany({ where: { applicationId: application.id }, select: { documentId: true } }),
-    prisma.coverLetter.findUnique({ where: { applicationId: application.id } }),
-  ]);
+  const defaultDocuments = await prisma.document.findMany({ where: { isDefault: true }, select: { id: true } });
+  const alreadyAttached = await prisma.applicationDocument.findMany({ where: { applicationId: application.id }, select: { documentId: true } });
+  const existingCoverLetter = await prisma.coverLetter.findUnique({ where: { applicationId: application.id } });
 
   const attachedIds = new Set(alreadyAttached.map((a) => a.documentId));
   const toAttach = defaultDocuments.filter((doc) => !attachedIds.has(doc.id));
-  if (toAttach.length > 0) {
-    await prisma.applicationDocument.createMany({
-      data: toAttach.map((doc) => ({ applicationId: application.id, documentId: doc.id })),
+  for (const doc of toAttach) {
+    await prisma.applicationDocument.create({
+      data: { applicationId: application.id, documentId: doc.id },
     });
   }
 
@@ -83,24 +81,38 @@ export async function POST(_request: NextRequest, { params }: Params) {
       companyId = company.id;
     }
 
+    const company = job.company ?? (await prisma.company.findUniqueOrThrow({ where: { id: companyId } }));
+
     const existing = await prisma.application.findFirst({
       where: { jobPostingId: job.id },
       include: { company: true, jobPosting: true },
     });
 
-    const application =
-      existing ??
-      (await prisma.application.create({
+    let application: Application & { company: Company; jobPosting: JobPosting | null };
+
+    if (existing) {
+      application = existing;
+    } else {
+      const created = await prisma.application.create({
         data: {
           position: job.title,
           status: "DRAFT",
           companyId,
           jobPostingId: job.id,
           source: job.portalSource,
-          statusEvents: { create: { status: "DRAFT", note: "Bewerbung aus Stellenangebot erstellt" } },
         },
-        include: { company: true, jobPosting: true, statusEvents: true },
-      }));
+      });
+
+      await prisma.applicationStatusEvent.create({
+        data: {
+          applicationId: created.id,
+          status: "DRAFT",
+          note: "Bewerbung aus Stellenangebot erstellt",
+        },
+      });
+
+      application = { ...created, company, jobPosting: job };
+    }
 
     // Holt fehlende Standard-Dokumente/Anschreiben nach — auch im
     // `existing`-Zweig, falls ein vorheriger Aufruf hier zuvor fehlgeschlagen

@@ -15,11 +15,12 @@ describe("GET /api/applications/[id]/pdf-package", () => {
       data: {
         position: "Frontend Entwickler",
         companyId: company.id,
-        coverLetter: {
-          create: {
-            content: "Sehr geehrte Damen und Herren,\n\nhiermit bewerbe ich mich als Frontend Entwickler.",
-          },
-        },
+      },
+    });
+    await prisma.coverLetter.create({
+      data: {
+        applicationId: app.id,
+        content: "Sehr geehrte Damen und Herren,\n\nhiermit bewerbe ich mich als Frontend Entwickler.",
       },
     });
 
