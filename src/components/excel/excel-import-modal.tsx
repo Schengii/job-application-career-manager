@@ -5,7 +5,6 @@
 // -----------------------------------------------------------------------------
 import { useState, useRef } from "react";
 import { useSWRConfig } from "swr";
-import * as XLSX from "xlsx";
 import { UploadCloud, FileSpreadsheet, X, Check, AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
@@ -61,8 +60,9 @@ export function ExcelImportModal({
     setParsing(true);
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
+        const XLSX = await import("xlsx");
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: "array", cellDates: true });
         const firstSheetName = workbook.SheetNames[0];
