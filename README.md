@@ -684,3 +684,7 @@ ist über einen `overrides`-Eintrag in `package.json` auf eine gepatchte Version
 selbst hat diese Abhängigkeit in keiner stabilen 7.x-Version bisher aktualisiert (nur im experimentellen
 8.0.0-Release-Candidate, der bewusst nicht eingesetzt wird, da diese App auf der Prisma-7-Client-Architektur
 aufbaut, siehe `AGENTS.md`).
+
+## License
+
+MIT, see [LICENSE](LICENSE).
