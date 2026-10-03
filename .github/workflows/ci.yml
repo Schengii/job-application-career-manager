@@ -26,10 +26,12 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # SQLite-Datei nur für den Build-Schritt (next build) — die eigentliche
-  # Testsuite verwendet eine eigene, isolierte Testdatenbank, siehe
-  # vitest.global-setup.ts.
-  DATABASE_URL: "file:./ci.db"
+  # Platzhalter fuer Lint/Build: Das Projekt nutzt PostgreSQL (Neon) statt
+  # SQLite, daher eine URL im PostgreSQL-Format. Fuer echte Datenbank-Laeufe
+  # (Vitest mit TEST_DATABASE_URL, Playwright mit E2E_DATABASE_URL) muss eine
+  # erreichbare Neon-Branch bereitgestellt werden.
+  DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci?sslmode=disable"
+  DIRECT_URL: "postgresql://ci:ci@localhost:5432/ci?sslmode=disable"
 
 jobs:
   lint-test-build:
@@ -46,18 +48,7 @@ jobs:
           cache: "npm"
 
       - name: Abhängigkeiten installieren
-        # `npm_config_build_from_source=true` zwingt `better-sqlite3` (native
-        # C++-Addon), sein Binding lokal gegen die exakten Node-Header dieses
-        # Runners zu kompilieren, statt ein vorgebautes Binary herunterzuladen.
-        # Ohne das führte ein ABI-Mismatch zwischen dem heruntergeladenen
-        # Prebuilt-Binary und der Runner-Umgebung reproduzierbar zu einem
-        # sofortigen Segfault ("Segmentation fault (core dumped)", exit 139)
-        # beim allerersten `new Database(...)`-Aufruf in
-        # vitest.global-setup.ts. ubuntu-latest bringt die dafür nötigen
-        # Build-Tools (python3/make/g++) bereits vorinstalliert mit.
         run: npm ci
-        env:
-          npm_config_build_from_source: "true"
 
       - name: Prisma Client generieren
         run: npx prisma generate
@@ -84,12 +75,8 @@ jobs:
           node-version: 22
           cache: "npm"
 
-      # Siehe Kommentar im "lint-test-build"-Job oben: better-sqlite3 muss
-      # lokal gegen die exakten Node-Header dieses Runners kompiliert werden.
       - name: Abhängigkeiten installieren
         run: npm ci
-        env:
-          npm_config_build_from_source: "true"
 
       - name: Prisma Client generieren
         run: npx prisma generate
