@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Receipt, Download, Plus, Trash2 } from "lucide-react";
+import { Receipt, Download, Plus, Trash2, Printer } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/form";
@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import {
   generateTaxReport,
   generateTaxCsvExport,
+  generateTaxReportPrintHtml,
   calculateTravelCost,
   type TaxDeductibleItem,
 } from "@/lib/salary/taxReportCalculator";
@@ -120,6 +121,17 @@ export function TaxExpenseReportCard() {
     toast.success("Steuerbericht (.csv) heruntergeladen!");
   }
 
+  function handlePrintReport() {
+    const html = generateTaxReportPrintHtml(report, "Alexander Schepp");
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 300);
+    toast.success("Druckansicht für das Finanzamt geöffnet!");
+  }
+
   return (
     <Card className="border border-border/70 shadow-sm">
       <CardHeader className="pb-3">
@@ -143,6 +155,17 @@ export function TaxExpenseReportCard() {
               <option value={currentYear - 1}>{currentYear - 1}</option>
               <option value={currentYear - 2}>{currentYear - 2}</option>
             </Select>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={handlePrintReport}
+              className="h-8 text-xs border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10"
+              title="Offiziellen DIN A4 Nachweis für ELSTER / Finanzamt drucken"
+            >
+              <Printer className="h-3.5 w-3.5 mr-1" />
+              Finanzamt drucken
+            </Button>
             <Button type="button" size="sm" variant="outline" onClick={handleExportCsv} className="h-8 text-xs">
               <Download className="h-3.5 w-3.5 mr-1" />
               CSV-Export

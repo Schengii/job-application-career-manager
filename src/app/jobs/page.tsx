@@ -38,6 +38,7 @@ import { JobDismissModal } from "@/components/jobs/job-dismiss-modal";
 import { LiveJobSearchModal } from "@/components/jobs/live-job-search-modal";
 import { UrlJobScraperCard } from "@/components/jobs/url-job-scraper-card";
 import { JobRedFlagsCard } from "@/components/jobs/job-red-flags-card";
+import { SalaryTransparencyBadge } from "@/components/jobs/salary-transparency-badge";
 import { Globe2 } from "lucide-react";
 
 function matchColor(score: number) {
@@ -482,6 +483,7 @@ export default function JobsPage() {
                   {findStatusMeta(JOB_PORTALS, job.portalSource)?.label ?? job.portalSource}
                 </span>
                 {job.salaryInfo && <span className="font-medium text-foreground">{job.salaryInfo}</span>}
+                <SalaryTransparencyBadge salaryInfo={job.salaryInfo} description={job.description} role={job.title} />
 
                 {job.isDismissed && (
                   <span className="inline-flex items-center gap-1 rounded bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 text-[11px] font-semibold text-rose-600 dark:text-rose-400">

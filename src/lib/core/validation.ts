@@ -161,7 +161,7 @@ export const jobLiveSearchSchema = z.object({
   query: z.string().default("Fachinformatiker Anwendungsentwicklung"),
   location: z.string().default("Bonn"),
   radius: z.number().int().default(50),
-  source: z.enum(["ALL", "ARBEITSAGENTUR", "ARBEITNOW"]).default("ALL"),
+  source: z.enum(["ALL", "ARBEITSAGENTUR", "ARBEITNOW", "REMOTIVE"]).default("ALL"),
   limit: z.number().int().min(1).max(50).default(20),
 });
 

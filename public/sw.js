@@ -1,9 +1,10 @@
 // -----------------------------------------------------------------------------
 // Service Worker für Offline-Caching und PWA-Installation
 // -----------------------------------------------------------------------------
-const CACHE_NAME = "career-manager-v3";
+const CACHE_NAME = "career-manager-v4";
 const STATIC_ASSETS = [
   "/",
+  "/jobs",
   "/interview-prep",
   "/cv-designer",
   "/applications",

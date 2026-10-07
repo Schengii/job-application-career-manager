@@ -9,12 +9,13 @@
 // Rate-Limiter in src/lib/rateLimiter.ts: ein einziger Server-Prozess für
 // diese Single-User-App, kein verteilter Cache nötig).
 import { SimulatedJobPosting } from "@/lib/jobs/mockJobPortals";
+import { searchRemotiveJobs } from "@/lib/jobs/remotiveJobs";
 
 export interface LiveJobSearchParams {
   query?: string;
   location?: string;
   radius?: number; // km
-  source?: "ALL" | "ARBEITSAGENTUR" | "ARBEITNOW";
+  source?: "ALL" | "ARBEITSAGENTUR" | "ARBEITNOW" | "REMOTIVE";
   limit?: number;
 }
 
@@ -245,6 +246,12 @@ async function searchRealJobsUncached(params: LiveJobSearchParams): Promise<Live
     sourcesQueried.push("Arbeitnow Tech Jobs API");
     const anJobs = await searchArbeitnow(params);
     results.push(...anJobs);
+  }
+
+  if (source === "ALL" || source === "REMOTIVE") {
+    sourcesQueried.push("Remotive Remote API");
+    const remotiveJobs = await searchRemotiveJobs(params.query || "Frontend", Math.min(params.limit || 10, 15));
+    results.push(...remotiveJobs);
   }
 
   if (results.length === 0) {

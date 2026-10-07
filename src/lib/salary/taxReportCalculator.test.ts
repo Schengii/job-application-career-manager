@@ -3,6 +3,7 @@ import {
   calculateTravelCost,
   generateTaxReport,
   generateTaxCsvExport,
+  generateTaxReportPrintHtml,
   type TaxDeductibleItem,
 } from "./taxReportCalculator";
 
@@ -73,5 +74,25 @@ describe("taxReportCalculator", () => {
     const csv = generateTaxCsvExport(report);
     expect(csv).toContain("Datum;Kategorie;Unternehmen / Verwendungszweck;Distanz (km);Absetzbarer Betrag (EUR)");
     expect(csv).toContain("STEUERLICH ABSETZBARER GESAMTBETRAG;;;;30,00");
+  });
+
+  it("erzeugt druckfertiges HTML für das Finanzamt", () => {
+    const report = generateTaxReport(2026, [
+      {
+        id: "1",
+        category: "TRAVEL",
+        date: "2026-02-10",
+        description: "Bewerbungsgespräch Frontend",
+        companyName: "Acme Tech",
+        amount: 45,
+        distanceKm: 150,
+      },
+    ]);
+
+    const html = generateTaxReportPrintHtml(report, "Max Mustermann");
+    expect(html).toContain("Aufstellung der Bewerbungskosten (Werbungskosten § 9 EStG)");
+    expect(html).toContain("Max Mustermann");
+    expect(html).toContain("Acme Tech");
+    expect(html).toContain("45,00 €");
   });
 });

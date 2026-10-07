@@ -38,7 +38,7 @@ export function LiveJobSearchModal({ open, onClose, onJobAdded }: LiveJobSearchM
   const [query, setQuery] = useState("Fachinformatiker Anwendungsentwicklung");
   const [location, setLocation] = useState("Bonn");
   const [radius, setRadius] = useState(50);
-  const [source, setSource] = useState<"ALL" | "ARBEITSAGENTUR" | "ARBEITNOW">("ALL");
+  const [source, setSource] = useState<"ALL" | "ARBEITSAGENTUR" | "ARBEITNOW" | "REMOTIVE">("ALL");
 
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<ScoredLiveJob[]>([]);
@@ -146,11 +146,12 @@ export function LiveJobSearchModal({ open, onClose, onJobAdded }: LiveJobSearchM
             <Select
               label="Quelle"
               value={source}
-              onChange={(e) => setSource(e.target.value as "ALL" | "ARBEITSAGENTUR" | "ARBEITNOW")}
+              onChange={(e) => setSource(e.target.value as "ALL" | "ARBEITSAGENTUR" | "ARBEITNOW" | "REMOTIVE")}
               options={[
                 { value: "ALL", label: "Alle Portale" },
                 { value: "ARBEITSAGENTUR", label: "Arbeitsagentur" },
                 { value: "ARBEITNOW", label: "Arbeitnow (Remote/Tech)" },
+                { value: "REMOTIVE", label: "Remotive (Global Remote)" },
               ]}
             />
           </div>

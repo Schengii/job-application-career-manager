@@ -32,7 +32,7 @@ export async function GET() {
   try {
     await prisma.$queryRaw`SELECT 1`;
     dbConnected = true;
-  } catch (err) {
+  } catch {
     // DB-Fehlermeldung nicht nach außen geben — könnte Host-Namen/Credentials leaken.
     dbError = "Verbindung fehlgeschlagen";
   }

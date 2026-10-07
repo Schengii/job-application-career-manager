@@ -5,6 +5,7 @@
 // auf Basis des Nutzerprofils, Ausbildungsdaten und Referenzprojekten.
 // -----------------------------------------------------------------------------
 import type { PreferencesWithProfile } from "@/types";
+import { createPortfolioQrCode } from "./qrCodeGenerator";
 
 export type CvLayout = "MODERN" | "CLASSIC" | "COMPACT" | "ATS_MINIMAL" | "MODERN_TWO_COLUMN";
 
@@ -16,6 +17,7 @@ export type CvOptions = {
   selectedProjectIds?: string[];
   selectedEducationIds?: string[];
   sectionOrder?: CvSection[];
+  includeQrCode?: boolean;
 };
 
 export function formatMonthYear(dateString?: Date | string | null): string {
@@ -45,6 +47,10 @@ export function generateCvHtml(preferences: PreferencesWithProfile, options: CvO
     preferences.email ? `E-Mail: ${preferences.email}` : null,
     preferences.phone ? `Tel: ${preferences.phone}` : null,
   ].filter(Boolean);
+
+  const qr = options.includeQrCode !== false
+    ? createPortfolioQrCode("https://job-application-career-manager.vercel.app", preferences.portfolioShareToken, 72)
+    : null;
 
   if (layout === "MODERN_TWO_COLUMN") {
     return `
@@ -92,6 +98,16 @@ export function generateCvHtml(preferences: PreferencesWithProfile, options: CvO
         ${skills.map((s) => `<span class="side-skill-pill">${escapeHtml(s)}</span>`).join("")}
       </div>
     </div>
+
+    ${qr ? `
+    <div style="margin-top: auto; padding-top: 20px; text-align: center; border-top: 1px solid #334155;">
+      <div style="display: inline-block; background: #fff; padding: 4px; border-radius: 6px; margin-bottom: 6px;">
+        ${qr.svg}
+      </div>
+      <div style="font-size: 10px; font-weight: 700; color: #f8fafc;">Digital Portfolio</div>
+      <div style="font-size: 8.5px; color: #94a3b8;">Scannen für Live-Demos & Code</div>
+    </div>
+    ` : ""}
   </div>
 
   <div class="main-content">

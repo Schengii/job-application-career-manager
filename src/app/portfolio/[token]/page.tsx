@@ -15,6 +15,7 @@ import {
   Sparkles,
   ShieldCheck,
 } from "lucide-react";
+import { GitHubRepoCard } from "@/components/portfolio/github-repo-card";
 import { fetcher } from "@/lib/core/api";
 import type { PreferencesWithProfile } from "@/types";
 import { Card } from "@/components/ui/card";
@@ -267,6 +268,9 @@ export default function PortfolioTokenPage({ params }: { params: Promise<{ token
                     ))}
                   </div>
                 )}
+
+                {/* Live GitHub-Statistiken */}
+                <GitHubRepoCard url={project.url} />
               </div>
             ))}
           </div>
