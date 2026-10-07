@@ -1,5 +1,13 @@
 # Job Application & Career Manager
 
+> **In short (EN):** Full-stack web app that manages an entire job search: applications on a Kanban board, ATS-checked CV builder, cover-letter generator, AI interview and salary-negotiation trainer, and a Manifest V3 browser extension that clips job postings.
+> **Stack:** Next.js 16 · React 19 · TypeScript · Prisma 7 · Neon PostgreSQL · Tailwind CSS v4 · Zod · Vitest · Playwright · GitHub Actions · Vercel
+> **Live demo:** [job-application-career-manager.vercel.app](https://job-application-career-manager.vercel.app)
+
+<!-- Screenshot: Datei unter docs/screenshots/dashboard.png ablegen und die nächste Zeile einkommentieren -->
+<!-- ![Dashboard mit Kanban-Board](docs/screenshots/dashboard.png) -->
+
+
 Eine vollständige, moderne Fullstack-Web-Anwendung zur professionellen Steuerung der gesamten Jobsuche als **Fachinformatiker für
 Anwendungsentwicklung** (Schwerpunkt Frontend: TypeScript, JavaScript, CSS, React, Next.js – Region
 Bonn/Dortmund/Remote). Alle Daten – Unternehmen, Stellenangebote, Bewerbungen, Präferenzen,
@@ -676,3 +684,7 @@ ist über einen `overrides`-Eintrag in `package.json` auf eine gepatchte Version
 selbst hat diese Abhängigkeit in keiner stabilen 7.x-Version bisher aktualisiert (nur im experimentellen
 8.0.0-Release-Candidate, der bewusst nicht eingesetzt wird, da diese App auf der Prisma-7-Client-Architektur
 aufbaut, siehe `AGENTS.md`).
+
+## License
+
+MIT, see [LICENSE](LICENSE).
