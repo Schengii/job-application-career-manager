@@ -65,8 +65,11 @@ describe("KanbanBoard", () => {
 
   it("zeigt einen Platzhaltertext für leere Spalten", () => {
     render(<KanbanBoard applications={[]} onStatusChange={vi.fn()} />);
+    // Die Spalte "Entwurf" zeigt statt des Platzhalters eine Ablage-Fläche für
+    // Stellenanzeigen; alle anderen Spalten zeigen den Platzhaltertext.
     const emptyPlaceholders = screen.getAllByText("Keine Bewerbungen");
-    expect(emptyPlaceholders).toHaveLength(APPLICATION_STATUSES.length);
+    expect(emptyPlaceholders).toHaveLength(APPLICATION_STATUSES.length - 1);
+    expect(screen.getByText("Stellenanzeige ablegen")).toBeInTheDocument();
   });
 
   it("löst onStatusChange mit der Ziel-Spalte aus, wenn eine Karte dorthin gezogen und fallen gelassen wird", () => {

@@ -26,15 +26,25 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # SQLite-Datei nur für den Build-Schritt (next build) — die eigentliche
-  # Testsuite verwendet eine eigene, isolierte Testdatenbank, siehe
-  # vitest.global-setup.ts.
-  DATABASE_URL: "file:./ci.db"
+  # Platzhalter-URL nur für `prisma generate` und `next build` — der Build
+  # verbindet sich nicht mit der Datenbank.
+  DATABASE_URL: "postgresql://build:build@localhost:5432/build"
+
+# Datenbankabhängige Schritte (Vitest-Integrationstests, Playwright-E2E)
+# brauchen eine echte Neon-PostgreSQL-Datenbank, z. B. eine eigene Test-Branch
+# in Neon. Die App nutzt den Neon-HTTP-Adapter; eine einfache Postgres-
+# Instanz im Runner funktioniert daher nicht. Verbindungs-URL als Repository-
+# Secret `TEST_DATABASE_URL` hinterlegen (Settings → Secrets and variables →
+# Actions). Ohne das Secret (und bei Dependabot-/Fork-PRs, die keine Secrets
+# sehen) werden diese Schritte mit einer Warnung übersprungen; Lint, Build und
+# Docker-Build laufen immer.
 
 jobs:
   lint-test-build:
     name: Lint, Test & Build
     runs-on: ubuntu-latest
+    env:
+      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,18 +56,7 @@ jobs:
           cache: "npm"
 
       - name: Abhängigkeiten installieren
-        # `npm_config_build_from_source=true` zwingt `better-sqlite3` (native
-        # C++-Addon), sein Binding lokal gegen die exakten Node-Header dieses
-        # Runners zu kompilieren, statt ein vorgebautes Binary herunterzuladen.
-        # Ohne das führte ein ABI-Mismatch zwischen dem heruntergeladenen
-        # Prebuilt-Binary und der Runner-Umgebung reproduzierbar zu einem
-        # sofortigen Segfault ("Segmentation fault (core dumped)", exit 139)
-        # beim allerersten `new Database(...)`-Aufruf in
-        # vitest.global-setup.ts. ubuntu-latest bringt die dafür nötigen
-        # Build-Tools (python3/make/g++) bereits vorinstalliert mit.
         run: npm ci
-        env:
-          npm_config_build_from_source: "true"
 
       - name: Prisma Client generieren
         run: npx prisma generate
@@ -65,7 +64,12 @@ jobs:
       - name: ESLint
         run: npm run lint
 
+      - name: Hinweis zu fehlendem Test-Datenbank-Secret
+        if: env.TEST_DATABASE_URL == ''
+        run: echo "::warning::TEST_DATABASE_URL ist nicht gesetzt - Vitest-Integrationstests werden übersprungen."
+
       - name: Testsuite (Vitest)
+        if: env.TEST_DATABASE_URL != ''
         run: npm run test
 
       - name: Produktions-Build
@@ -74,33 +78,42 @@ jobs:
   e2e:
     name: E2E-Tests (Playwright)
     runs-on: ubuntu-latest
+    env:
+      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
     steps:
+      - name: Hinweis zu fehlendem Test-Datenbank-Secret
+        if: env.TEST_DATABASE_URL == ''
+        run: echo "::warning::TEST_DATABASE_URL ist nicht gesetzt - E2E-Tests werden übersprungen."
+
       - name: Checkout
+        if: env.TEST_DATABASE_URL != ''
         uses: actions/checkout@v4
 
       - name: Node.js einrichten
+        if: env.TEST_DATABASE_URL != ''
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: "npm"
 
-      # Siehe Kommentar im "lint-test-build"-Job oben: better-sqlite3 muss
-      # lokal gegen die exakten Node-Header dieses Runners kompiliert werden.
       - name: Abhängigkeiten installieren
+        if: env.TEST_DATABASE_URL != ''
         run: npm ci
-        env:
-          npm_config_build_from_source: "true"
 
       - name: Prisma Client generieren
+        if: env.TEST_DATABASE_URL != ''
         run: npx prisma generate
 
-      # Nur Chromium (siehe Begründung in playwright.config.mts) — spart
-      # Download-/Laufzeit gegenüber allen drei Playwright-Browsern.
+      # Nur Chromium (siehe Begründung in playwright.config.mts).
       - name: Playwright-Browser (Chromium) installieren
+        if: env.TEST_DATABASE_URL != ''
         run: npx playwright install --with-deps chromium
 
       - name: E2E-Tests (Playwright)
+        if: env.TEST_DATABASE_URL != ''
         run: npm run test:e2e
+        env:
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
 
       - name: Playwright-Report bei Fehlschlag hochladen
         if: failure()
@@ -109,6 +122,7 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+          if-no-files-found: ignore
 
   docker-build:
     name: Docker-Image bauen
