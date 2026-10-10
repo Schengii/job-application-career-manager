@@ -8,7 +8,8 @@ import Link from "next/link";
 import { MoreVertical, UploadCloud } from "lucide-react";
 import { APPLICATION_STATUSES } from "@/lib/core/constants";
 import { formatDate, cn } from "@/lib/core/utils";
-import { checkColumnWip, detectGhosting } from "@/lib/applications/kanbanWip";
+import { checkColumnWip } from "@/lib/applications/kanbanWip";
+import { GhostingRadarBadge } from "@/components/applications/ghosting-radar-badge";
 import type { ApplicationListItem } from "@/types";
 
 const COLUMN_COLORS: Record<string, { header: string; dot: string; cardBorder: string }> = {
@@ -209,9 +210,7 @@ export function KanbanBoard({
 
             {/* Karten-Liste */}
             <div className="flex min-h-[140px] flex-col gap-2.5 p-2.5">
-              {items.map((app) => {
-                const ghosting = detectGhosting(app);
-                return (
+              {items.map((app) => (
                 <div key={app.id} className="relative">
                   <Link
                     href={`/applications/${app.id}`}
@@ -237,14 +236,7 @@ export function KanbanBoard({
                           ⏳ 90-Tage Reaktivierung
                         </span>
                       )}
-                      {ghosting.isGhosting && (
-                        <span
-                          className="rounded bg-rose-500/15 border border-rose-500/30 px-1.5 py-0.2 text-[9.5px] font-bold text-rose-600 dark:text-rose-400"
-                          title={ghosting.label}
-                        >
-                          ⚠️ Inaktiv ({ghosting.daysSinceApplication}d)
-                        </span>
-                      )}
+                      <GhostingRadarBadge application={app} />
                       {app.tags &&
                         app.tags.split(",").slice(0, 2).map((t) => (
                           <span
@@ -273,8 +265,7 @@ export function KanbanBoard({
                   </Link>
                   <StatusMoveMenu app={app} onMove={(status, label) => handleMove(app, status, label)} />
                 </div>
-              );
-            })}
+              ))}
               {items.length === 0 && (
                 <div className="py-6 text-center text-xs text-muted-foreground/60 flex flex-col items-center gap-1.5">
                   {col.value === "DRAFT" ? (

@@ -31,9 +31,12 @@ import { FollowUpSnoozeButtons } from "@/components/applications/follow-up-snooz
 import { ApplicationStatusBadge } from "@/components/status-badge";
 import { parseTags, getTagStyle } from "@/lib/core/tags";
 import { apiPut } from "@/lib/core/api";
-import { Smartphone, Mail, Calendar, Archive } from "lucide-react";
+import { Smartphone, Mail, Calendar, Archive, Scale } from "lucide-react";
 import { InterviewStageTracker } from "@/components/applications/interview-stage-tracker";
+import { MultiRoundInterviewManager } from "@/components/interview/multi-round-interview-manager";
+import { GhostingRadarBadge } from "@/components/applications/ghosting-radar-badge";
 import { SendApplicationEmailModal } from "@/components/applications/send-application-email-modal";
+import { ContractAuditModal } from "@/components/salary/contract-audit-modal";
 import { generateIcsContent, downloadIcsFile } from "@/lib/settings/ical";
 
 export default function ApplicationDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -45,6 +48,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
   const [dossierOpen, setDossierOpen] = useState(false);
   const [daySheetOpen, setDaySheetOpen] = useState(false);
   const [sendEmailOpen, setSendEmailOpen] = useState(false);
+  const [contractAuditOpen, setContractAuditOpen] = useState(false);
 
   const { data: application, isLoading, error } = useSWR<ApplicationDetail>(
     `/api/applications/${id}`,
@@ -99,6 +103,16 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
             title="Bewerbung direkt per E-Mail inkl. PDF-Mappe an das Unternehmen versenden"
           >
             <Mail className="h-4 w-4" /> E-Mail versenden
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setContractAuditOpen(true)}
+            className="card-hover-effect border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+            title="Vertragsentwurf auf typische IT-Klauseln (Überstunden, Home-Office, IP) prüfen"
+          >
+            <Scale className="h-4 w-4" /> Vertragsprüfung (Klausel-Check)
           </Button>
 
           <Button
@@ -166,6 +180,7 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-bold text-foreground">{application.position}</h1>
             <ApplicationStatusBadge status={application.status} />
+            <GhostingRadarBadge application={application} />
             {application.meetingUrl && (
               <a
                 href={application.meetingUrl}
@@ -223,12 +238,16 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         </div>
       </header>
 
-      {/* Visueller Interview-Phasen-Tracker */}
       <InterviewStageTracker
         applicationId={application.id}
         currentStage={application.interviewStage}
         onStageChanged={refresh}
       />
+
+      {/* Mehrstufiger Runden- & Feedback-Manager */}
+      {(application.status === "INTERVIEW" || Boolean(application.interviewStage)) && (
+        <MultiRoundInterviewManager applicationId={application.id} />
+      )}
 
       {/* Absage-Banner */}
       {application.status === "REJECTED" && (
@@ -322,6 +341,13 @@ export default function ApplicationDetailPage({ params }: { params: Promise<{ id
         onOpenChange={setSendEmailOpen}
         application={application}
         onSent={refresh}
+      />
+
+      <ContractAuditModal
+        open={contractAuditOpen}
+        onOpenChange={setContractAuditOpen}
+        companyName={application.company.name}
+        position={application.position}
       />
     </div>
   );

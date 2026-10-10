@@ -5,7 +5,7 @@
 # http://localhost:3000. Für den ersten Start Beispieldaten laden (optional):
 # `docker compose exec app npx prisma db seed`.
 #
-# Persistenz: `./prisma` (SQLite-Datenbank), `./public/uploads` (hochgeladene
+# Persistenz: `./public/uploads` (hochgeladene
 # Bewerbungsunterlagen) und `./backups` (automatische Sicherheitskopien vor
 # destruktiven Aktionen, siehe src/lib/serverBackupRotation.ts) werden als
 # Bind-Mounts vom Host eingehängt — Container-Neustarts/-Updates verlieren
@@ -18,7 +18,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: "file:/app/prisma/dev.db"
+      # Neon-PostgreSQL-Verbindungs-URL (Pflicht, z. B. in .env setzen).
+      DATABASE_URL: "${DATABASE_URL:?DATABASE_URL (Neon-PostgreSQL) muss gesetzt sein}"
+      DIRECT_URL: "${DIRECT_URL:-}"
       # Siehe .env.example für alle optionalen Variablen (APP_PASSWORD,
       # ENCRYPTION_KEY, VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY, OLLAMA_BASE_URL).
       # Für Hosting außerhalb von localhost werden APP_PASSWORD sowie ein
@@ -35,7 +37,6 @@ services:
       VAPID_PRIVATE_KEY: "${VAPID_PRIVATE_KEY:-}"
       OLLAMA_BASE_URL: "${OLLAMA_BASE_URL:-}"
     volumes:
-      - ./prisma:/app/prisma
       - ./public/uploads:/app/public/uploads
       - ./backups:/app/backups
     restart: unless-stopped

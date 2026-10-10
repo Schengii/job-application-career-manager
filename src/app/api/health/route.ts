@@ -32,8 +32,9 @@ export async function GET() {
   try {
     await prisma.$queryRaw`SELECT 1`;
     dbConnected = true;
-  } catch (err) {
-    dbError = err instanceof Error ? err.message : String(err);
+  } catch {
+    // DB-Fehlermeldung nicht nach außen geben — könnte Host-Namen/Credentials leaken.
+    dbError = "Verbindung fehlgeschlagen";
   }
 
   let vapidConfigured = false;
@@ -87,7 +88,10 @@ export async function GET() {
         scheduler = {
           enabled: prefs.backgroundSchedulerEnabled,
           lastErrorSource: prefs.lastSchedulerErrorSource,
-          lastErrorMessage: prefs.lastSchedulerErrorMessage,
+          // Fehlermeldungen können interne Stack-Traces oder DB-Host-Namen
+          // enthalten — nur das Vorhandensein eines Fehlers wird kommuniziert,
+          // nicht der Inhalt.
+          lastErrorMessage: prefs.lastSchedulerErrorMessage ? "[Fehler vorhanden]" : null,
           lastErrorAt: prefs.lastSchedulerErrorAt?.toISOString() ?? null,
         };
       }

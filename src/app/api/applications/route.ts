@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = applicationSchema.parse(body);
 
-    const application = await prisma.application.create({
+    const created = await prisma.application.create({
       data: {
         position: data.position,
         status: data.status ?? "DRAFT",
@@ -83,6 +83,10 @@ export async function POST(request: NextRequest) {
         companyId: data.companyId,
         jobPostingId: data.jobPostingId || null,
       },
+    });
+
+    const application = await prisma.application.findUniqueOrThrow({
+      where: { id: created.id },
       include: { company: true, jobPosting: true },
     });
 

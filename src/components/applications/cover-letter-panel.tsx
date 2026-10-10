@@ -21,6 +21,7 @@ import { CoverLetterSnippetPicker } from "./cover-letter-snippet-picker";
 import { CoverLetterDiffViewer } from "./cover-letter-diff-viewer";
 import { calculateDin5008Metrics } from "@/lib/documents/din5008Guard";
 import { generateEmlString, downloadEmlFile } from "@/lib/email/emlExport";
+import { AtsKeywordMatcherModal } from "./ats-keyword-matcher-modal";
 import { cn } from "@/lib/core/utils";
 
 export function CoverLetterPanel({
@@ -42,6 +43,7 @@ export function CoverLetterPanel({
   const [printModalOpen, setPrintModalOpen] = useState(false);
   const [followUpModalOpen, setFollowUpModalOpen] = useState(false);
   const [smtpSendModalOpen, setSmtpSendModalOpen] = useState(false);
+  const [atsMatcherOpen, setAtsMatcherOpen] = useState(false);
 
   const coverLetter = application.coverLetter;
 
@@ -323,6 +325,17 @@ export function CoverLetterPanel({
                 type="button"
                 variant="outline"
                 size="sm"
+                onClick={() => setAtsMatcherOpen(true)}
+                title="Side-by-Side ATS Keyword Matching mit der Stellenanzeige"
+                className="text-xs card-hover-effect border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-indigo-500" /> ATS Matcher
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setPrintModalOpen(true)}
               >
                 <Printer className="h-3.5 w-3.5" /> DIN 5008 Druck / PDF
@@ -484,6 +497,17 @@ export function CoverLetterPanel({
         senderName={preferences?.fullName || undefined}
         senderEmail={preferences?.email || undefined}
         onSent={onChange}
+      />
+
+      {/* ATS Keyword Matcher Modal */}
+      <AtsKeywordMatcherModal
+        open={atsMatcherOpen}
+        onOpenChange={setAtsMatcherOpen}
+        jobTitle={application.position}
+        jobDescription={application.jobPosting?.description || application.jobPosting?.requirementsProfile || ""}
+        coverLetterContent={content}
+        cvText={preferences?.fullName ? `${preferences.fullName} - ${application.position}` : ""}
+        onInsertSnippet={(snippet) => setContent((prev) => `${prev}${snippet}`)}
       />
     </div>
   );

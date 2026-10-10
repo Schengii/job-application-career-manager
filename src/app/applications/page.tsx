@@ -39,6 +39,7 @@ import { SavedFiltersBar } from "@/components/applications/saved-filters-bar";
 import { EigenbemuehungenModal } from "@/components/applications/eigenbemuehungen-modal";
 import type { SavedFilterValues } from "@/lib/applications/savedFilters";
 import { parseTags, getTagStyle } from "@/lib/core/tags";
+import { GhostingRadarBadge } from "@/components/applications/ghosting-radar-badge";
 
 const TABLE_PAGE_SIZE = 25;
 // Verzögerung, bevor eine geänderte Volltextsuche einen neuen (paginierten)
@@ -555,21 +556,24 @@ export default function ApplicationsPage() {
                       </td>
                       <td className="px-5 py-3 text-muted-foreground">{formatDate(app.applicationDate)}</td>
                       <td className="px-5 py-3">
-                        <label className="sr-only" htmlFor={`status-${app.id}`}>
-                          Status für {app.position}
-                        </label>
-                        <Select
-                          id={`status-${app.id}`}
-                          value={app.status}
-                          onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                          className="h-8 w-auto py-1 text-xs font-semibold"
-                        >
-                          {APPLICATION_STATUSES.map((s) => (
-                            <option key={s.value} value={s.value}>
-                              {s.label}
-                            </option>
-                          ))}
-                        </Select>
+                        <div className="flex flex-col gap-1 items-start">
+                          <label className="sr-only" htmlFor={`status-${app.id}`}>
+                            Status für {app.position}
+                          </label>
+                          <Select
+                            id={`status-${app.id}`}
+                            value={app.status}
+                            onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                            className="h-8 w-auto py-1 text-xs font-semibold"
+                          >
+                            {APPLICATION_STATUSES.map((s) => (
+                              <option key={s.value} value={s.value}>
+                                {s.label}
+                              </option>
+                            ))}
+                          </Select>
+                          <GhostingRadarBadge application={app} />
+                        </div>
                       </td>
                       <td className="max-w-[220px] px-5 py-3 text-muted-foreground">
                         <div className="flex items-center gap-2">

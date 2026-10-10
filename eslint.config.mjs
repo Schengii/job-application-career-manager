@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generierte Vercel-Output-Dateien (z.B. ___next_launcher.cjs) nicht linten:
+    ".vercel/**",
   ]),
 ]);
 

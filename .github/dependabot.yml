@@ -21,6 +21,17 @@ updates:
           - "@prisma/*"
       dev-dependencies:
         dependency-type: "development"
+    # Major-Version-Bumps für Build-kritische Pakete manuell steuern:
+    # TypeScript 6→7 und @types/node 20→26 würden sofort Build-Fehler
+    # erzeugen, da Breaking Changes im Compiler und in den Node-Typen
+    # umfangreiche Code-Anpassungen erfordern.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "imapflow"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions Workflow-Versionen (z.B. actions/checkout, actions/setup-node)
   - package-ecosystem: "github-actions"

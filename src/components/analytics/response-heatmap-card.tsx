@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Calendar, Zap, Info, TrendingUp } from "lucide-react";
+import { Clock, Calendar, Zap, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   TimingAnalyticsResult,

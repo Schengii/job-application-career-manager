@@ -1,17 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
-  Sparkles,
-  CheckCircle2,
   Trash2,
   Plus,
   Copy,
   BookOpen,
   Send,
-  AlertCircle,
   HelpCircle,
-  ExternalLink,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,47 +29,40 @@ interface StarStoryBuilderCardProps {
 
 export function StarStoryBuilderCard({ onSendToTeleprompter }: StarStoryBuilderCardProps) {
   const toast = useToast();
-  const [stories, setStories] = useState<StarStory[]>([]);
-  const [activeStoryId, setActiveStoryId] = useState<string | null>(null);
-
-  // Form State
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<StarStory["category"]>("OPTIMIZATION");
-  const [situation, setSituation] = useState("");
-  const [task, setTask] = useState("");
-  const [action, setAction] = useState("");
-  const [result, setResult] = useState("");
-  const [keyTakeaway, setKeyTakeaway] = useState("");
-  const [techTagsStr, setTechTagsStr] = useState("");
-
-  // Load from LocalStorage
-  useEffect(() => {
+  const [stories, setStories] = useState<StarStory[]>(() => {
+    if (typeof window === "undefined") return [];
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored) as StarStory[];
-        setStories(parsed);
-        if (parsed.length > 0) {
-          selectStory(parsed[0]);
-        }
-      } else {
-        // Init with presets
-        const initial = STAR_PRESETS.map((p, idx) => ({
-          ...p,
-          id: `star-story-${Date.now()}-${idx}`,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }));
-        setStories(initial);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-        if (initial.length > 0) {
-          selectStory(initial[0]);
-        }
+        return JSON.parse(stored) as StarStory[];
       }
+      const initial = STAR_PRESETS.map((p, idx) => ({
+        ...p,
+        id: `star-story-${Date.now()}-${idx}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+      } catch {}
+      return initial;
     } catch {
-      // Fallback
+      return [];
     }
-  }, []);
+  });
+
+  const initialStory = stories[0] || null;
+  const [activeStoryId, setActiveStoryId] = useState<string | null>(initialStory?.id ?? null);
+
+  // Form State
+  const [title, setTitle] = useState(initialStory?.title ?? "");
+  const [category, setCategory] = useState<StarStory["category"]>(initialStory?.category ?? "OPTIMIZATION");
+  const [situation, setSituation] = useState(initialStory?.situation ?? "");
+  const [task, setTask] = useState(initialStory?.task ?? "");
+  const [action, setAction] = useState(initialStory?.action ?? "");
+  const [result, setResult] = useState(initialStory?.result ?? "");
+  const [keyTakeaway, setKeyTakeaway] = useState(initialStory?.keyTakeaway || "");
+  const [techTagsStr, setTechTagsStr] = useState(initialStory?.techTags.join(", ") ?? "");
 
   function saveToStorage(updated: StarStory[]) {
     setStories(updated);

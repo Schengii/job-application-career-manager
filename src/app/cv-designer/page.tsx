@@ -40,6 +40,8 @@ export default function CvDesignerPage() {
     setInitialized(true);
   }
 
+  const [includeQrCode, setIncludeQrCode] = useState(true);
+
   const cvHtml = useMemo(() => {
     if (!preferences) return "";
     return generateCvHtml(preferences, {
@@ -47,8 +49,9 @@ export default function CvDesignerPage() {
       selectedProjectIds: selectedProjects,
       selectedEducationIds: selectedEducation,
       sectionOrder,
+      includeQrCode,
     });
-  }, [preferences, layout, selectedProjects, selectedEducation, sectionOrder]);
+  }, [preferences, layout, selectedProjects, selectedEducation, sectionOrder, includeQrCode]);
 
   function moveSection(index: number, direction: "UP" | "DOWN") {
     const targetIndex = direction === "UP" ? index - 1 : index + 1;
@@ -203,6 +206,16 @@ export default function CvDesignerPage() {
                   </label>
                 ))}
               </div>
+
+              <label className="flex items-center gap-2 pt-2 border-t border-border/60 text-xs text-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeQrCode}
+                  onChange={(e) => setIncludeQrCode(e.target.checked)}
+                  className="rounded border-border text-primary cursor-pointer"
+                />
+                <span className="font-medium text-xs">Portfolio QR-Code einbinden (Scannbar für Recruiter)</span>
+              </label>
             </CardContent>
           </Card>
 
