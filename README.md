@@ -1,5 +1,7 @@
 # Job Application & Career Manager
 
+[![CI](https://github.com/Schengii/job-application-career-manager/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Schengii/job-application-career-manager/actions/workflows/ci.yml) [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-yellow.svg)](LICENSE) [![Live-Demo](https://img.shields.io/badge/Live--Demo-Vercel-2ea44f?logo=vercel)](https://job-application-career-manager.vercel.app) ![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+
 > **In short (EN):** Full-stack web app that manages an entire job search: applications on a Kanban board, ATS-checked CV builder, cover-letter generator, AI interview and salary-negotiation trainer, and a Manifest V3 browser extension that clips job postings.
 > **Stack:** Next.js 16 · React 19 · TypeScript · Prisma 7 · Neon PostgreSQL · Tailwind CSS v4 · Zod · Vitest · Playwright · GitHub Actions · Vercel
 > **Live demo:** [job-application-career-manager.vercel.app](https://job-application-career-manager.vercel.app)
