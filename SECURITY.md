@@ -24,6 +24,10 @@ Die Sicherheit persönlicher Bewerbungsdaten und die Integrität des Systems hab
    - Passwortvergleiche erfolgen zeitsicher (`timingSafeEqual`) gegen Seitenkanal-Timingangriffe.
    - Ein Lockout-Mechanismus (`src/lib/core/rateLimiter.ts`) schützt vor Brute-Force-Angriffen.
 
+5. **Automatischer Git Pre-Commit Hook**:
+   - Skript `.githooks/pre-commit` (ausgeführt via `scripts/check-secrets.mjs`) fängt versehentlich gestagte `.env`-Dateien, private Bewerbungsunterlagen und API-Keys (`sk-`, `sk-ant-`, `ghp_`, Private Keys etc.) automatisch vor jedem `git commit` ab.
+   - Manuell aufrufbar über `npm run security:check`.
+
 ---
 
 ## 🛡️ Datenschutz für Bewerbungsunterlagen

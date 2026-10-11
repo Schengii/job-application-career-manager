@@ -57,10 +57,13 @@ npm run lint
 # 2. Vitest Testsuite ausführen (alle Tests müssen grün sein)
 npm run test
 
-# 3. Produktions-Build testen
+# 3. Sicherheits- & Secret-Check ausführen
+npm run security:check
+
+# 4. Produktions-Build testen
 npm run build
 
-# 4. Optional: Playwright End-to-End Tests ausführen
+# 5. Optional: Playwright End-to-End Tests ausführen
 npm run test:e2e
 ```
 

@@ -53,8 +53,10 @@ npx vitest run src/lib/interview/     # Einzelne Datei/Verzeichnis testen
 npm run test:e2e                      # Playwright E2E-Tests (headless)
 npm run test:e2e:ui                   # Playwright mit interaktivem UI
 
-# Linting & Code-Qualität
+# Linting, Tests & Sicherheit
 npm run lint
+npm run test                          # Vitest einmalig
+npm run security:check                # Gestagte Dateien & Secrets vor Commit prüfen
 
 # Prisma & Datenbank
 npx prisma generate    # Prisma-Client generieren (nach Schema-Änderungen)
@@ -108,10 +110,11 @@ vercel --prod          # Production-Deploy
    - Server Components standardmäßig bevorzugen.
 3. **Prisma 7:** Niemals direkt im generierten Client editieren. Typen immer aus `src/types` bzw. `src/generated/prisma/client` beziehen. Adapter: `PrismaNeonHttp` (HTTP-basiert, kein WebSocket — zuverlässiger auf Vercel Node.js 22+).
 4. **Datei-Uploads:** Immer `@vercel/blob` nutzen (`put`, `del`). Kein lokales Dateisystem in Production. Bestehende lokale Pfade (`/uploads/...`) werden als Fallback weiterhin unterstützt.
-5. **Sicherheit & Datenschutz:**
+5. **Sicherheit & Datenschutz & Pre-Commit Hook:**
+   - **Pre-Commit Hook aktiv:** `.githooks/pre-commit` (delegiert an `scripts/check-secrets.mjs`) blockiert vor jedem `git commit` automatisch das versehentliche Committen von `.env`-Dateien, API-Keys (`sk-`, `ghp_`, etc.) und privaten Dokumenten.
    - Niemals API-Keys oder sensible Daten hardcoden.
    - Echte persönliche Bewerbungsunterlagen (`Bewerbungsunterlagen final/`, `public/uploads/`) NIEMALS in Git committen.
-   - `.env` (mit echten DB-URLs) niemals in Git committen — liegt in `.gitignore` und `.claudeignore`.
+   - `.env` (mit echten DB-URLs) niemals in Git committen — liegt in `.gitignore`, `.claudeignore` und wird vom Pre-Commit Hook geblockt.
    - Cron-Endpunkt (`/api/cron/tick`) ist fail-closed: Auf Vercel ohne `CRON_SECRET` → 500, mit falschem Token → 401. `crypto.timingSafeEqual` für Timing-sicheren Vergleich.
 6. **Code-Style:**
    - Saubere Trennung von Domänenlogik (`src/lib`) und UI-Komponenten (`src/components`).

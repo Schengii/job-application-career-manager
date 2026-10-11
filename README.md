@@ -724,6 +724,7 @@ Dieses Projekt ist für eine strukturierte, zuverlässige Zusammenarbeit mit fü
 | [CHANGELOG.md](file:///CHANGELOG.md) | Versionskontrolle | Dokumentation aller Meilensteine und Funktionserweiterungen |
 | [CONTRIBUTING.md](file:///CONTRIBUTING.md) | GitHub & Pair Programming | Leitfaden für Code-Stil, Tests und Datenschutz |
 | [SECURITY.md](file:///SECURITY.md) | Sicherheit | At-Rest-Verschlüsselung, SSRF-Guards und Reporting-Richtlinien |
+| [.githooks/pre-commit](file:///.githooks/pre-commit) | Git Pre-Commit Hook | Blockiert automatisch .env-Dateien, API-Keys und private Daten vor dem Commit |
 
 ### 🔒 Datenschutz-Garantie
 Echte Bewerbungsunterlagen unter `Bewerbungsunterlagen final/`, hochgeladene Zeugnisse in `public/uploads/` sowie lokale Schlüsseldateien (`.encryption-key`, `.vapid-keys.json`) sind in allen Ignore-Dateien (`.gitignore`, `.claudeignore`) ausgeschlossen und gelangen niemals in Prompts oder Versionsstände.

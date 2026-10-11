@@ -19,7 +19,9 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "import:bewerbungsliste": "tsx scripts/import-bewerbungsliste.ts"
+    "import:bewerbungsliste": "tsx scripts/import-bewerbungsliste.ts",
+    "security:check": "node scripts/check-secrets.mjs",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
