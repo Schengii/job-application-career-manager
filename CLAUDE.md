@@ -57,6 +57,7 @@ npm run test:e2e:ui                   # Playwright mit interaktivem UI
 npm run lint
 npm run test                          # Vitest einmalig
 npm run security:check                # Gestagte Dateien & Secrets vor Commit prüfen
+npm run security:hook:install         # Git Pre-Commit Hook in Git aktivieren (.githooks)
 
 # Prisma & Datenbank
 npx prisma generate    # Prisma-Client generieren (nach Schema-Änderungen)
@@ -111,7 +112,7 @@ vercel --prod          # Production-Deploy
 3. **Prisma 7:** Niemals direkt im generierten Client editieren. Typen immer aus `src/types` bzw. `src/generated/prisma/client` beziehen. Adapter: `PrismaNeonHttp` (HTTP-basiert, kein WebSocket — zuverlässiger auf Vercel Node.js 22+).
 4. **Datei-Uploads:** Immer `@vercel/blob` nutzen (`put`, `del`). Kein lokales Dateisystem in Production. Bestehende lokale Pfade (`/uploads/...`) werden als Fallback weiterhin unterstützt.
 5. **Sicherheit & Datenschutz & Pre-Commit Hook:**
-   - **Pre-Commit Hook aktiv:** `.githooks/pre-commit` (delegiert an `scripts/check-secrets.mjs`) blockiert vor jedem `git commit` automatisch das versehentliche Committen von `.env`-Dateien, API-Keys (`sk-`, `ghp_`, etc.) und privaten Dokumenten.
+   - **Pre-Commit Hook aktiv:** `.githooks/pre-commit` (delegiert an `scripts/check-secrets.mjs`) blockiert vor jedem `git commit` automatisch das versehentliche Committen von `.env`-Dateien, API-Keys (`sk-ant-`, `sk-`, `AIzaSy`, `ghp_`, etc.) und privaten Dokumenten.
    - Niemals API-Keys oder sensible Daten hardcoden.
    - Echte persönliche Bewerbungsunterlagen (`Bewerbungsunterlagen final/`, `public/uploads/`) NIEMALS in Git committen.
    - `.env` (mit echten DB-URLs) niemals in Git committen — liegt in `.gitignore`, `.claudeignore` und wird vom Pre-Commit Hook geblockt.
@@ -119,6 +120,30 @@ vercel --prod          # Production-Deploy
 6. **Code-Style:**
    - Saubere Trennung von Domänenlogik (`src/lib`) und UI-Komponenten (`src/components`).
    - Tailwind CSS v4 Utilities verwenden, einheitliche Farb- und Spacing-Konventionen einhalten.
+
+---
+
+## 🔒 Pre-Commit Hook & Secret-Schutz (Verbindliche Claude-Regel)
+
+Vor jedem Git-Commit greift der Hook `.githooks/pre-commit` (delegiert an `scripts/check-secrets.mjs`).
+
+- **Aktivierung in Git:** `git config core.hooksPath .githooks` (oder `npm run security:hook:install`).
+- **Geblockte Dateinamen:**
+  - Alle `.env`-Dateien (`.env`, `.env.local`, `.env.production` etc., außer `.env.example`)
+  - Lokale Schlüsseldateien (`.encryption-key`, `.vapid-keys.json`, `.ai-usage.json`)
+  - Private Unterlagen (`Bewerbungsunterlagen final/`, `public/uploads/*`, `backups/`, `profile-data.local.json`)
+- **Geblockte Inhalte im Git-Diff:**
+  - Anthropic Claude API-Keys (`sk-ant-...`)
+  - OpenAI API-Keys (`sk-...`, `sk-proj-...`)
+  - Google AI / Gemini API-Keys (`AIzaSy...`)
+  - Vercel Blob Tokens (`vercel_blob_rw_...`)
+  - PostgreSQL Connection Strings mit Passwörtern (`postgresql://user:pass@...`)
+  - GitHub Tokens (`ghp_...`, `github_pat_...`)
+  - Slack Tokens & Private RSA/SSH Keys
+- **Verbindliches Verhalten für Claude:**
+  1. Claude darf niemals `git commit --no-verify` ausführen, um den Hook zu umgehen.
+  2. Vor jedem Commit muss `npm run security:check` sauber durchlaufen.
+  3. Bei Sicherheitswarnungen müssen betroffene Dateien un-staged und sensible Werte in `.env` ausgelagert werden.
 
 ---
 

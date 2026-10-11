@@ -88,6 +88,9 @@ if (diffOutput) {
   const SECRET_PATTERNS = [
     { name: "Anthropic Claude API-Key", regex: /^\+[^\n]*(sk-ant-[a-zA-Z0-9_\-]{20,})/m },
     { name: "OpenAI API-Key", regex: /^\+[^\n]*(sk-(proj-)?[a-zA-Z0-9_\-]{20,})/m },
+    { name: "Google AI / Gemini API-Key", regex: /^\+[^\n]*(AIzaSy[a-zA-Z0-9_\-]{33})/m },
+    { name: "Vercel Blob Token", regex: /^\+[^\n]*(vercel_blob_rw_[a-zA-Z0-9_\-]{20,})/m },
+    { name: "PostgreSQL Connection String mit Zugangsdaten", regex: /^\+[^\n]*(postgres(?:ql)?:\/\/[a-zA-Z0-9_\.\-]+:[^@\s]+@[a-zA-Z0-9_\.\-]+\/)/m },
     { name: "GitHub Personal Access Token", regex: /^\+[^\n]*(ghp_[a-zA-Z0-9]{36})/m },
     { name: "GitHub Fine-Grained Token", regex: /^\+[^\n]*(github_pat_[a-zA-Z0-9_]{22,})/m },
     { name: "Slack Token", regex: /^\+[^\n]*(xox[baprs]-[0-9]{10,}-[a-zA-Z0-9]{10,})/m },

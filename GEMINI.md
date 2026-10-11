@@ -69,7 +69,8 @@ npm run test
 npm run test:e2e
 
 # Sicherheit & Pre-Commit Check
-npm run security:check
+npm run security:hook:install  # Git-Hook in Git aktivieren (.githooks)
+npm run security:check         # Gestagte Dateien & Secrets vor Commit prüfen
 
 # Prisma DB Push & Client-Generierung
 npx prisma generate
