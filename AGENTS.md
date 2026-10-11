@@ -14,8 +14,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 (Fachinformatiker Anwendungsentwicklung, Frontend-Schwerpunkt). Siehe `README.md` für Setup,
 Architektur und Feature-Übersicht.
 
-- **Stack:** Next.js 16 (App Router, Turbopack), TypeScript (Strict), Tailwind CSS v4, Prisma 7 (SQLite via
-  `better-sqlite3`-Adapter, siehe `src/lib/core/prisma.ts` und `prisma.config.ts`).
+- **Stack:** Next.js 16 (App Router, Turbopack), TypeScript (Strict), Tailwind CSS v4, Prisma 7 (Neon PostgreSQL via
+  `PrismaNeonHttp`-Adapter, siehe `src/lib/core/prisma.ts` und `prisma.config.ts`).
 - **API-Routen:** `src/app/api/**/route.ts` (REST, Zod-validiert über `src/lib/core/validation.ts`).
 - **Domänenlogik:** Strukturiert in Submodule unter `src/lib/`:
   - `core/`: DB-Client, Validierung, SSRF-Schutz, Rate-Limiting, Verschlüsselung (`secretCrypto.ts`).

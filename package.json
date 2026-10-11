@@ -16,6 +16,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:unit": "vitest run --exclude '**/api/**'",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

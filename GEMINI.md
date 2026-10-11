@@ -8,8 +8,7 @@ Dieses Dokument definiert spezifische Richtlinien für Google Gemini und die Ant
 
 - **Framework:** Next.js 16 (App Router mit Turbopack) und React 19.
 - **Typisierung & Styling:** TypeScript (Strict-Modus), Tailwind CSS v4.
-- **Persistenz:** SQLite über Prisma 7 mit `@prisma/adapter-better-sqlite3`.
-  - Datenbankpfad: `file:./dev.db` (definiert in `.env`).
+- **Persistenz:** Neon PostgreSQL über Prisma 7 mit `@prisma/adapter-neon` (`PrismaNeonHttp`).
   - Der generierte Client liegt in `src/generated/prisma/client` und ist gitignored.
 - **Testing:**
   - Vitest für Unit- und Integrationstests (`npm run test`). Verwendet eine isolierte Testdatenbank via `vitest.global-setup.ts`.
