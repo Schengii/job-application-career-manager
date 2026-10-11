@@ -7,47 +7,85 @@ und dieses Projekt hält sich an [Semantic Versioning](https://semver.org/spec/v
 
 ---
 
+## [Unreleased]
+
+- Kontinuierliche Verbesserungen an KI-Prompts und Prompt-Chains für Interview- und Anschreiben-Generierung.
+- Performance-Optimierungen für Client-seitiges Caching mit SWR.
+
+---
+
+## [0.3.0] - 2026-10-11
+
+### Hinzugefügt
+- **Neon PostgreSQL & Prisma Serverless Adapter**:
+  - Vollständige Migration auf Neon PostgreSQL über `@prisma/adapter-neon` (`PrismaNeonHttp`).
+  - Unterstützung für Serverless Functions via HTTP-Transport ohne persistente WebSocket-Verbindungen.
+  - Dual-Connection-Setup mit `DATABASE_URL` (Connection Pooler für Runtime-Queries) und `DIRECT_URL` (Direct Connection für DDL / `prisma db push`).
+- **Vercel Cloud Deployment & Blob Storage**:
+  - Konfiguration für produktives Hosting auf Vercel (`vercel.json`).
+  - Integration von `@vercel/blob` für persistente Datei-Uploads in der Cloud.
+  - Vercel Serverless Cron Job (`/api/cron/tick`) mit `CRON_SECRET`-Absicherung für tägliche Hintergrundaufgaben.
+  - Vercel Build-Optimierung: `ignoreCommand` zum Überspringen unnötiger Builds auf Dependabot-Branches.
+- **Multi-Agent & Tooling-Governance**:
+  - Spezifische Agent-Leitfäden für Claude ([CLAUDE.md](CLAUDE.md)) und Google Gemini / Antigravity ([GEMINI.md](GEMINI.md)).
+  - Ignore-Dateien ([.claudeignore](.claudeignore) und [.geminiignore](.geminiignore)) zum Schutz sensibler Daten und Schonung des KI-Kontextfensters.
+  - Standardisierte Universal-Agent-Regeln in [AGENTS.md](AGENTS.md) mit Next.js 16 Leitplanken.
+- **Sicherheits-Infrastruktur & Pre-Commit Hook**:
+  - Git Pre-Commit Hook ([.githooks/pre-commit](.githooks/pre-commit) & `scripts/check-secrets.mjs`) blockiert versehentlich gestagte `.env`-Dateien, echte API-Keys (`sk-`, `ghp_`) und private Bewerbungsunterlagen.
+  - Manueller Sicherheits-Audit via `npm run security:check`.
+  - Plattformübergreifende Zeilenenden-Normalisierung via [.gitattributes](.gitattributes).
+- **GitHub Collaboration Templates**:
+  - Issue-Vorlagen für Bug-Reports und Feature-Requests unter `.github/ISSUE_TEMPLATE/`.
+  - Pull-Request-Template mit Test- und Sicherheits-Checkliste ([.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md)).
+  - Dependabot-Konfiguration für automatische Dependency-Updates.
+
+### Geändert
+- Prisma-Schema von `sqlite` auf `postgresql` umgestellt.
+- CI-Pipeline (`.github/workflows/ci.yml`) für PostgreSQL-Builds und isolierte Testläufe mit `TEST_DATABASE_URL` angepasst.
+- Dokumentation ([README.md](README.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md)) vollständig auf PostgreSQL und Vercel aktualisiert.
+
+---
+
+## [0.2.0] - 2026-10-11
+
+### Hinzugefügt
+- **🧩 Browser-Erweiterung: Career Manager Clipper (Manifest V3)**:
+  - 1-Klick Web-Clipper für Chromium-Browser (Chrome, Edge, Brave) zur automatischen Erfassung von Stellenangeboten aus LinkedIn, StepStone, Indeed und Unternehmensseiten.
+  - Extraktion von `schema.org/JobPosting` JSON-LD und OpenGraph-Tags direkt im DOM.
+  - 1-Klick ZIP-Download der gepackten Erweiterung aus den Einstellungen (`/settings`).
+- **🎙️ KI-Simulation & Verhandlungs-Coach (`/interview-prep`)**:
+  - Interaktives Gehaltsverhandlungs-Roleplay gegen verschiedene HR-Personas (Head of People, Engineering Manager, Geschäftsführung).
+  - Taktische Live-Analyse: BATNA-Bewertung, Value Framing und Scorecard (0–100%).
+  - STAR-Audit zur methodischen Vorbereitung auf verhaltensbezogene Fragen mit DIN A4 Dossier-Export.
+  - Voice-First Audio-Dialog mittels Web Speech API (SpeechSynthesis TTS & SpeechRecognition STT).
+- **📄 Mappen-Builder & Dokumenten-Management**:
+  - High-Fidelity PDF Export Generator nach DIN 5008 für Anschreiben und druckoptimierte Lebensläufe via CSS Paged Media.
+  - ATS-optimierter CV-Designer mit Einspalten-Layout und `resume.json` Export.
+  - Bewerbungsmappen-Builder zur Zusammenführung von Deckblatt, Anschreiben, Lebenslauf und Zeugnissen in ein Dokument (< 5 MB).
+- **📊 ROTI-Tracker & Erweiterte Analytics**:
+  - Return on Time Invested (ROTI) Score zur Analyse zeiteffizienter Bewerbungskanäle.
+  - Skill-Gap Matrix und Total Compensation Rechner.
+  - Response-Heatmap zur Ermittlung optimaler Absendezeiten.
+
+---
+
 ## [0.1.0] - 2026-10-11
 
 ### Hinzugefügt
-
-#### 🧩 Browser-Erweiterung & Erfassung
-- **Career Manager Clipper (Manifest V3)**: 1-Klick Web-Clipper für Chromium-Browser (Chrome, Edge, Brave) zum Extrahieren von Stellenanzeigen direkt aus LinkedIn, StepStone, Indeed und Unternehmensseiten via `schema.org/JobPosting` & OpenGraph.
-- **Direkter ZIP-Export**: Browser-Extension kann direkt über die Einstellungen (`/settings`) als ZIP-Archiv für den lokalen Entwicklermodus geladen werden.
-- **Multi-Portal URL-Scraper**: Automatisches Auslesen externer Stellenanzeigen mit SSRF-Schutz und HTML-Parsing.
-
-#### 🎙️ KI-Simulation & Interview-Vorbereitung
-- **Voice-First KI-Interview Simulator**: Vollständiger Audio-Dialog mittels Web Speech API (SpeechSynthesis TTS & webkitSpeechRecognition STT) inklusive Sprechtempo- und Füllwort-Analyse.
-- **KI-Gehaltsverhandlungs-Coach**: Interaktives Verhandlungs-Roleplay gegen verschiedene HR-Personas mit BATNA-Bewertung und Taktik-Scorecard.
-- **STAR-Audit & Dossier-Druck**: Strukturierte Vorbereitung auf verhaltensbezogene Interviewfragen mit DIN A4 Dossier-Export.
-
-#### 📄 Dokumenten-Management & Bewerbungsmappe
-- **High-Fidelity PDF Export**: DIN 5008 konforme Anschreiben und druckoptimierte Lebensläufe via CSS Paged Media.
-- **ATS-optimierter CV-Designer**: Einspaltiges Minimal-Layout, Live-Audit auf ATS-Kompatibilität und Unterstützung des `resume.json` Standards.
-- **Bewerbungsmappen-Builder**: Interaktive Zusammenstellung und Zusammenführung von Deckblatt, Anschreiben, Lebenslauf und Zeugnissen in eine einzige, komprimierte Gesamt-PDF (< 5 MB).
-- **Textbaustein-Bibliothek**: Wiederverwendbare Absätze für Anschreiben (z. B. Remote-Erfahrung, Gehalt, Kündigungsfrist).
-
-#### 📊 Analysen & Bewerbungsmanagement
-- **Bewerbungs-Aufwand & ROTI-Tracker**: Return on Time Invested (ROTI) Score zur Identifikation zeiteffizienter Bewerbungskanäle.
-- **Skill-Gap Matrix & Total Compensation Calculator**: Abgleich geforderter Markt-Skills mit dem eigenen Stack sowie genauer Effektiv-Stundenlohn-Rechner.
-- **Interaktives Kanban-Board & Excel-View**: Tastaturbedienbares Kanban-Board mit Live-Screenreader-Feedback und paginierte Excel-Grid-Ansicht für Massenbearbeitung.
-- **Digitales Recruiter-Portfolio One-Pager**: Schreibgeschützter Showcase für Personalverantwortliche mit temporärem Zugriffs-Token.
-- **iCal Kalender-Feed**: Synchronisation anstehender Bewerbungsgespräche mit externen Kalendern (Google, Apple, Outlook).
-
-#### 📬 Automatisierung & Benachrichtigungen
-- **IMAP E-Mail Auto-Sync**: Postfachabgleich via IMAP/TLS mit automatischer Absendererkennung und Statusvorschlägen.
-- **Web-Push Benachrichtigungen**: Standard Web Push API mit VAPID-Schlüsseln für Interview-Erinnerungen und Status-Updates.
-- **In-Process Hintergrund-Scheduler**: Regelmäßiger Check (15-Minuten-Intervall) für anstehende Aufgaben, E-Mails und wöchentlichen Reminder-Digest.
-
-#### 🔒 Sicherheit & Architektur
-- **Next.js 16 (App Router) & React 19**: Modernste Web-Architektur mit Turbopack und TypeScript im Strict-Mode.
-- **Prisma 7 mit better-sqlite3 Driver Adapter**: Performante relationale SQLite-Persistenz im WAL-Modus.
-- **Sicherheits-Infrastruktur**:
-  - SSRF-Guard gegen DNS-Rebinding und interne IP-Abfragen bei URL-Imports.
-  - Strenges MIME-Type Whitelisting für Uploads.
-  - At-Rest-Verschlüsselung (AES-256-GCM) für KI-API-Keys und IMAP-Passwörter.
-  - Optionale HTTP-Basic-Auth mit Timing-Angriffsschutz und IP-basiertem Rate-Limiting.
-- **Testabdeckung**:
-  - Über 490 Vitest Unit- und Komponenten-Tests.
-  - 15 Playwright End-to-End Testflows gegen isolierte SQLite-Instanz.
-  - Docker Multi-Stage Build & GitHub Actions CI-Pipeline.
+- **Kernanwendung & Dashboard**:
+  - Next.js 16 Fullstack-Anwendung mit App Router, React 19, TypeScript im Strict-Mode und Tailwind CSS v4.
+  - Interaktives Kanban-Board mit Spalten für Entwurf, Beworben, Interview, Angebot und Absage.
+  - Detailformulare für Bewerbungen und Unternehmensprofile mit SWR-Datenbindung.
+  - Alternative paginierte Tabellen- und Grid-Ansicht für Massenbearbeitung.
+- **REST-API & Validierung**:
+  - Vollständige Zod-Validierung aller API-Routen unter `/api/**`.
+  - Schutz vor SSRF bei externen URL-Abrufen via `src/lib/core/ssrfGuard.ts`.
+  - Rate-Limiter und HTTP-Basic-Auth in `middleware.ts`.
+  - AES-256-GCM At-Rest-Verschlüsselung für API-Keys und IMAP-Passwörter.
+- **Automatisierung & Kalender**:
+  - IMAP E-Mail Auto-Sync mit intelligenter Status-Vorschlags-Engine.
+  - Web-Push Benachrichtigungen (VAPID) für anstehende Termine.
+  - iCal Kalender-Feed für Apple Calendar, Google Calendar und Outlook.
+- **Qualitätssicherung**:
+  - Vitest Unit- und Komponenten-Testsuite.
+  - Playwright E2E-Tests für Kern-Workflows.

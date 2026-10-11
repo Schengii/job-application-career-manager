@@ -1,0 +1,12 @@
+# =============================================================================
+# GitHub Code Owners
+# =============================================================================
+# Definiert Code-Eigentümer für Pull Requests und automatische Reviews.
+# =============================================================================
+
+* @Schengii
+
+# Spezifische Sicherheits- und Konfigurationsbereiche
+/.github/ @Schengii
+/prisma/ @Schengii
+/src/lib/core/ @Schengii

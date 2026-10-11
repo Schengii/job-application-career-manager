@@ -7,7 +7,7 @@ Die Sicherheit persönlicher Bewerbungsdaten und die Integrität des Systems hab
 ## 🔒 Sicherheitsarchitektur im Überblick
 
 1. **At-Rest-Verschlüsselung (AES-256-GCM)**:
-   - Sensible Werte wie KI-API-Keys und IMAP-Passwörter werden niemals im Klartext in der SQLite-Datenbank abgelegt.
+   - Sensible Werte wie KI-API-Keys und IMAP-Passwörter werden niemals im Klartext in der PostgreSQL-Datenbank abgelegt.
    - Die Ver- und Entschlüsselung erfolgt server-seitig via `src/lib/core/secretCrypto.ts`.
    - Bei Backups oder API-Responses werden Secrets unkenntlich gemacht bzw. nie übertragen.
 

@@ -20,8 +20,10 @@ npm install
 
 # 2. Lokale Umgebungskonfiguration anlegen
 cp .env.example .env
+# DATABASE_URL & DIRECT_URL eintragen
 
-# 3. SQLite Datenbank initialisieren & Schema pushen
+# 3. Prisma-Client generieren & PostgreSQL Schema pushen
+npx prisma generate
 npx prisma db push
 
 # 4. Optionale Beispieldaten laden
@@ -39,7 +41,7 @@ Beim Arbeiten mit KI-Werkzeugen (z. B. **Claude Code**, **Google Gemini**, **Cur
 - **`CLAUDE.md`**: Spezifische Richtlinien für Claude Code (Befehle, Architekturüberblick, Do's & Don'ts).
 - **`GEMINI.md`**: Spezifische Richtlinien für Google Gemini und die Antigravity-IDE.
 - **`AGENTS.md`**: Universelle Agenten-Anweisungen inklusive Next.js 16 Regeln.
-- **`.claudeignore`**: Schützt sensible Daten, Datenbanken und Build-Ordner vor unbedachter Indizierung durch LLMs.
+- **`.claudeignore` & `.geminiignore`**: Schützen sensible Daten, Datenbanken und Build-Ordner vor unbedachter Indizierung durch LLMs.
 
 ### 🔒 Wichtigste Datenschutz-Regel:
 Prüfe vor jedem Commit, dass keine echten Bewerbungsunterlagen (aus `Bewerbungsunterlagen final/` oder `public/uploads/`) oder API-Keys (aus `.env` oder `.encryption-key`) in die Git-Historie gelangen.

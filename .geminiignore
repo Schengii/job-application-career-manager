@@ -1,0 +1,93 @@
+# =============================================================================
+# Gemini Ignore List (.geminiignore)
+# =============================================================================
+# Schließt temporäre Dateien, Caches, sensible Geheimnisse und große Artefakte
+# für Google Gemini CLI, Antigravity und Google Developer Tools aus.
+# =============================================================================
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js Build-Outputs, Compiler & Caches
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Git, IDEs & KI-Agenten
+.git/
+.vscode/
+.idea/
+.gemini/
+.antigravity/
+.cursor/
+.agents/
+.claude/
+skills-lock.json
+
+# Testing & Coverage Reports
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Logs & Debugging
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Umgebungsdateien & Geheimnisse (Datenschutz!)
+.env
+.env.local
+.env.production
+.env.development
+.env*.local
+*.local
+!scripts/profile-data.example.json
+!.env.example
+.encryption-key
+.vapid-keys.json
+.ai-usage.json
+.npmrc
+
+# Lokale SQLite Test- & Entwicklungsdatenbanken
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+dev.db*
+test.db*
+e2e.db*
+ci.db*
+prisma/*.db
+prisma/*.db-journal
+prisma/*.db-wal
+prisma/*.db-shm
+
+# Prisma generierter Client (groß, stattdessen schema.prisma analysieren)
+src/generated/prisma/
+
+# Echte persönliche Bewerbungsunterlagen & Uploads (Datenschutz!)
+public/uploads/*
+!public/uploads/.gitkeep
+backups/
+Bewerbungsunterlagen final/
+scripts/profile-data.local.json
+
+# Vercel & Turbo Caches
+.vercel/
+.turbo/
+.cache/
+.temp/
+.tmp/
+
+# OS-spezifische Dateien
+.DS_Store
+Thumbs.db

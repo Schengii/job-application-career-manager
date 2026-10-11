@@ -1,17 +1,23 @@
-# Gemini Assistant Guide — Job Application & Career Manager
+# Gemini & Antigravity Guide — Job Application & Career Manager
 
-Dieses Dokument definiert spezifische Richtlinien für Google Gemini und die Antigravity-IDE beim Arbeiten mit dieser Codebase.
+Dieses Dokument definiert verbindliche Richtlinien für Google Gemini Modelle, Antigravity und Google Developer Tools beim Arbeiten in diesem Repository.
 
 ---
 
 ## 🧭 Kontext & Kernarchitektur
 
 - **Framework:** Next.js 16 (App Router mit Turbopack) und React 19.
-- **Typisierung & Styling:** TypeScript (Strict-Modus), Tailwind CSS v4.
+- **Typisierung & Styling:** TypeScript (Strict-Modus), Tailwind CSS v4 (`@tailwindcss/postcss`).
 - **Persistenz:** Neon PostgreSQL über Prisma 7 mit `@prisma/adapter-neon` (`PrismaNeonHttp`).
-  - Der generierte Client liegt in `src/generated/prisma/client` und ist gitignored.
+  - Runtime-Queries verwenden HTTP-Transport (`DATABASE_URL`, Connection Pooler).
+  - DDL-Migrationen & `npx prisma db push` nutzen Direct Connection (`DIRECT_URL`).
+  - Der generierte Prisma-Client liegt in `src/generated/prisma/` und ist gitignored.
+  - Modelltypen folgen der Konvention `<Model>Model` (z. B. `CompanyModel`, `ApplicationModel`), re-exportiert in `src/types/index.ts`.
+- **Cloud Hosting & Speicherung:** Vercel
+  - Datei-Uploads (Lebensläufe, Zeugnisse) laufen über `@vercel/blob` (keine lokalen Dateisystem-Schreibvorgänge in Vercel Serverless Functions!).
+  - Tägliche Hintergrundaufgaben laufen serverless über `/api/cron/tick` (definiert in `vercel.json`), geschützt mit `CRON_SECRET`.
 - **Testing:**
-  - Vitest für Unit- und Integrationstests (`npm run test`). Verwendet eine isolierte Testdatenbank via `vitest.global-setup.ts`.
+  - Vitest für Unit- und Integrationstests (`npm run test`).
   - Playwright für End-to-End Tests (`npm run test:e2e`).
   - ESLint 9 mit Next.js Konfiguration (`npm run lint`).
 
@@ -19,7 +25,7 @@ Dieses Dokument definiert spezifische Richtlinien für Google Gemini und die Ant
 
 ## 📂 Domänen- & Modulstruktur (`src/lib/`)
 
-Beim Bearbeiten oder Erweitern von Geschäftslogik immer das passende Submodul verwenden:
+Logik immer modular im passenden Submodul unter `src/lib/` pflegen:
 
 ```text
 src/lib/
@@ -38,14 +44,16 @@ src/lib/
 ## 🔒 Sicherheits- & Datenschutz-Leitplanken
 
 1. **Privatsphäre & Datenschutz:**
-   - Echte persönliche Bewerbungsunterlagen (Zeugnisse, Lebensläufe, Adressen) unter `Bewerbungsunterlagen final/` und `public/uploads/` dürfen niemals in Git committet werden.
-   - Lokale Schlüsseldateien (`.encryption-key`, `.vapid-keys.json`, `.ai-usage.json`) sind in `.gitignore` und `.claudeignore` geschützt.
+   - Echte persönliche Bewerbungsunterlagen (Zeugnisse, Lebensläufe, Adressen) unter `Bewerbungsunterlagen final/` und `public/uploads/` dürfen niemals committet werden.
+   - Lokale Schlüsseldateien (`.encryption-key`, `.vapid-keys.json`, `.ai-usage.json`) und `.env*` sind in `.gitignore`, `.claudeignore` und `.geminiignore` geschützt.
 2. **SSRF-Schutz:**
-   - Bei allen externen URL-Aufrufen (z. B. Job-Scraper) muss der `ssrfGuard` (`src/lib/core/ssrfGuard.ts`) vorgeschaltet sein, um Zugriff auf interne Netze und Metadaten-Endpunkte zu blockieren.
+   - Bei allen externen URL-Aufrufen (z. B. Job-Scraper) muss zwingend `ssrfGuard` (`src/lib/core/ssrfGuard.ts`) vorgeschaltet sein, um interne Netze und Cloud-Metadaten-Endpunkte zu blockieren.
 3. **At-Rest-Verschlüsselung:**
-   - API-Keys und IMAP-Zugangsdaten werden über `src/lib/core/secretCrypto.ts` mit AES-256-GCM verschlüsselt in SQLite gespeichert.
+   - API-Keys und IMAP-Zugangsdaten werden über `src/lib/core/secretCrypto.ts` mit AES-256-GCM verschlüsselt in PostgreSQL gespeichert.
 4. **Pre-Commit Hook (.githooks/pre-commit & scripts/check-secrets.mjs):**
    - Blockiert vor jedem Git Commit automatisch versehentlich gestagte `.env`-Dateien, echte API-Keys (`sk-`, `ghp_`, etc.) und private Bewerbungsunterlagen. Manuell prüfbar via `npm run security:check`.
+5. **Basic Auth & Rate Limiting:**
+   - In Produktivumgebungen schützt `middleware.ts` Routen via HTTP Basic Auth (`APP_PASSWORD`), mit Timing-Angriffsschutz und IP-basiertem Rate-Limiting.
 
 ---
 
@@ -60,7 +68,10 @@ npm run lint
 npm run test
 npm run test:e2e
 
+# Sicherheit & Pre-Commit Check
+npm run security:check
+
 # Prisma DB Push & Client-Generierung
-npx prisma db push
 npx prisma generate
+npx prisma db push
 ```

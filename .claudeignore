@@ -1,12 +1,17 @@
-# Claude Ignore List
-# Ignoriert temporäre Build-Dateien, Logs, Datenbanken und sensible Artefakte für Claude
+# =============================================================================
+# Claude Ignore List (.claudeignore)
+# =============================================================================
+# Schließt Build-Artefakte, Logs, sensible Daten und Caches von der Indexierung
+# durch Claude Code / Claude Desktop aus, um Kontextfenster zu schonen und
+# Datenschutz zu gewährleisten.
+# =============================================================================
 
 # Dependencies
 node_modules/
 .pnp
 .pnp.js
 
-# Next.js Build-Outputs & Caches
+# Next.js Build-Outputs, Compiler & Caches
 .next/
 out/
 build/
@@ -14,12 +19,18 @@ dist/
 *.tsbuildinfo
 next-env.d.ts
 
-# Git & IDEs
+# Git, IDEs & KI-Agenten
 .git/
 .vscode/
 .idea/
+.gemini/
+.antigravity/
+.cursor/
+.agents/
+.claude/skills/
+skills-lock.json
 
-# Testing & Coverage
+# Testing & Coverage Reports
 coverage/
 playwright-report/
 test-results/
@@ -33,18 +44,21 @@ yarn-error.log*
 pnpm-debug.log*
 .pnpm-debug.log*
 
-# Umgebungsdateien & Geheimnisse
+# Umgebungsdateien & Geheimnisse (Datenschutz!)
 .env
 .env.local
 .env.production
 .env.development
 .env*.local
+*.local
+!scripts/profile-data.example.json
 !.env.example
 .encryption-key
 .vapid-keys.json
 .ai-usage.json
+.npmrc
 
-# SQLite Datenbankdateien
+# Lokale SQLite Test- & Entwicklungsdatenbanken
 *.db
 *.db-journal
 *.db-wal
@@ -58,17 +72,17 @@ prisma/*.db-journal
 prisma/*.db-wal
 prisma/*.db-shm
 
-# Prisma generierter Client (sehr groß, stattdessen schema.prisma betrachten)
+# Prisma generierter Client (groß, stattdessen schema.prisma analysieren)
 src/generated/prisma/
 
-# Uploads & Backups & private Unterlagen (Datenschutz)
+# Echte persönliche Bewerbungsunterlagen & Uploads (Datenschutz!)
 public/uploads/*
 !public/uploads/.gitkeep
 backups/
 Bewerbungsunterlagen final/
 scripts/profile-data.local.json
 
-# Vercel & Caches
+# Vercel & Turbo Caches
 .vercel/
 .turbo/
 .cache/
