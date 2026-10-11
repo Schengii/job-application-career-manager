@@ -1,7 +1,3 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 # CLAUDE.md - Projekt-Leitfaden für Claude Code / Claude Desktop
 
 Dieses Dokument dient als Kontext- und Architektur-Leitfaden für Claude bei der Arbeit im Projekt **Job Application & Career Manager**.
@@ -39,7 +35,7 @@ Dieses Dokument dient als Kontext- und Architektur-Leitfaden für Claude bei der
 - **Validierung:** Zod (`src/lib/core/validation.ts`) für alle API-Routen (`src/app/api/**/route.ts`).
 - **State & Data Fetching:** SWR für Client-Caching, App Router Route Handlers.
 - **Testing:**
-  - Unit/Integration: Vitest (`vitest.config.mts`, `vitest.global-setup.ts` führt `prisma db push --force-reset` aus)
+  - Unit/Integration: Vitest (`vitest.config.mts`, `vitest.global-setup.ts`)
   - E2E: Playwright (`playwright.config.mts`, `e2e/`)
 
 ---
@@ -96,7 +92,7 @@ vercel --prod          # Production-Deploy
 ├── prisma/
 │   └── schema.prisma        # Datenbankschema (PostgreSQL)
 ├── prisma.config.ts         # DIRECT_URL für prisma db push (Non-Pooler)
-├── vercel.json              # Vercel Cron-Konfiguration (täglich 8 Uhr UTC)
+├── vercel.json              # Vercel Cron- & Build-Konfiguration
 ├── e2e/                     # Playwright End-to-End Tests
 ├── public/                  # Statische Assets & Browser-Extension
 └── scripts/                 # Hilfs- und Import-Skripte (z. B. import-bewerbungsliste.ts)
@@ -114,7 +110,8 @@ vercel --prod          # Production-Deploy
 4. **Datei-Uploads:** Immer `@vercel/blob` nutzen (`put`, `del`). Kein lokales Dateisystem in Production. Bestehende lokale Pfade (`/uploads/...`) werden als Fallback weiterhin unterstützt.
 5. **Sicherheit & Datenschutz:**
    - Niemals API-Keys oder sensible Daten hardcoden.
-   - `.env` (mit echten Neon-URLs) niemals in Git committen — liegt in `.gitignore`.
+   - Echte persönliche Bewerbungsunterlagen (`Bewerbungsunterlagen final/`, `public/uploads/`) NIEMALS in Git committen.
+   - `.env` (mit echten DB-URLs) niemals in Git committen — liegt in `.gitignore` und `.claudeignore`.
    - Cron-Endpunkt (`/api/cron/tick`) ist fail-closed: Auf Vercel ohne `CRON_SECRET` → 500, mit falschem Token → 401. `crypto.timingSafeEqual` für Timing-sicheren Vergleich.
 6. **Code-Style:**
    - Saubere Trennung von Domänenlogik (`src/lib`) und UI-Komponenten (`src/components`).

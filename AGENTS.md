@@ -14,11 +14,19 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 (Fachinformatiker Anwendungsentwicklung, Frontend-Schwerpunkt). Siehe `README.md` für Setup,
 Architektur und Feature-Übersicht.
 
-- **Stack:** Next.js 16 (App Router, Turbopack), TypeScript, Tailwind CSS v4, Prisma 7 (SQLite via
-  `better-sqlite3`-Adapter, siehe `src/lib/prisma.ts` und `prisma.config.ts`).
-- **API-Routen:** `src/app/api/**/route.ts` (REST, Zod-validiert über `src/lib/validation.ts`).
-- **Domänenlogik:** `src/lib/matching.ts` (Match-Score), `src/lib/mockJobPortals.ts`
-  (Job-Portal-Simulator), `src/lib/coverLetterGenerator.ts` (Anschreiben-Generator).
+- **Stack:** Next.js 16 (App Router, Turbopack), TypeScript (Strict), Tailwind CSS v4, Prisma 7 (SQLite via
+  `better-sqlite3`-Adapter, siehe `src/lib/core/prisma.ts` und `prisma.config.ts`).
+- **API-Routen:** `src/app/api/**/route.ts` (REST, Zod-validiert über `src/lib/core/validation.ts`).
+- **Domänenlogik:** Strukturiert in Submodule unter `src/lib/`:
+  - `core/`: DB-Client, Validierung, SSRF-Schutz, Rate-Limiting, Verschlüsselung (`secretCrypto.ts`).
+  - `applications/`: Bewerbungen, Kanban-Board, Time-Tracking, Mappen-Builder.
+  - `jobs/`: Jobsuche & Scraper (`matching.ts`, `liveJobSearch.ts`, `jobScraper.ts`).
+  - `interview/`: KI-Interview-Simulator (TTS/STT), Gehaltscoach, STAR-Audit.
+  - `documents/`: Anschreiben-Generator (`coverLetterGenerator.ts`), DIN-5008 PDF-Export, ATS-Score.
+  - `salary/`: Benchmarks, Vergütungsrechner, Verhandlungsskripte.
+  - `email/`: IMAP-Client (`imapClient.ts`), Auto-Sync, wöchentlicher Digest.
+  - `settings/`: Backup-Rotation, Scheduler, Web-Push (`pushNotifications.ts`), KI-Tracker.
 - **Prisma 7 Besonderheit:** Der generierte Client liegt unter `src/generated/prisma/` (gitignored,
   `npx prisma generate` nach jeder Schema-Änderung erneut ausführen). Modelltypen heißen
-  `<Model>Model` (z. B. `CompanyModel`), re-exportiert in `src/types/index.ts`.
+  `<Model>Model` (z. B. `CompanyModel`, `ApplicationModel`), re-exportiert in `src/types/index.ts`.
+- **Testing & Linting:** Vitest (`npm run test`), Playwright (`npm run test:e2e`), ESLint (`npm run lint`).

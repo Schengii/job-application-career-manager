@@ -687,6 +687,49 @@ selbst hat diese Abhängigkeit in keiner stabilen 7.x-Version bisher aktualisier
 8.0.0-Release-Candidate, der bewusst nicht eingesetzt wird, da diese App auf der Prisma-7-Client-Architektur
 aufbaut, siehe `AGENTS.md`).
 
+---
+
+## ☁️ Deployment auf Vercel
+
+Die Anwendung ist für das Deployment auf Vercel optimiert. Eine fertige [vercel.json](file:///vercel.json) ist im Projekt hinterlegt.
+
+### 1. Build-Vorbereitung
+Dank des `"postinstall": "prisma generate"`-Skripts in der [package.json](file:///package.json) generiert Vercel den Prisma 7 Client automatisch vor dem Build.
+
+### 2. Notwendige Environment-Variablen auf Vercel
+Trage im Vercel Dashboard unter **Project Settings → Environment Variables** folgende Variablen ein:
+
+| Variable | Empfohlener Wert | Zweck |
+|---|---|---|
+| `DATABASE_URL` | Neon PostgreSQL Connection-String | Pfad zur PostgreSQL-Datenbank |
+| `DIRECT_URL` | Neon Direct Connection-String (Non-Pooler) | Für `prisma db push` Migrationen |
+| `APP_PASSWORD` | Beliebiges starkes Passwort | Aktiviert HTTP-Basic-Auth ([middleware.ts](file:///middleware.ts)), um persönliche Daten zu schützen |
+| `ENCRYPTION_KEY` | 64-stelliger Hex-String (`openssl rand -hex 32`) | Fester Schlüssel für AES-256-GCM Verschlüsselung von API-Keys & IMAP-Passwörtern |
+| `CRON_SECRET` | Zufälliges Geheimnis | Bearer-Token für Hintergrund-Jobs via `/api/cron/tick` |
+| `VAPID_PUBLIC_KEY` | Erzeugt via `npx web-push generate-vapid-keys` | Öffentlicher VAPID-Schlüssel für Web-Push |
+| `VAPID_PRIVATE_KEY` | Erzeugt via `npx web-push generate-vapid-keys` | Privater VAPID-Schlüssel für Web-Push |
+
+---
+
+## 🤖 Zusammenarbeit mit KI-Assistenten (Claude & Gemini)
+
+Dieses Projekt ist für eine strukturierte, zuverlässige Zusammenarbeit mit führenden KI-Coding-Assistenten optimiert:
+
+| Datei | Zielsystem | Zweck |
+|---|---|---|
+| [CLAUDE.md](file:///CLAUDE.md) | Claude Code / Anthropic | CLI-Befehle, Architekturregeln, Modulhierarchie & Do's/Don'ts |
+| [.claudeignore](file:///.claudeignore) | Claude Code | Schützt sensible Daten, Uploads und `.next` vor LLM-Indexierung |
+| [GEMINI.md](file:///GEMINI.md) | Google Gemini / Antigravity | Leitfaden für Google Gemini Modelle und IDE-Agenten |
+| [AGENTS.md](file:///AGENTS.md) | Universal Agent Standard | Standardisierte Agent-Regeln inklusive Next.js 16 Vorgaben |
+| [CHANGELOG.md](file:///CHANGELOG.md) | Versionskontrolle | Dokumentation aller Meilensteine und Funktionserweiterungen |
+| [CONTRIBUTING.md](file:///CONTRIBUTING.md) | GitHub & Pair Programming | Leitfaden für Code-Stil, Tests und Datenschutz |
+| [SECURITY.md](file:///SECURITY.md) | Sicherheit | At-Rest-Verschlüsselung, SSRF-Guards und Reporting-Richtlinien |
+
+### 🔒 Datenschutz-Garantie
+Echte Bewerbungsunterlagen unter `Bewerbungsunterlagen final/`, hochgeladene Zeugnisse in `public/uploads/` sowie lokale Schlüsseldateien (`.encryption-key`, `.vapid-keys.json`) sind in allen Ignore-Dateien (`.gitignore`, `.claudeignore`) ausgeschlossen und gelangen niemals in Prompts oder Versionsstände.
+
+---
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
