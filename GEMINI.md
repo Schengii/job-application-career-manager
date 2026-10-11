@@ -30,12 +30,16 @@ Logik immer modular im passenden Submodul unter `src/lib/` pflegen:
 ```text
 src/lib/
 ├── core/         # Prisma-Singleton, SSRF-Filter, Rate-Limiter, Verschlüsselung, Zod-Schemas
-├── applications/ # Bewerbungslogik, Kanban, Zeiterfassung (ROTI), PDF-Mappen-Kompilierung
-├── jobs/         # Live-Jobsuche (Arbeitsagentur, Arbeitnow), Scraper, Match-Score Heuristik
-├── interview/    # Voice-Simulator (TTS/STT), Gehaltscoach, STAR-Audit Heuristik
+├── applications/ # Bewerbungslogik, Kanban, Zeiterfassung (ROTI), Mappen-Kompilierung
+├── analytics/    # Response-Heatmap, Erfolgs- und Trichteranalysen
+├── career/       # Kündigungsfrist-Rechner
+├── companies/    # Unternehmensrecherche & Interview-Vorbereitung
 ├── documents/    # Anschreiben-Generator (DIN 5008), ATS-Kompatibilitäts-Check, JSON-Resume
-├── salary/       # Total-Compensation-Rechner, Gehaltsbenchmarks, BATNA-Verhandlungsskripte
 ├── email/        # IMAP/TLS Postfachsynchronisation, Response-Parser, Digest-Generierung
+├── interview/    # Voice-Simulator (TTS/STT), Gehaltscoach, STAR-Audit, Tech-Quiz
+├── jobs/         # Live-Jobsuche (Arbeitsagentur, Arbeitnow), Scraper, Match-Score Heuristik
+├── portfolio/    # GitHub-Integration & Portfolio-Showcase
+├── salary/       # Total-Compensation-Rechner, Gehaltsbenchmarks, BATNA-Verhandlungsskripte
 └── settings/     # Automatischer Scheduler, Web-Push (VAPID), KI-Provider & Token-Tracker
 ```
 

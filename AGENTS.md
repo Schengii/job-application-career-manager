@@ -19,12 +19,16 @@ Architektur und Feature-Übersicht.
 - **API-Routen:** `src/app/api/**/route.ts` (REST, Zod-validiert über `src/lib/core/validation.ts`).
 - **Domänenlogik:** Strukturiert in Submodule unter `src/lib/`:
   - `core/`: DB-Client, Validierung, SSRF-Schutz, Rate-Limiting, Verschlüsselung (`secretCrypto.ts`).
-  - `applications/`: Bewerbungen, Kanban-Board, Time-Tracking, Mappen-Builder.
-  - `jobs/`: Jobsuche & Scraper (`matching.ts`, `liveJobSearch.ts`, `jobScraper.ts`).
-  - `interview/`: KI-Interview-Simulator (TTS/STT), Gehaltscoach, STAR-Audit.
-  - `documents/`: Anschreiben-Generator (`coverLetterGenerator.ts`), DIN-5008 PDF-Export, ATS-Score.
-  - `salary/`: Benchmarks, Vergütungsrechner, Verhandlungsskripte.
+  - `applications/`: Bewerbungen, Kanban-Board, Time-Tracking (ROTI), Ghosting-Radar, Mappen-Builder.
+  - `analytics/`: Response-Heatmap, Erfolgs- und Trichteranalysen.
+  - `career/`: Kündigungsfrist-Rechner (`noticePeriodCalculator.ts`).
+  - `companies/`: Unternehmensrecherche und Gesprächsvorbereitung (`companyPrep.ts`).
+  - `documents/`: Anschreiben-Generator (`coverLetterGenerator.ts`), DIN-5008 PDF-Export, ATS-Score, JSON-Resume.
   - `email/`: IMAP-Client (`imapClient.ts`), Auto-Sync, wöchentlicher Digest.
+  - `interview/`: KI-Interview-Simulator (TTS/STT), Gehaltscoach, STAR-Audit, Tech-Quiz.
+  - `jobs/`: Jobsuche & Scraper (`matching.ts`, `liveJobSearch.ts`, `jobScraper.ts`).
+  - `portfolio/`: GitHub-Integration und Showcase-Generator.
+  - `salary/`: Benchmarks, Vergütungsrechner, Verhandlungsskripte, Arbeitsvertrags-Audit.
   - `settings/`: Backup-Rotation, Scheduler, Web-Push (`pushNotifications.ts`), KI-Tracker.
 - **Prisma 7 Besonderheit:** Der generierte Client liegt unter `src/generated/prisma/` (gitignored,
   `npx prisma generate` nach jeder Schema-Änderung erneut ausführen). Modelltypen heißen
