@@ -143,7 +143,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 ### 14. 🤖 Hybrid-KI-Anbindung (Anschreiben-Polishing & Interview-Feedback)
 - **Vier wählbare Provider** (Einstellungen → KI-Provider, s. `src/lib/settings/aiService.ts`): **OpenAI** (GPT-4o/-mini), **Anthropic** (Claude), **OpenRouter** (Universal-Router für zahlreiche Modelle) sowie **Ollama** für vollständig lokale, kostenlose Modelle auf `localhost:11434` — Ollama benötigt dabei bewusst keinen API-Key.
 - **100% Offline-Fallback**: Ohne konfigurierten Provider (oder bei einem fehlgeschlagenen Request) arbeitet die App transparent mit einer lokalen Heuristik weiter — nie ein Hard-Fail für den Nutzer.
-- **API-Key verschlüsselt at-rest** (`src/lib/core/secretCrypto.ts`, AES-256-GCM): Der Key wird nie im Klartext an den Client zurückgegeben und auch in der SQLite-Datei nicht im Klartext abgelegt.
+- **API-Key verschlüsselt at-rest** (`src/lib/core/secretCrypto.ts`, AES-256-GCM): Der Key wird nie im Klartext an den Client zurückgegeben und auch in der Datenbank nicht im Klartext abgelegt.
 
 ---
 
@@ -561,7 +561,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 ```text
 ├── e2e/                         # Playwright End-to-End-Tests (Kernflows: Bewerbung anlegen,
 │                                 # Unternehmen verwalten, Kalender, Notifications, Job-Filter, …)
-├── prisma/                      # Prisma 7 SQLite Schema, Migrationen & Test-Fixtures
+├── prisma/                      # Prisma 7 PostgreSQL Schema, Migrationen & Test-Fixtures
 │   ├── schema.prisma            # Datenmodelle (Company, JobPosting, Application, Preferences)
 │   └── seed.ts                  # Realistische Test- & Beispieldaten
 ├── public/
@@ -671,7 +671,7 @@ siehe `middleware.ts`/`APP_PASSWORD`. Folgende Schutzmaßnahmen greifen dabei zu
 | --- | --- |
 | URL-Scraper (`/jobs/scrape-url`) | SSRF-Schutz (`src/lib/core/ssrfGuard.ts`): DNS-Auflösung + IP-Prüfung gegen private/interne Netzwerke (inkl. Cloud-Metadaten-Endpunkte) für die Ziel-URL UND jeden Redirect-Hop, plus Content-Type-/Größen-Limit der Antwort. |
 | Datei-Upload (`/api/documents/upload`) | Allowlist statt Denylist für MIME-Type + Dateiendung (`src/lib/core/constants.ts`) — verhindert das Hochladen aktiver Inhalte (`.html`, `.svg`, `.js`, …), die unter `/uploads/` sonst als gespeichertes XSS ausführbar wären. |
-| KI-API-Key & IMAP-Passwort (Einstellungen) | At-Rest-Verschlüsselung (AES-256-GCM, `src/lib/core/secretCrypto.ts`) statt Klartext in der SQLite-Datei; beide werden zusätzlich nie im Klartext an den Client zurückgegeben und nie in Backup-Exporte mit aufgenommen. |
+| KI-API-Key & IMAP-Passwort (Einstellungen) | At-Rest-Verschlüsselung (AES-256-GCM, `src/lib/core/secretCrypto.ts`) statt Klartext in der Datenbank; beide werden zusätzlich nie im Klartext an den Client zurückgegeben und nie in Backup-Exporte mit aufgenommen. |
 | Stapel-Löschung & Restore | Automatischer JSON-Snapshot vor jeder unwiderruflichen Aktion (`src/lib/settings/serverBackupRotation.ts`, rotierend unter `./backups/`). |
 | Passwortabgleich (`middleware.ts`) | Konstante-Zeit-Vergleich (`timingSafeEqual`) gegen Timing-Angriffe. |
 | Brute-Force auf `APP_PASSWORD` (`middleware.ts`) | Rate-Limiting mit Lockout pro Client (`src/lib/core/rateLimiter.ts`): Nach 10 Fehlversuchen in 15 Minuten wird die IP für 15 Minuten mit `429 Too Many Requests` gesperrt, statt weitere Versuche zuzulassen. |
@@ -686,6 +686,53 @@ ist über einen `overrides`-Eintrag in `package.json` auf eine gepatchte Version
 selbst hat diese Abhängigkeit in keiner stabilen 7.x-Version bisher aktualisiert (nur im experimentellen
 8.0.0-Release-Candidate, der bewusst nicht eingesetzt wird, da diese App auf der Prisma-7-Client-Architektur
 aufbaut, siehe `AGENTS.md`).
+
+---
+
+## ☁️ Deployment auf Vercel
+
+Die Anwendung ist für das Deployment auf Vercel optimiert. Eine fertige [vercel.json](file:///vercel.json) ist im Projekt hinterlegt.
+
+### 1. Build-Vorbereitung
+Dank des `"postinstall": "prisma generate"`-Skripts in der [package.json](file:///package.json) generiert Vercel den Prisma 7 Client automatisch vor dem Build.
+
+### 2. Notwendige Environment-Variablen auf Vercel
+Trage im Vercel Dashboard unter **Project Settings → Environment Variables** folgende Variablen ein:
+
+| Variable | Empfohlener Wert | Zweck |
+|---|---|---|
+| `DATABASE_URL` | Neon PostgreSQL Connection-String | Pfad zur PostgreSQL-Datenbank |
+| `DIRECT_URL` | Neon Direct Connection-String (Non-Pooler) | Für `prisma db push` Migrationen |
+| `APP_PASSWORD` | Beliebiges starkes Passwort | Aktiviert HTTP-Basic-Auth ([middleware.ts](file:///middleware.ts)), um persönliche Daten zu schützen |
+| `ENCRYPTION_KEY` | 64-stelliger Hex-String (`openssl rand -hex 32`) | Fester Schlüssel für AES-256-GCM Verschlüsselung von API-Keys & IMAP-Passwörtern |
+| `CRON_SECRET` | Zufälliges Geheimnis | Bearer-Token für Hintergrund-Jobs via `/api/cron/tick` |
+| `VAPID_PUBLIC_KEY` | Erzeugt via `npx web-push generate-vapid-keys` | Öffentlicher VAPID-Schlüssel für Web-Push |
+| `VAPID_PRIVATE_KEY` | Erzeugt via `npx web-push generate-vapid-keys` | Privater VAPID-Schlüssel für Web-Push |
+
+---
+
+## 🤖 Zusammenarbeit mit KI-Assistenten (Claude & Gemini)
+
+Dieses Projekt ist für eine strukturierte, zuverlässige Zusammenarbeit mit führenden KI-Coding-Assistenten optimiert:
+
+| Datei | Zielsystem | Zweck |
+|---|---|---|
+| [CLAUDE.md](file:///CLAUDE.md) | Claude Code / Anthropic | CLI-Befehle, Architekturregeln, Modulhierarchie & Do's/Don'ts |
+| [.claudeignore](file:///.claudeignore) | Claude Code | Schützt sensible Daten, Uploads und `.next` vor LLM-Indexierung |
+| [GEMINI.md](file:///GEMINI.md) | Google Gemini / Antigravity | Leitfaden für Google Gemini Modelle und IDE-Agenten |
+| [.geminiignore](file:///.geminiignore) | Google Gemini / Antigravity | Schützt sensible Daten und Build-Caches vor Google Tool-Indexierung |
+| [AGENTS.md](file:///AGENTS.md) | Universal Agent Standard | Standardisierte Agent-Regeln inklusive Next.js 16 Vorgaben |
+| [CHANGELOG.md](file:///CHANGELOG.md) | Versionskontrolle | Dokumentation aller Meilensteine und Funktionserweiterungen (SemVer) |
+| [.env.example](file:///.env.example) | Konfiguration | Vollständige Vorlage aller Produktions- und Entwicklungsumgebungsvariablen |
+| [.gitattributes](file:///.gitattributes) | Git & Betriebssysteme | Plattformübergreifende Zeilenenden-Normalisierung (LF) für Windows/Linux |
+| [CONTRIBUTING.md](file:///CONTRIBUTING.md) | GitHub & Pair Programming | Leitfaden für Code-Stil, Tests und Datenschutz |
+| [SECURITY.md](file:///SECURITY.md) | Sicherheit | At-Rest-Verschlüsselung, SSRF-Guards und Reporting-Richtlinien |
+| [.githooks/pre-commit](file:///.githooks/pre-commit) | Git Pre-Commit Hook | Blockiert automatisch .env-Dateien, API-Keys und private Daten vor dem Commit |
+
+### 🔒 Datenschutz-Garantie
+Echte Bewerbungsunterlagen unter `Bewerbungsunterlagen final/`, hochgeladene Zeugnisse in `public/uploads/` sowie lokale Schlüsseldateien (`.encryption-key`, `.vapid-keys.json`) sind in allen Ignore-Dateien (`.gitignore`, `.claudeignore`, `.geminiignore`) ausgeschlossen und gelangen niemals in Prompts oder Versionsstände.
+
+---
 
 ## License
 

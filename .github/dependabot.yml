@@ -21,6 +21,11 @@ updates:
           - "@prisma/*"
       dev-dependencies:
         dependency-type: "development"
+        # Major-Sprünge (z. B. vitest 5, jsdom 30) einzeln prüfen: gebündelt
+        # brechen sie `npm ci` (Peer-Konflikte) und blockieren die ganze Gruppe.
+        update-types:
+          - "minor"
+          - "patch"
     # Major-Version-Bumps für Build-kritische Pakete manuell steuern:
     # TypeScript 6→7 und @types/node 20→26 würden sofort Build-Fehler
     # erzeugen, da Breaking Changes im Compiler und in den Node-Typen

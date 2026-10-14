@@ -1,0 +1,47 @@
+# =============================================================================
+# Git Attributes — Job Application & Career Manager
+# =============================================================================
+# Verhindert CRLF/LF-Inkonsistenzen zwischen Windows-Entwicklungssystemen
+# und Linux-basierten Umgebungen (Vercel, Docker, GitHub Actions Runners).
+# =============================================================================
+
+# Standard: Automatische Textkonvertierung zu LF beim Commit
+* text=auto eol=lf
+
+# Shell-Skripte MÜSSEN zwingend LF behalten (sonst '\r' Syntax-Fehler in Linux/Docker)
+*.sh text eol=lf
+.githooks/* text eol=lf
+
+# Windows Batch-Dateien benötigen CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Source Code & Konfiguration
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.mjs text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.css text eol=lf
+*.prisma text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+*.env* text eol=lf
+
+# Binärdateien unberührt lassen
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.db binary
+*.sqlite binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
