@@ -32,12 +32,11 @@ if not exist "node_modules\" (
     )
 )
 
-:: 3. Prüfe ob die SQLite-Datenbank existiert
-if not exist "dev.db" (
-    echo [INFO] Initialisiere Datenbank dev.db mit Prisma ...
-    call npx prisma db push
-    echo [INFO] Lade Beispieldaten ...
-    call npx prisma db seed
+:: 3. Prüfe ob die .env-Datei existiert
+if not exist ".env" (
+    echo [INFO] Erstelle .env aus .env.example ...
+    copy .env.example .env >nul
+    echo [HINWEIS] Bitte trage deine DATABASE_URL in die .env-Datei ein.
 )
 
 :: 4. Browser nach kurzer Verzögerung automatisch im Hintergrund öffnen

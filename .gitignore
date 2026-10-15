@@ -105,4 +105,7 @@ next-env.d.ts
 /.agents/
 /.claude/skills/
 /.windsurf/
+/.gemini/
+/.antigravity/
+/.cursor/
 skills-lock.json
