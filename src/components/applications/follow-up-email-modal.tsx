@@ -69,6 +69,7 @@ export function FollowUpEmailModal({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Schließen"
             className="rounded-lg p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-foreground"
           >
             <X className="h-5 w-5" />

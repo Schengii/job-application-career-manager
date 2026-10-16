@@ -21,9 +21,10 @@ export default defineConfig({
     fileParallelism: false,
     globalSetup: process.env.TEST_DATABASE_URL ? ["./vitest.global-setup.ts"] : [],
     env: {
-      // Für lokale Tests: TEST_DATABASE_URL in .env.test setzen,
-      // z.B. eine separate Neon-Branch oder lokale Postgres-Instanz.
-      DATABASE_URL: process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL ?? "",
+      // Für Integrationstests: TEST_DATABASE_URL in .env.test oder als Environment-Variable setzen.
+      // Niemals stillschweigend auf die Entwicklungs-/Produktions-DATABASE_URL zurückfallen,
+      // um versehentlichen Datenverlust durch resetDb() auszuschließen.
+      DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgresql://unit-test-dummy:dummy@localhost:5432/dummy",
     },
   },
   resolve: {

@@ -9,6 +9,11 @@ import { execFileSync } from "node:child_process";
 import { E2E_DATABASE_URL } from "./env.mts";
 
 export default function globalSetup() {
+  if (!E2E_DATABASE_URL) {
+    throw new Error(
+      "SICHERHEITSABBRUCH: E2E-Tests dürfen nur ausgeführt werden, wenn E2E_DATABASE_URL explizit gesetzt ist (verhindert versehentliches --force-reset der Entwicklungsdatenbank).",
+    );
+  }
   execFileSync(
     "npx",
     ["prisma", "db", "push", "--force-reset", "--skip-generate", "--accept-data-loss"],

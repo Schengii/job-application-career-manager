@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendWebhookNotification } from "@/lib/settings/webhookNotifier";
+import { UnsafeUrlError } from "@/lib/core/ssrfGuard";
 
 export async function POST(req: Request) {
   try {
@@ -24,6 +25,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (error instanceof UnsafeUrlError) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Fehler beim Testen des Webhooks." },
       { status: 500 }

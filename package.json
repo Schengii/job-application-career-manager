@@ -1,13 +1,14 @@
 {
   "name": "job-career-manager",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "engines": {
     "node": ">=20"
   },
   "overrides": {
     "deepmerge-ts": "^8.0.2",
-    "mysql2": "^3.24.3"
+    "mysql2": "^3.24.3",
+    "braces": "^3.0.3"
   },
   "scripts": {
     "postinstall": "prisma generate",
@@ -16,14 +17,17 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:unit": "vitest run --exclude '**/api/**'",
+    "test:unit": "vitest run --exclude '**/api/**' --exclude 'src/lib/settings/*.test.ts'",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "import:bewerbungsliste": "tsx scripts/import-bewerbungsliste.ts",
     "security:check": "node scripts/check-secrets.mjs",
     "security:hook:install": "git config core.hooksPath .githooks",
-    "prepare": "git config core.hooksPath .githooks || true"
+    "prepare": "git config core.hooksPath .githooks || true",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",

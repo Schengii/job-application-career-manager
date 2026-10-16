@@ -15,7 +15,7 @@ async function listAutoSnapshots(): Promise<string[]> {
   }
 }
 
-describe("serverBackupRotation", () => {
+describe.skipIf(!process.env.TEST_DATABASE_URL)("serverBackupRotation", () => {
   beforeEach(async () => {
     await resetDb();
     await fs.rm(BACKUP_DIR, { recursive: true, force: true });
@@ -58,7 +58,7 @@ describe("serverBackupRotation", () => {
   });
 });
 
-describe("createPeriodicSnapshotIfDue", () => {
+describe.skipIf(!process.env.TEST_DATABASE_URL)("createPeriodicSnapshotIfDue", () => {
   beforeEach(async () => {
     await resetDb();
     await fs.rm(BACKUP_DIR, { recursive: true, force: true });

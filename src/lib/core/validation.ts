@@ -99,12 +99,30 @@ export const interactionSchema = z.object({
   interactionDate: z.string().datetime().optional().nullable().or(z.literal("")),
 });
 
+export const safeFileUrlSchema = z
+  .string()
+  .refine(
+    (val) => {
+      if (!val) return true;
+      if (val.startsWith("http://") || val.startsWith("https://")) {
+        try {
+          new URL(val);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      return !val.includes("..") && !val.includes("\\");
+    },
+    { message: "Ungültige oder unsichere Datei-URL (Path Traversal nicht erlaubt)" }
+  );
+
 export const documentSchema = z.object({
   name: z.string().min(1),
   category: z.enum(DOCUMENT_CATEGORY_VALUES),
   description: z.string().optional().nullable(),
   fileName: z.string().optional().nullable(),
-  fileUrl: z.string().optional().nullable(),
+  fileUrl: safeFileUrlSchema.optional().nullable(),
   mimeType: z.string().optional().nullable(),
   fileSize: z.number().optional().nullable(),
   isDefault: z.boolean().optional(),
@@ -301,7 +319,7 @@ const backupDocumentSchema = z.object({
   category: z.string().optional(),
   description: z.string().nullable().optional(),
   fileName: z.string().nullable().optional(),
-  fileUrl: z.string().nullable().optional(),
+  fileUrl: safeFileUrlSchema.nullable().optional(),
   mimeType: z.string().nullable().optional(),
   fileSize: z.number().nullable().optional(),
 });

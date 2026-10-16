@@ -24,6 +24,7 @@ import {
   generateNegotiationStep,
   evaluateNegotiationPerformance,
 } from "@/lib/salary/salaryNegotiationEngine";
+import type { WindowWithSpeechRecognition, SpeechRecognitionEventLike } from "@/types";
 
 export function SalaryNegotiationTrainer() {
   const [activeSubTab, setActiveSubTab] = useState<"SIMULATION" | "EMAIL_GENERATOR">("SIMULATION");
@@ -98,8 +99,7 @@ export function SalaryNegotiationTrainer() {
   function toggleListening() {
     if (typeof window === "undefined") return;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const win = window as any;
+    const win = window as unknown as WindowWithSpeechRecognition;
     const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
@@ -119,8 +119,7 @@ export function SalaryNegotiationTrainer() {
       recognition.interimResults = false;
 
       recognition.onstart = () => setIsListening(true);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: SpeechRecognitionEventLike) => {
         const transcript = event.results[0][0].transcript;
         setUserInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
         setIsListening(false);

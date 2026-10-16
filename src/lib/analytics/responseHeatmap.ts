@@ -10,7 +10,7 @@
 
 export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0=Sonntag, 1=Montag, ..., 6=Samstag
 
-export const DAY_NAMES: Record<number, string> = {
+const DAY_NAMES: Record<number, string> = {
   1: "Montag",
   2: "Dienstag",
   3: "Mittwoch",

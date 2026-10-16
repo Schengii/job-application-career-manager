@@ -16,7 +16,10 @@ Dieses Dokument dient als Kontext- und Architektur-Leitfaden für Claude bei der
   - **KI-Verhandlungs-Coach & Roleplay:** Gehalt- & Interviewtraining (`/interview-prep`), inkl. STAR-Story-Builder (`src/lib/interview/starStoryBuilder.ts`).
   - **Anschreiben- & Dossier-Generator:** Automatisierte Bewerbungstexte (`src/lib/documents/coverLetterGenerator.ts`).
   - **Job-Portal-Simulator & Matcher:** Scoring von Stellen (`src/lib/jobs/matching.ts`).
-  - **Analytics:** Bewerbungsanalysen inkl. Response-Heatmap (`src/lib/analytics/`, `src/components/analytics/`).
+  - **Analytics & Heatmap:** Bewerbungsanalysen inkl. Response-Heatmap (`src/lib/analytics/`, `src/components/analytics/`).
+  - **Karriere- & Fristenrechner:** Kündigungsfristen, Probezeit und Urlaubsanspruch (`src/lib/career/`).
+  - **Unternehmensrecherche:** Dossier und Vorbereitung für Vorstellungsgespräche (`src/lib/companies/`).
+  - **Portfolio & Showcase:** PDF-Kompilierung von Projekten (`src/lib/portfolio/`).
 
 ---
 

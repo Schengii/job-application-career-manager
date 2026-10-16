@@ -7,29 +7,66 @@ import { fetcher, apiPost } from "@/lib/core/api";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import dynamic from "next/dynamic";
 import { StatusBarChart } from "@/components/analytics/status-bar-chart";
 import { PortalBarChart } from "@/components/analytics/portal-bar-chart";
 import { TrendChart } from "@/components/analytics/trend-chart";
 import { StatTile } from "@/components/analytics/stat-tile";
 import { FunnelChart } from "@/components/analytics/funnel-chart";
-import { OfferComparisonMatrix } from "@/components/analytics/offer-comparison-matrix";
 import { SalaryBenchmarkCard } from "@/components/analytics/salary-benchmark-card";
 import { RejectionReasonsChart } from "@/components/analytics/rejection-reasons-chart";
 import { SkillSuccessRatesCard, type SkillSuccessRate } from "@/components/analytics/skill-success-rates-card";
 import { SkillGapCard } from "@/components/analytics/skill-gap-card";
-import { TotalCompensationCard } from "@/components/analytics/total-compensation-card";
-import { RoiTrackerCard } from "@/components/analytics/roi-tracker-card";
-import { CurrencyRelocationCalculator } from "@/components/analytics/currency-relocation-calculator";
-import { SkillRoadmapTracker } from "@/components/analytics/skill-roadmap-tracker";
-import { VermittlungsbudgetCard } from "@/components/analytics/vermittlungsbudget-card";
-import { ContractCheckerCard } from "@/components/analytics/contract-checker-card";
-import { NoticePeriodCalculatorCard } from "@/components/analytics/notice-period-calculator-card";
-import { CommuteCalculatorCard } from "@/components/analytics/commute-calculator-card";
 import { ToneEfficiencyCard } from "@/components/analytics/tone-efficiency-card";
 import { SalaryHistoryCard } from "@/components/analytics/salary-history-card";
-import { TaxExpenseReportCard } from "@/components/analytics/tax-expense-report-card";
-import { CounterOfferAssistantCard } from "@/components/analytics/counter-offer-assistant-card";
 import { ResponseHeatmapCard } from "@/components/analytics/response-heatmap-card";
+
+const CardSkeleton = () => <Card className="h-64 animate-pulse bg-muted/40" />;
+
+const OfferComparisonMatrix = dynamic(
+  () => import("@/components/analytics/offer-comparison-matrix").then((m) => m.OfferComparisonMatrix),
+  { loading: CardSkeleton, ssr: false }
+);
+const TotalCompensationCard = dynamic(
+  () => import("@/components/analytics/total-compensation-card").then((m) => m.TotalCompensationCard),
+  { loading: CardSkeleton, ssr: false }
+);
+const RoiTrackerCard = dynamic(
+  () => import("@/components/analytics/roi-tracker-card").then((m) => m.RoiTrackerCard),
+  { loading: CardSkeleton, ssr: false }
+);
+const CurrencyRelocationCalculator = dynamic(
+  () => import("@/components/analytics/currency-relocation-calculator").then((m) => m.CurrencyRelocationCalculator),
+  { loading: CardSkeleton, ssr: false }
+);
+const SkillRoadmapTracker = dynamic(
+  () => import("@/components/analytics/skill-roadmap-tracker").then((m) => m.SkillRoadmapTracker),
+  { loading: CardSkeleton, ssr: false }
+);
+const VermittlungsbudgetCard = dynamic(
+  () => import("@/components/analytics/vermittlungsbudget-card").then((m) => m.VermittlungsbudgetCard),
+  { loading: CardSkeleton, ssr: false }
+);
+const ContractCheckerCard = dynamic(
+  () => import("@/components/analytics/contract-checker-card").then((m) => m.ContractCheckerCard),
+  { loading: CardSkeleton, ssr: false }
+);
+const NoticePeriodCalculatorCard = dynamic(
+  () => import("@/components/analytics/notice-period-calculator-card").then((m) => m.NoticePeriodCalculatorCard),
+  { loading: CardSkeleton, ssr: false }
+);
+const CommuteCalculatorCard = dynamic(
+  () => import("@/components/analytics/commute-calculator-card").then((m) => m.CommuteCalculatorCard),
+  { loading: CardSkeleton, ssr: false }
+);
+const TaxExpenseReportCard = dynamic(
+  () => import("@/components/analytics/tax-expense-report-card").then((m) => m.TaxExpenseReportCard),
+  { loading: CardSkeleton, ssr: false }
+);
+const CounterOfferAssistantCard = dynamic(
+  () => import("@/components/analytics/counter-offer-assistant-card").then((m) => m.CounterOfferAssistantCard),
+  { loading: CardSkeleton, ssr: false }
+);
 import type { ToneSuccessRate } from "@/lib/applications/toneSuccessRates";
 import type { SalaryDataPoint } from "@/lib/salary/salaryHistoryTracker";
 import type { TimingAnalyticsResult } from "@/lib/analytics/responseHeatmap";

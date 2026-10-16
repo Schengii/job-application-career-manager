@@ -22,9 +22,9 @@ npm install
 cp .env.example .env
 # DATABASE_URL & DIRECT_URL eintragen
 
-# 3. Prisma-Client generieren & PostgreSQL Schema pushen
-npx prisma generate
-npx prisma db push
+# 3. PostgreSQL/Neon Datenbank initialisieren & Schema pushen
+npm run db:push
+npm run db:generate
 
 # 4. Optionale Beispieldaten laden
 npx prisma db seed

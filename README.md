@@ -561,7 +561,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 ```text
 ├── e2e/                         # Playwright End-to-End-Tests (Kernflows: Bewerbung anlegen,
 │                                 # Unternehmen verwalten, Kalender, Notifications, Job-Filter, …)
-├── prisma/                      # Prisma 7 PostgreSQL Schema, Migrationen & Test-Fixtures
+├── prisma/                      # Prisma 7 PostgreSQL/Neon Schema, Migrationen & Test-Fixtures
 │   ├── schema.prisma            # Datenmodelle (Company, JobPosting, Application, Preferences)
 │   └── seed.ts                  # Realistische Test- & Beispieldaten
 ├── public/
@@ -590,7 +590,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 │   │   ├── documents/           # Anschreiben/CV/Exporte: Generator, PDF-/ZIP-Export, JSON-Resume, ATS-Check
 │   │   ├── email/               # E-Mail-Sync/Inbox: IMAP-Client, Response-Parser, .eml-Export, Digest
 │   │   └── settings/            # Backup, Scheduler, KI-Provider & -Kosten-Tracking, Push, Präferenzen
-│   ├── test/                     # Test-Helfer (DB-Reset, SQLite Test-Setup)
+│   ├── test/                     # Test-Helfer (DB-Reset, PostgreSQL Test-Setup)
 │   └── types/                    # TypeScript Typdefinitionen & Prisma Model-Re-Exporte
 ├── Dockerfile                    # Mehrstufiger Produktions-Build für Self-Hosting
 └── docker-compose.yml            # Lokaler Self-Hosting-Betrieb (Bind-Mounts für DB/Uploads/Backups)

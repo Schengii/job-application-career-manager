@@ -37,10 +37,10 @@ export async function GET() {
 
     zip.file("README.txt", readmeContent);
 
-    const zipBuffer = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE" });
+    const zipBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
     const filename = `career-manager-complete-${new Date().toISOString().slice(0, 10)}.zip`;
 
-    return new NextResponse(zipBuffer as unknown as BodyInit, {
+    return new NextResponse(zipBlob, {
       status: 200,
       headers: {
         "Content-Disposition": `attachment; filename="${filename}"`,

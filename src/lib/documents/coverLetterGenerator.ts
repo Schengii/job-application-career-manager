@@ -69,19 +69,19 @@ export type CoverLetterProfile = {
   aiModel?: string | null;
 };
 
-export function today(): string {
+function today(): string {
   return new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "long", year: "numeric" }).format(new Date());
 }
 
 /** Stellt sicher, dass ein Satzfragment mit einem Satzzeichen endet */
-export function ensureSentence(text: string): string {
+function ensureSentence(text: string): string {
   const trimmed = text.trim();
   if (!trimmed) return trimmed;
   return /[.!?]$/.test(trimmed) ? trimmed : `${trimmed}.`;
 }
 
 /** Baut eine grammatikalisch korrekte Anrede aus dem Ansprechpartner-Namen */
-export function buildSalutation(contactName: string | null | undefined): string {
+function buildSalutation(contactName: string | null | undefined): string {
   if (!contactName?.trim()) return "Sehr geehrte Damen und Herren,";
 
   const [genderWord, ...rest] = contactName.trim().split(/\s+/);

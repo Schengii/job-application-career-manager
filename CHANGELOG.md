@@ -14,6 +14,34 @@ und dieses Projekt hält sich an [Semantic Versioning](https://semver.org/spec/v
 
 ---
 
+## [0.4.0] - 2026-10-16
+
+### Behoben & Gehärtet (Security)
+- **SSRF-Schutz für Webhook-Tests**: `/api/settings/webhooks/test` und `webhookNotifier.ts` validieren Ziel-URLs mit `assertPublicHttpUrl` und verwenden `safeFetchFollowingRedirects` (blockiert private IP-Bereiche, RFC 1918, RFC 4193 und Metadaten-Endpunkte).
+- **Path-Traversal-Schutz im Dokumentenversand**: `pdfMerge.ts` und `zipPackage.ts` prüfen Dateipfade strikt gegen das Upload-Verzeichnis und verhindern SSRF bei Remote-URLs.
+- **Geheimnisschutz in Backups**: `smtpPassword` wird in `src/lib/settings/backup.ts` zuverlässig vor dem JSON-Export herausgefiltert.
+- **Validierung von Dateipfaden**: `safeFileUrlSchema` in `src/lib/core/validation.ts` weist Traversal-Muster (`..`, `\`) rigoros ab.
+- **Schutz der Entwicklungsdatenbank**: `resetDb` in `src/test/dbTestUtils.ts` bricht bei fehlendem `TEST_DATABASE_URL` sicher ab; `vitest.config.mts` nutzt keine Standard-Entwicklungs-DB mehr für API-Tests.
+
+### Barrierefreiheit (a11y)
+- **Accessible Names für Dialoge**: `aria-label="Schließen"` in `DialogClose` (`src/components/ui/dialog.tsx`) sowie in 6 Feature-Modalkomponenten (`CalendarFeedModal`, `FollowUpEmailModal`, `ApplicationPdfPackageModal`, `JobTextParserModal`, `JobComparisonModal`, `JobAlertModal`).
+- **Screenreader-Labels in Excel-View**: Accessible Labels für Suche und Filter-Reset im `ExcelGridTable`.
+- **Accessible Tooltips & Shortcuts**: Tastaturkürzel-Trigger in `sidebar.tsx` mit aussagekräftigem `aria-label` versehen.
+
+### Performance & Codequalität
+- **Lazy Loading im Analytics-Dashboard**: Sekundäre Rechnerkarten (`OfferComparisonMatrix`, `TotalCompensationCard`, `RoiTrackerCard`, `CurrencyRelocationCalculator`, `SkillRoadmapTracker`, `VermittlungsbudgetCard`, `ContractCheckerCard`, `NoticePeriodCalculatorCard`, `CommuteCalculatorCard`, `TaxExpenseReportCard`, `CounterOfferAssistantCard`) per `next/dynamic` mit Skeleton-Fallback ausgelagert.
+- **Entflechtung von commuteCalculator**: Pendel-Radar im Jobs-Bereich in `src/lib/jobs/commuteRadar.ts` umbenannt, um Namenskollisionen mit dem Gehaltsrechner zu eliminieren.
+- **Typensicherheit Web Speech API**: Zentrale Typdefinitionen (`WindowWithSpeechRecognition`, `SpeechRecognitionLike`, `SpeechRecognitionEventLike`) in `src/types/index.ts` integriert und alle `any`-Casts in Interview-Komponenten entfernt.
+- **Typsicherer Response-Body**: Direkte Blob-Verwendung für ZIP-Downloads in `src/app/api/backup/zip/route.ts`.
+- **Bereinigung toter Artefakte**: Veraltetes SQLite-Schema-Dump `prisma/test-schema.sql` und ungenutzte UI-/Hilfsexporte entfernt.
+
+### Developer Experience & Dokumentation
+- **Prisma-Skripte in package.json**: `npm run db:push`, `npm run db:generate`, `npm run db:studio` ergänzt.
+- **Bereinigung von SQLite-Altlasten**: Leitfäden und Dokumente (`GEMINI.md`, `SECURITY.md`, `CONTRIBUTING.md`, `README.md`) auf Neon PostgreSQL harmonisiert.
+- **Vollständige Modulübersicht**: Alle 12 Domänen-Module (`analytics`, `career`, `companies`, `portfolio` etc.) und aktuelle Dateinamen in `AGENTS.md`, `GEMINI.md` und `CLAUDE.md` synchronisiert.
+
+---
+
 ## [0.3.0] - 2026-10-11
 
 ### Hinzugefügt

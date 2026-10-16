@@ -8,8 +8,7 @@
  * Nutzt DATABASE_URL aus der Umgebung (z.B. eine separate Neon-Branch
  * oder eine lokale Postgres-Instanz). Muss vor dem Testlauf gesetzt sein.
  */
-export const E2E_DATABASE_URL =
-  process.env.E2E_DATABASE_URL ?? process.env.DATABASE_URL ?? "";
+export const E2E_DATABASE_URL = process.env.E2E_DATABASE_URL ?? "";
 
 // Eigener Port, damit `npx playwright test` nicht mit einem parallel
 // laufenden `npm run dev` (Port 3000) auf derselben Maschine kollidiert.

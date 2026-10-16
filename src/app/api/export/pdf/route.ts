@@ -1,5 +1,9 @@
 // -----------------------------------------------------------------------------
-// PDF Export API Route: /api/export/pdf
+// PDF / Print-Ready HTML Export API Route: /api/export/pdf
+// -----------------------------------------------------------------------------
+// Bereitet standardisiertes, druck- und PDF-fertiges DIN-A4-HTML mit
+// @page- und CSS-Paged-Media-Regeln für den direkten PDF-Export via Browser vor.
+// Liefert text/html mit attachment-Header für den direkten Download/Druck.
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
 import { wrapHtmlForPdfExport, PdfExportOptions } from "@/lib/documents/pdfExport";

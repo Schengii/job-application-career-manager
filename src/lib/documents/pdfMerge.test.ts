@@ -212,5 +212,14 @@ describe("createApplicationPdfPackage", () => {
     // 1 Deckblatt-Seite + 1 Anschreiben-Seite + 2 PDF-Seiten = 4
     expect(await pageCount(bytes)).toBe(4);
   });
+
+  it("ignoriert Dokumente mit Path-Traversal-Versuchen außerhalb des public-Ordners", async () => {
+    const bytes = await createApplicationPdfPackage({
+      coverLetterContent: "Test",
+      documents: [{ name: "Exploit", fileUrl: "/../../.env" }],
+    });
+    // Nur das Anschreiben wird generiert, die Datei außerhalb von public wird ignoriert
+    expect(await pageCount(bytes)).toBe(1);
+  });
 });
 

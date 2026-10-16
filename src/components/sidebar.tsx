@@ -141,6 +141,7 @@ export function Sidebar() {
             }}
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
             title="Tastaturkürzel anzeigen (?)"
+            aria-label="Tastaturkürzel anzeigen (?)"
           >
             <Keyboard className="h-3.5 w-3.5" />
             <span>Kürzel <kbd className="rounded border border-border px-1 py-0.2 font-mono text-[10px]">?</kbd></span>

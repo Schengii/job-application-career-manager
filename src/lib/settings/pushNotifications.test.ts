@@ -26,7 +26,7 @@ async function createSubscription(endpoint = "https://push.example.com/abc") {
   });
 }
 
-describe("sendPushToSubscription", () => {
+describe.skipIf(!process.env.TEST_DATABASE_URL)("sendPushToSubscription", () => {
   beforeEach(async () => {
     await resetDb();
     mockSendNotification.mockReset();
@@ -63,7 +63,7 @@ describe("sendPushToSubscription", () => {
   });
 });
 
-describe("sendDueNotifications", () => {
+describe.skipIf(!process.env.TEST_DATABASE_URL)("sendDueNotifications", () => {
   beforeEach(async () => {
     await resetDb();
     mockSendNotification.mockReset();
@@ -154,7 +154,7 @@ function makeMatchedAction(overrides: { appId: string; emailId: string; statusCh
   };
 }
 
-describe("sendEmailMatchNotifications", () => {
+describe.skipIf(!process.env.TEST_DATABASE_URL)("sendEmailMatchNotifications", () => {
   beforeEach(async () => {
     await resetDb();
     mockSendNotification.mockReset();
@@ -184,7 +184,7 @@ describe("sendEmailMatchNotifications", () => {
   });
 });
 
-describe("sendWeeklyDigestIfDue", () => {
+describe.skipIf(!process.env.TEST_DATABASE_URL)("sendWeeklyDigestIfDue", () => {
   beforeEach(async () => {
     await resetDb();
     mockSendNotification.mockReset();

@@ -20,14 +20,14 @@ Architektur und Feature-Übersicht.
 - **Domänenlogik:** Strukturiert in Submodule unter `src/lib/`:
   - `core/`: DB-Client, Validierung, SSRF-Schutz, Rate-Limiting, Verschlüsselung (`secretCrypto.ts`).
   - `applications/`: Bewerbungen, Kanban-Board, Time-Tracking (ROTI), Ghosting-Radar, Mappen-Builder.
-  - `analytics/`: Response-Heatmap, Erfolgs- und Trichteranalysen.
-  - `career/`: Kündigungsfrist-Rechner (`noticePeriodCalculator.ts`).
+  - `analytics/`: Response-Heatmap & Timing-Analysen (`responseHeatmap.ts`), Erfolgs- und Trichteranalysen.
+  - `career/`: Kündigungsfristen & Probezeit-Rechner (`noticePeriodCalculator.ts`).
   - `companies/`: Unternehmensrecherche und Gesprächsvorbereitung (`companyPrep.ts`).
   - `documents/`: Anschreiben-Generator (`coverLetterGenerator.ts`), DIN-5008 PDF-Export, ATS-Score, JSON-Resume.
   - `email/`: IMAP-Client (`imapClient.ts`), Auto-Sync, wöchentlicher Digest.
   - `interview/`: KI-Interview-Simulator (TTS/STT), Gehaltscoach, STAR-Audit, Tech-Quiz.
-  - `jobs/`: Jobsuche & Scraper (`matching.ts`, `liveJobSearch.ts`, `jobScraper.ts`).
-  - `portfolio/`: GitHub-Integration und Showcase-Generator.
+  - `jobs/`: Jobsuche & Scraper (`matching.ts`, `realJobSearch.ts`, `urlJobScraper.ts`, `commuteRadar.ts`).
+  - `portfolio/`: GitHub-Integration, Showcase- und PDF-Generierung (`portfolioPdfGenerator.ts`).
   - `salary/`: Benchmarks, Vergütungsrechner, Verhandlungsskripte, Arbeitsvertrags-Audit.
   - `settings/`: Backup-Rotation, Scheduler, Web-Push (`pushNotifications.ts`), KI-Tracker.
 - **Prisma 7 Besonderheit:** Der generierte Client liegt unter `src/generated/prisma/` (gitignored,

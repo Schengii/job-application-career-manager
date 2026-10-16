@@ -73,7 +73,7 @@ export function toKeywordList(value: string | null | undefined): string[] {
  *  einzelne, aussagekräftige Wörter statt ihn als einen einzigen langen
  *  Suchstring zu behandeln – sonst scheitert der Treffer schon an einem
  *  einzigen fehlenden Füllwort im Stellentitel. */
-export function toRoleKeywords(value: string): string[] {
+function toRoleKeywords(value: string): string[] {
   return value
     .toLowerCase()
     .replace(/[()/]/g, " ")

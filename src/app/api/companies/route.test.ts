@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// Integrationstest: /api/companies (GET/POST) gegen die echte SQLite-
+// Integrationstest: /api/companies (GET/POST) gegen die echte PostgreSQL-
 // Testdatenbank (siehe vitest.global-setup.ts). Anders als die reinen
 // Unit-Tests unter src/lib/*.test.ts prüft dieser Test den kompletten Pfad
 // Request -> Zod-Validierung -> Prisma -> JSON-Response inkl. Fehlerfälle.

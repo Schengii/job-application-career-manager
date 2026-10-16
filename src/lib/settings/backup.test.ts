@@ -23,7 +23,7 @@ import { prisma } from "@/lib/core/prisma";
 // Ordner ist ohnehin über .gitignore ausgeschlossen).
 const BACKUP_DIR = path.join(process.cwd(), "backups");
 
-describe("createFullBackup", () => {
+describe.skipIf(!process.env.TEST_DATABASE_URL)("createFullBackup", () => {
   beforeEach(async () => {
     await resetDb();
   });
@@ -51,6 +51,17 @@ describe("createFullBackup", () => {
     expect(JSON.stringify(backup)).not.toContain("app-password-should-never-leave-the-server");
   });
 
+  it("exportiert die Präferenzen ohne das smtpPassword", async () => {
+    await prisma.preferences.create({
+      data: { id: "default", smtpHost: "smtp.example.com", smtpPassword: "smtp-password-should-never-leave-the-server" },
+    });
+
+    const backup = await createFullBackup();
+
+    expect(backup.preferences).not.toHaveProperty("smtpPassword");
+    expect(JSON.stringify(backup)).not.toContain("smtp-password-should-never-leave-the-server");
+  });
+
   it("liefert version: 1 und leere Arrays statt undefined für eine frische Datenbank", async () => {
     const backup = await createFullBackup();
     expect(backup.version).toBe(1);
@@ -59,7 +70,7 @@ describe("createFullBackup", () => {
   });
 });
 
-describe("restoreFromBackup", () => {
+describe.skipIf(!process.env.TEST_DATABASE_URL)("restoreFromBackup", () => {
   beforeEach(async () => {
     await resetDb();
   });
