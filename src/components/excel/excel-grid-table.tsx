@@ -622,6 +622,7 @@ function ExcelGridContent({
             <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
             <input
               type="text"
+              aria-label="Tabelle durchsuchen"
               placeholder="In Tabelle suchen …"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -631,6 +632,7 @@ function ExcelGridContent({
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
+                aria-label="Suche zurücksetzen"
                 className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
               >
                 <X className="h-3.5 w-3.5" />
