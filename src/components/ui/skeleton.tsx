@@ -40,20 +40,3 @@ export function SkeletonTableRow() {
     </div>
   );
 }
-
-export function SkeletonKanbanColumn() {
-  return (
-    <div className="rounded-xl border border-border bg-surface/60 p-3 space-y-2 min-w-[200px]">
-      <div className="flex items-center justify-between mb-3">
-        <Skeleton className="h-4 w-20" />
-        <Skeleton className="h-5 w-6 rounded-full" />
-      </div>
-      {[...Array(3)].map((_, i) => (
-        <div key={i} className="rounded-lg border border-border bg-surface p-3 space-y-2">
-          <Skeleton className="h-3.5 w-3/4" />
-          <Skeleton className="h-3 w-1/2" />
-        </div>
-      ))}
-    </div>
-  );
-}
