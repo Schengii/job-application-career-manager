@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { estimateCommute } from "@/lib/jobs/commuteCalculator";
+import { estimateCommute } from "./commuteRadar";
 
-describe("commuteCalculator", () => {
+describe("commuteRadar", () => {
   it("berechnet Pendelzeiten für Bonn und Köln", () => {
     const bonn = estimateCommute("Bonn Zentrum", false, 2);
     expect(bonn.transitMinutes).toBe(15);
