@@ -143,7 +143,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 ### 14. 🤖 Hybrid-KI-Anbindung (Anschreiben-Polishing & Interview-Feedback)
 - **Vier wählbare Provider** (Einstellungen → KI-Provider, s. `src/lib/settings/aiService.ts`): **OpenAI** (GPT-4o/-mini), **Anthropic** (Claude), **OpenRouter** (Universal-Router für zahlreiche Modelle) sowie **Ollama** für vollständig lokale, kostenlose Modelle auf `localhost:11434` — Ollama benötigt dabei bewusst keinen API-Key.
 - **100% Offline-Fallback**: Ohne konfigurierten Provider (oder bei einem fehlgeschlagenen Request) arbeitet die App transparent mit einer lokalen Heuristik weiter — nie ein Hard-Fail für den Nutzer.
-- **API-Key verschlüsselt at-rest** (`src/lib/core/secretCrypto.ts`, AES-256-GCM): Der Key wird nie im Klartext an den Client zurückgegeben und auch in der SQLite-Datei nicht im Klartext abgelegt.
+- **API-Key verschlüsselt at-rest** (`src/lib/core/secretCrypto.ts`, AES-256-GCM): Der Key wird nie im Klartext an den Client zurückgegeben und auch in der Datenbank nicht im Klartext abgelegt.
 
 ---
 
@@ -561,7 +561,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 ```text
 ├── e2e/                         # Playwright End-to-End-Tests (Kernflows: Bewerbung anlegen,
 │                                 # Unternehmen verwalten, Kalender, Notifications, Job-Filter, …)
-├── prisma/                      # Prisma 7 SQLite Schema, Migrationen & Test-Fixtures
+├── prisma/                      # Prisma 7 PostgreSQL/Neon Schema, Migrationen & Test-Fixtures
 │   ├── schema.prisma            # Datenmodelle (Company, JobPosting, Application, Preferences)
 │   └── seed.ts                  # Realistische Test- & Beispieldaten
 ├── public/
@@ -590,7 +590,7 @@ Dokumente, Historie, generierte Anschreiben, Interview-Dossiers, Lebensläufe un
 │   │   ├── documents/           # Anschreiben/CV/Exporte: Generator, PDF-/ZIP-Export, JSON-Resume, ATS-Check
 │   │   ├── email/               # E-Mail-Sync/Inbox: IMAP-Client, Response-Parser, .eml-Export, Digest
 │   │   └── settings/            # Backup, Scheduler, KI-Provider & -Kosten-Tracking, Push, Präferenzen
-│   ├── test/                     # Test-Helfer (DB-Reset, SQLite Test-Setup)
+│   ├── test/                     # Test-Helfer (DB-Reset, PostgreSQL Test-Setup)
 │   └── types/                    # TypeScript Typdefinitionen & Prisma Model-Re-Exporte
 ├── Dockerfile                    # Mehrstufiger Produktions-Build für Self-Hosting
 └── docker-compose.yml            # Lokaler Self-Hosting-Betrieb (Bind-Mounts für DB/Uploads/Backups)
@@ -671,7 +671,7 @@ siehe `middleware.ts`/`APP_PASSWORD`. Folgende Schutzmaßnahmen greifen dabei zu
 | --- | --- |
 | URL-Scraper (`/jobs/scrape-url`) | SSRF-Schutz (`src/lib/core/ssrfGuard.ts`): DNS-Auflösung + IP-Prüfung gegen private/interne Netzwerke (inkl. Cloud-Metadaten-Endpunkte) für die Ziel-URL UND jeden Redirect-Hop, plus Content-Type-/Größen-Limit der Antwort. |
 | Datei-Upload (`/api/documents/upload`) | Allowlist statt Denylist für MIME-Type + Dateiendung (`src/lib/core/constants.ts`) — verhindert das Hochladen aktiver Inhalte (`.html`, `.svg`, `.js`, …), die unter `/uploads/` sonst als gespeichertes XSS ausführbar wären. |
-| KI-API-Key & IMAP-Passwort (Einstellungen) | At-Rest-Verschlüsselung (AES-256-GCM, `src/lib/core/secretCrypto.ts`) statt Klartext in der SQLite-Datei; beide werden zusätzlich nie im Klartext an den Client zurückgegeben und nie in Backup-Exporte mit aufgenommen. |
+| KI-API-Key & IMAP-Passwort (Einstellungen) | At-Rest-Verschlüsselung (AES-256-GCM, `src/lib/core/secretCrypto.ts`) statt Klartext in der Datenbank; beide werden zusätzlich nie im Klartext an den Client zurückgegeben und nie in Backup-Exporte mit aufgenommen. |
 | Stapel-Löschung & Restore | Automatischer JSON-Snapshot vor jeder unwiderruflichen Aktion (`src/lib/settings/serverBackupRotation.ts`, rotierend unter `./backups/`). |
 | Passwortabgleich (`middleware.ts`) | Konstante-Zeit-Vergleich (`timingSafeEqual`) gegen Timing-Angriffe. |
 | Brute-Force auf `APP_PASSWORD` (`middleware.ts`) | Rate-Limiting mit Lockout pro Client (`src/lib/core/rateLimiter.ts`): Nach 10 Fehlversuchen in 15 Minuten wird die IP für 15 Minuten mit `429 Too Many Requests` gesperrt, statt weitere Versuche zuzulassen. |

@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// Integrationstest: /api/applications (GET/POST) gegen die echte SQLite-
+// Integrationstest: /api/applications (GET/POST) gegen die echte PostgreSQL-
 // Testdatenbank (siehe vitest.global-setup.ts).
 // -----------------------------------------------------------------------------
 import { beforeEach, describe, expect, it } from "vitest";

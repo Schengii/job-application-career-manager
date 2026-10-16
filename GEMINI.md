@@ -43,7 +43,7 @@ src/lib/
 2. **SSRF-Schutz:**
    - Bei allen externen URL-Aufrufen (z. B. Job-Scraper) muss der `ssrfGuard` (`src/lib/core/ssrfGuard.ts`) vorgeschaltet sein, um Zugriff auf interne Netze und Metadaten-Endpunkte zu blockieren.
 3. **At-Rest-Verschlüsselung:**
-   - API-Keys und IMAP-Zugangsdaten werden über `src/lib/core/secretCrypto.ts` mit AES-256-GCM verschlüsselt in SQLite gespeichert.
+   - API-Keys und IMAP-Zugangsdaten werden über `src/lib/core/secretCrypto.ts` mit AES-256-GCM verschlüsselt in der Datenbank (PostgreSQL / Neon) gespeichert.
 4. **Pre-Commit Hook (.githooks/pre-commit & scripts/check-secrets.mjs):**
    - Blockiert vor jedem Git Commit automatisch versehentlich gestagte `.env`-Dateien, echte API-Keys (`sk-`, `ghp_`, etc.) und private Bewerbungsunterlagen. Manuell prüfbar via `npm run security:check`.
 

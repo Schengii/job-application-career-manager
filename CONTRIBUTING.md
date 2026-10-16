@@ -21,8 +21,8 @@ npm install
 # 2. Lokale Umgebungskonfiguration anlegen
 cp .env.example .env
 
-# 3. SQLite Datenbank initialisieren & Schema pushen
-npx prisma db push
+# 3. PostgreSQL/Neon Datenbank initialisieren & Schema pushen
+npm run db:push
 
 # 4. Optionale Beispieldaten laden
 npx prisma db seed
