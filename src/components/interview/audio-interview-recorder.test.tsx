@@ -6,6 +6,9 @@ import { AudioInterviewRecorder } from "./audio-interview-recorder";
 describe("AudioInterviewRecorder", () => {
   it("rendert den Start-Button und wechselt in den Aufnahme-Zustand", async () => {
     vi.useFakeTimers();
+    // jsdom implementiert URL.createObjectURL nicht
+    const createObjectURL = vi.fn(() => "blob:mock-audio");
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL }));
 
     render(
       <AudioInterviewRecorder questionTitle="Erzählen Sie von Ihrem Werdegang" />
@@ -33,5 +36,6 @@ describe("AudioInterviewRecorder", () => {
     expect(screen.getByText(/Aufnahme bereit/i)).toBeDefined();
 
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 });
