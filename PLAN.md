@@ -37,7 +37,7 @@ Performance ist gut, zeigt aber Optimierungspotenzial durch fehlendes Code-Split
 - [x] M17 | Dynamic Imports für rechenintensive Karten der Analytics-Seite | P3 | M | src/app/analytics/page.tsx | src/app/analytics/page.tsx:10-32 | Fertig wenn: sekundäre Rechnerkarten per next/dynamic lazy geladen werden und das initiale JS-Bundle der Analytics-Route sinkt.
 
 ### Phase 4: Developer Experience & Dokumentation
-- [ ] M18 | Fehlende Prisma-Skripte in package.json ergänzen | P3 | S | package.json | package.json:12-26 | Fertig wenn: db:push, db:generate und db:studio als npm-Skripte definiert und ausführbar sind.
+- [x] M18 | Fehlende Prisma-Skripte in package.json ergänzen | P3 | S | package.json | package.json:12-26 | Fertig wenn: db:push, db:generate und db:studio als npm-Skripte definiert und ausführbar sind.
 - [ ] M19 | Doku-Aktualisierung: SQLite-Altlasten bereinigen | P3 | S | GEMINI.md, SECURITY.md, CONTRIBUTING.md, src/test/dbTestUtils.ts | GEMINI.md:43 | Fertig wenn: alle veralteten Referenzen auf SQLite/dev.db durch PostgreSQL/Neon ersetzt sind.
 - [ ] M20 | Modulübersicht und Dateinamen in Leitfäden synchronisieren | P3 | S | AGENTS.md, GEMINI.md, CLAUDE.md | AGENTS.md:21 | Fertig wenn: die 4 fehlenden Module (analytics, career, companies, portfolio) ergänzt und veraltete Dateinamen korrigiert sind.
 
