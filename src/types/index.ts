@@ -110,3 +110,32 @@ export type Metrics = {
   companies: number;
   jobs: number;
 };
+
+// -----------------------------------------------------------------------------
+// Web Speech API Typen (Browser-Spracherkennung)
+// -----------------------------------------------------------------------------
+export interface SpeechRecognitionResultLike {
+  transcript: string;
+}
+
+export interface SpeechRecognitionEventLike {
+  resultIndex?: number;
+  results: ArrayLike<ArrayLike<SpeechRecognitionResultLike>>;
+}
+
+export interface SpeechRecognitionLike {
+  lang: string;
+  interimResults: boolean;
+  continuous?: boolean;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event?: unknown) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop?: () => void;
+}
+
+export type WindowWithSpeechRecognition = Window & {
+  SpeechRecognition?: new () => SpeechRecognitionLike;
+  webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+};

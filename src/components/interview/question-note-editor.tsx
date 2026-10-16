@@ -7,24 +7,14 @@ import { useState, useRef } from "react";
 import { Mic, MicOff, CheckCircle2, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-
-type BrowserSpeechRecognition = {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: (() => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-};
+import type { WindowWithSpeechRecognition, SpeechRecognitionLike } from "@/types";
 
 type SpeechRecognitionEvent = {
   resultIndex: number;
   results: {
     length: number;
     [index: number]: {
-      isFinal: boolean;
+      isFinal?: boolean;
       [index: number]: { transcript: string };
     };
   };
@@ -50,7 +40,7 @@ export function QuestionNoteEditor({
   });
   const [isListening, setIsListening] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   const [prevStorageKey, setPrevStorageKey] = useState(storageKey);
   if (storageKey !== prevStorageKey) {
@@ -86,10 +76,7 @@ export function QuestionNoteEditor({
       return;
     }
 
-    const windowWithSpeech = window as unknown as {
-      SpeechRecognition?: new () => BrowserSpeechRecognition;
-      webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
-    };
+    const windowWithSpeech = window as unknown as WindowWithSpeechRecognition;
     const SpeechRecognitionClass =
       windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
 

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/form";
 import { InterviewQuestion } from "@/lib/interview/interviewGuide";
 import { apiPost } from "@/lib/core/api";
+import type { WindowWithSpeechRecognition, SpeechRecognitionLike, SpeechRecognitionEventLike } from "@/types";
 
 type EnhancedEvaluation = {
   score: number;
@@ -51,37 +52,33 @@ export function MockInterviewModal({
   const [isListening, setIsListening] = useState(false);
   const [speechSupported] = useState(() => {
     if (typeof window === "undefined") return false;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const win = window as any;
-    return Boolean("SpeechRecognition" in win || "webkitSpeechRecognition" in win);
+    const win = window as unknown as WindowWithSpeechRecognition;
+    return Boolean(win.SpeechRecognition || win.webkitSpeechRecognition);
   });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   function toggleSpeech() {
     if (!speechSupported) return;
     if (isListening) {
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        recognitionRef.current.stop?.();
       }
       setIsListening(false);
       return;
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const win = window as any;
+      const win = window as unknown as WindowWithSpeechRecognition;
       const SpeechRecognition = win.SpeechRecognition || win.webkitSpeechRecognition;
+      if (!SpeechRecognition) return;
       const recognition = new SpeechRecognition();
       recognition.lang = "de-DE";
       recognition.continuous = true;
       recognition.interimResults = false;
 
       recognition.onstart = () => setIsListening(true);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recognition.onresult = (event: any) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const text = Array.from(event.results).map((r: any) => r[0].transcript).join(" ");
+      recognition.onresult = (event: SpeechRecognitionEventLike) => {
+        const text = Array.from(event.results).map((r) => r[0].transcript).join(" ");
         setUserAnswer((prev) => (prev.trim() ? `${prev.trim()} ${text.trim()}` : text.trim()));
       };
       recognition.onerror = () => setIsListening(false);

@@ -10,27 +10,7 @@ import {
   analyzeInterviewNotes,
   type InterviewFeedbackInsight,
 } from "@/lib/interview/interviewAudioFeedback";
-
-interface SpeechRecognitionResultLike {
-  transcript: string;
-}
-interface SpeechRecognitionEventLike {
-  resultIndex: number;
-  results: ArrayLike<ArrayLike<SpeechRecognitionResultLike>>;
-}
-interface SpeechRecognitionLike {
-  lang: string;
-  interimResults: boolean;
-  onstart: (() => void) | null;
-  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
-  onerror: (() => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-}
-type WindowWithSpeechRecognition = Window & {
-  SpeechRecognition?: new () => SpeechRecognitionLike;
-  webkitSpeechRecognition?: new () => SpeechRecognitionLike;
-};
+import type { WindowWithSpeechRecognition } from "@/types";
 
 export function InterviewFeedbackCard() {
   const toast = useToast();
