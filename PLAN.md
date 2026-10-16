@@ -14,7 +14,7 @@ Performance ist gut, zeigt aber Optimierungspotenzial durch fehlendes Code-Split
 ## 2. Maßnahmen
 
 ### Phase 1: Sicherheit & Test-Integrität
-- [ ] M01 | SSRF-Schutz für Webhook-Test-Endpunkt | P1 | S | src/app/api/settings/webhooks/test/route.ts, src/lib/settings/webhookNotifier.ts | src/lib/settings/webhookNotifier.ts:70 | Fertig wenn: webhookUrl vor dem Fetch über assertSafeUrl validiert wird und private/interne IP-Adressen mit HTTP 400 abgewiesen werden.
+- [x] M01 | SSRF-Schutz für Webhook-Test-Endpunkt | P1 | S | src/app/api/settings/webhooks/test/route.ts, src/lib/settings/webhookNotifier.ts | src/lib/settings/webhookNotifier.ts:70 | Fertig wenn: webhookUrl vor dem Fetch über assertSafeUrl validiert wird und private/interne IP-Adressen mit HTTP 400 abgewiesen werden.
 - [ ] M02 | Path-Traversal-Schutz beim PDF-Merging absichern | P1 | S | src/lib/documents/pdfMerge.ts | src/lib/documents/pdfMerge.ts:199-201 | Fertig wenn: relative Pfade mit path.resolve aufgelöst und verifiziert werden, dass sie strikt innerhalb des public-Verzeichnisses liegen.
 - [ ] M03 | Path-Traversal-Schutz beim ZIP-Export absichern | P1 | S | src/lib/documents/zipPackage.ts | src/lib/documents/zipPackage.ts:86-88 | Fertig wenn: relative Dokumentpfade geprüft werden und Zugriffe außerhalb von public mit Fehler abgefangen werden.
 - [x] M04 | SMTP-Passwort aus Backup-Export ausschließen | P1 | S | src/lib/settings/backup.ts | src/lib/settings/backup.ts:43 | Fertig wenn: smtpPassword im Destructuring herausgefiltert wird und im exportierten Backup-JSON niemals erscheint.

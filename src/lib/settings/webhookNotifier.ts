@@ -5,6 +5,8 @@
 // automatisch an einen konfigurierten Discord- oder Slack-Webhook-Channel.
 // -----------------------------------------------------------------------------
 
+import { safeFetchFollowingRedirects, assertPublicHttpUrl } from "@/lib/core/ssrfGuard";
+
 export interface WebhookNotificationPayload {
   title: string;
   description: string;
@@ -67,7 +69,9 @@ export async function sendWebhookNotification(
       };
     }
 
-    const res = await fetch(webhookUrl, {
+    await assertPublicHttpUrl(webhookUrl);
+
+    const res = await safeFetchFollowingRedirects(webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -76,6 +80,6 @@ export async function sendWebhookNotification(
     return res.ok;
   } catch (error) {
     console.error("Fehler beim Senden der Webhook-Benachrichtigung:", error);
-    return false;
+    throw error;
   }
 }
