@@ -78,13 +78,20 @@ export async function createApplicationZipPackage(data: ApplicationPackageData):
     try {
       let fileBuffer: Buffer;
       if (doc.fileUrl.startsWith("http://") || doc.fileUrl.startsWith("https://")) {
-        const res = await fetch(doc.fileUrl);
+        const { assertPublicHttpUrl } = await import("@/lib/core/ssrfGuard");
+        const safeUrl = await assertPublicHttpUrl(doc.fileUrl);
+        const res = await fetch(safeUrl);
         if (!res.ok) continue;
         fileBuffer = Buffer.from(await res.arrayBuffer());
       } else {
-        // Fallback für lokale Entwicklung ohne Vercel Blob
+        // Fallback für lokale Entwicklung ohne Vercel Blob (strikt innerhalb public)
+        const publicDir = path.resolve(process.cwd(), "public");
         const relativePath = doc.fileUrl.startsWith("/") ? doc.fileUrl.slice(1) : doc.fileUrl;
-        fileBuffer = await fs.readFile(path.join(process.cwd(), "public", relativePath));
+        const absolutePath = path.resolve(publicDir, relativePath);
+        if (!absolutePath.startsWith(publicDir + path.sep) && absolutePath !== publicDir) {
+          continue;
+        }
+        fileBuffer = await fs.readFile(absolutePath);
       }
       const fileName = doc.fileName || path.basename(doc.fileUrl) || `${sanitizeName(doc.name)}.pdf`;
       docsFolder.file(fileName, fileBuffer);

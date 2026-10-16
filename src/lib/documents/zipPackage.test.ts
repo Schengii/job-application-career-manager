@@ -30,4 +30,23 @@ describe("createApplicationZipPackage", () => {
     expect(files.some((f) => f.includes("Anschreiben.html"))).toBe(true);
     expect(files.some((f) => f.includes("Uebersicht.txt"))).toBe(true);
   });
+
+  it("ignoriert Dateien mit Path-Traversal-Versuchen außerhalb von public", async () => {
+    const zipBuffer = await createApplicationZipPackage({
+      position: "Frontend Entwickler",
+      companyName: "Tech Corp GmbH",
+      coverLetterContent: "Test",
+      documents: [
+        {
+          name: "Exploit",
+          fileUrl: "/../../.env",
+          fileName: "stolen.env",
+        },
+      ],
+    });
+
+    const loadedZip = await JSZip.loadAsync(zipBuffer);
+    const files = Object.keys(loadedZip.files);
+    expect(files.some((f) => f.includes("stolen.env"))).toBe(false);
+  });
 });
