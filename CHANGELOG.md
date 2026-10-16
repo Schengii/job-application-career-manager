@@ -26,6 +26,7 @@ und dieses Projekt hält sich an [Semantic Versioning](https://semver.org/spec/v
 - **Entflechtung von commuteCalculator**: Pendel-Radar im Jobs-Bereich in `src/lib/jobs/commuteRadar.ts` umbenannt, um Namenskollisionen mit dem Gehaltsrechner zu eliminieren.
 - **Typensicherheit Web Speech API**: Zentrale Typdefinitionen (`WindowWithSpeechRecognition`, `SpeechRecognitionLike`, `SpeechRecognitionEventLike`) in `src/types/index.ts` integriert und alle `any`-Casts in Interview-Komponenten entfernt.
 - **Typsicherer Response-Body**: Direkte Blob-Verwendung für ZIP-Downloads in `src/app/api/backup/zip/route.ts`.
+- **Bereinigung toter Artefakte**: Veraltetes SQLite-Schema-Dump `prisma/test-schema.sql` und ungenutzte UI-/Hilfsexporte entfernt.
 
 ### Developer Experience & Dokumentation
 - **Prisma-Skripte in package.json**: `npm run db:push`, `npm run db:generate`, `npm run db:studio` ergänzt.
