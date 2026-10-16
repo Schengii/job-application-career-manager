@@ -20,12 +20,16 @@ Architektur und Feature-Übersicht.
 - **Domänenlogik:** Strukturiert in Submodule unter `src/lib/`:
   - `core/`: DB-Client, Validierung, SSRF-Schutz, Rate-Limiting, Verschlüsselung (`secretCrypto.ts`).
   - `applications/`: Bewerbungen, Kanban-Board, Time-Tracking, Mappen-Builder.
-  - `jobs/`: Jobsuche & Scraper (`matching.ts`, `liveJobSearch.ts`, `jobScraper.ts`).
+  - `jobs/`: Jobsuche & Scraper (`matching.ts`, `realJobSearch.ts`, `urlJobScraper.ts`, `commuteRadar.ts`).
   - `interview/`: KI-Interview-Simulator (TTS/STT), Gehaltscoach, STAR-Audit.
   - `documents/`: Anschreiben-Generator (`coverLetterGenerator.ts`), DIN-5008 PDF-Export, ATS-Score.
   - `salary/`: Benchmarks, Vergütungsrechner, Verhandlungsskripte.
   - `email/`: IMAP-Client (`imapClient.ts`), Auto-Sync, wöchentlicher Digest.
   - `settings/`: Backup-Rotation, Scheduler, Web-Push (`pushNotifications.ts`), KI-Tracker.
+  - `analytics/`: Response-Heatmap & Timing-Analysen (`responseHeatmap.ts`).
+  - `career/`: Kündigungsfristen & Probezeit-Rechner (`noticePeriodCalculator.ts`).
+  - `companies/`: Unternehmensrecherche & Interview-Vorbereitung (`companyPrep.ts`).
+  - `portfolio/`: Projekt-Showcase & PDF-Generierung (`portfolioPdfGenerator.ts`).
 - **Prisma 7 Besonderheit:** Der generierte Client liegt unter `src/generated/prisma/` (gitignored,
   `npx prisma generate` nach jeder Schema-Änderung erneut ausführen). Modelltypen heißen
   `<Model>Model` (z. B. `CompanyModel`, `ApplicationModel`), re-exportiert in `src/types/index.ts`.

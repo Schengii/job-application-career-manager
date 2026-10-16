@@ -25,12 +25,16 @@ Beim Bearbeiten oder Erweitern von Geschäftslogik immer das passende Submodul v
 src/lib/
 ├── core/         # Prisma-Singleton, SSRF-Filter, Rate-Limiter, Verschlüsselung, Zod-Schemas
 ├── applications/ # Bewerbungslogik, Kanban, Zeiterfassung (ROTI), PDF-Mappen-Kompilierung
-├── jobs/         # Live-Jobsuche (Arbeitsagentur, Arbeitnow), Scraper, Match-Score Heuristik
+├── jobs/         # Live-Jobsuche (realJobSearch.ts), Scraper (urlJobScraper.ts), Pendel-Radar (commuteRadar.ts)
 ├── interview/    # Voice-Simulator (TTS/STT), Gehaltscoach, STAR-Audit Heuristik
 ├── documents/    # Anschreiben-Generator (DIN 5008), ATS-Kompatibilitäts-Check, JSON-Resume
 ├── salary/       # Total-Compensation-Rechner, Gehaltsbenchmarks, BATNA-Verhandlungsskripte
 ├── email/        # IMAP/TLS Postfachsynchronisation, Response-Parser, Digest-Generierung
-└── settings/     # Automatischer Scheduler, Web-Push (VAPID), KI-Provider & Token-Tracker
+├── settings/     # Automatischer Scheduler, Web-Push (VAPID), KI-Provider & Token-Tracker
+├── analytics/    # Response-Heatmap & Timing-Analysen
+├── career/       # Kündigungsfristen & Probezeit-Rechner
+├── companies/    # Unternehmensrecherche & Interview-Vorbereitung
+└── portfolio/    # Projekt-Showcase & PDF-Mappen-Generierung
 ```
 
 ---

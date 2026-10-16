@@ -39,7 +39,7 @@ Performance ist gut, zeigt aber Optimierungspotenzial durch fehlendes Code-Split
 ### Phase 4: Developer Experience & Dokumentation
 - [x] M18 | Fehlende Prisma-Skripte in package.json ergänzen | P3 | S | package.json | package.json:12-26 | Fertig wenn: db:push, db:generate und db:studio als npm-Skripte definiert und ausführbar sind.
 - [x] M19 | Doku-Aktualisierung: SQLite-Altlasten bereinigen | P3 | S | GEMINI.md, SECURITY.md, CONTRIBUTING.md, src/test/dbTestUtils.ts | GEMINI.md:43 | Fertig wenn: alle veralteten Referenzen auf SQLite/dev.db durch PostgreSQL/Neon ersetzt sind.
-- [ ] M20 | Modulübersicht und Dateinamen in Leitfäden synchronisieren | P3 | S | AGENTS.md, GEMINI.md, CLAUDE.md | AGENTS.md:21 | Fertig wenn: die 4 fehlenden Module (analytics, career, companies, portfolio) ergänzt und veraltete Dateinamen korrigiert sind.
+- [x] M20 | Modulübersicht und Dateinamen in Leitfäden synchronisieren | P3 | S | AGENTS.md, GEMINI.md, CLAUDE.md | AGENTS.md:21 | Fertig wenn: die 4 fehlenden Module (analytics, career, companies, portfolio) ergänzt und veraltete Dateinamen korrigiert sind.
 
 ### Optional (Ideen ohne direkten Defektbeleg)
 - [ ] OPT-1 | Virtualisierung für sehr große Tabellen in der Excel-Ansicht | P3 | L | src/components/excel/excel-grid-table.tsx | | Fertig wenn: Tabellen mit > 500 Zeilen flüssig mit DOM-Recycling gerendert werden.
