@@ -23,7 +23,7 @@ import { prisma } from "@/lib/core/prisma";
 // Ordner ist ohnehin über .gitignore ausgeschlossen).
 const BACKUP_DIR = path.join(process.cwd(), "backups");
 
-describe("createFullBackup", () => {
+describe.skipIf(!process.env.TEST_DATABASE_URL)("createFullBackup", () => {
   beforeEach(async () => {
     await resetDb();
   });
@@ -70,7 +70,7 @@ describe("createFullBackup", () => {
   });
 });
 
-describe("restoreFromBackup", () => {
+describe.skipIf(!process.env.TEST_DATABASE_URL)("restoreFromBackup", () => {
   beforeEach(async () => {
     await resetDb();
   });
