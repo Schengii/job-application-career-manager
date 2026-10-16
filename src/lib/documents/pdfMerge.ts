@@ -191,13 +191,19 @@ async function readUploadedFile(fileUrl: string): Promise<Buffer | null> {
   try {
     if (fileUrl.startsWith("http://") || fileUrl.startsWith("https://")) {
       // Vercel Blob: absolute HTTPS-URL
-      const res = await fetch(fileUrl);
+      const { assertPublicHttpUrl } = await import("@/lib/core/ssrfGuard");
+      const safeUrl = await assertPublicHttpUrl(fileUrl);
+      const res = await fetch(safeUrl);
       if (!res.ok) return null;
       return Buffer.from(await res.arrayBuffer());
     }
-    // Fallback für lokale Entwicklung ohne Vercel Blob
+    // Fallback für lokale Entwicklung ohne Vercel Blob (strikt innerhalb public)
+    const publicDir = path.resolve(process.cwd(), "public");
     const relativePath = fileUrl.startsWith("/") ? fileUrl.slice(1) : fileUrl;
-    const absolutePath = path.join(process.cwd(), "public", relativePath);
+    const absolutePath = path.resolve(publicDir, relativePath);
+    if (!absolutePath.startsWith(publicDir + path.sep) && absolutePath !== publicDir) {
+      return null;
+    }
     return await fs.readFile(absolutePath);
   } catch {
     return null;
