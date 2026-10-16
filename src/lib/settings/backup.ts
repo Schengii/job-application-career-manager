@@ -39,10 +39,16 @@ export async function createFullBackup(): Promise<BackupData> {
       prisma.document.findMany(),
     ]);
 
-  // aiApiKey & imapPassword bewusst herausfiltern (siehe Kommentar oben).
-  const { aiApiKey: _aiApiKey, imapPassword: _imapPassword, ...preferencesWithoutSecret } = preferences ?? {};
+  // aiApiKey, imapPassword & smtpPassword bewusst herausfiltern (siehe Kommentar oben).
+  const {
+    aiApiKey: _aiApiKey,
+    imapPassword: _imapPassword,
+    smtpPassword: _smtpPassword,
+    ...preferencesWithoutSecret
+  } = preferences ?? {};
   void _aiApiKey;
   void _imapPassword;
+  void _smtpPassword;
 
   return {
     version: 1,
