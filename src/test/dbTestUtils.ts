@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------------
-// Test-Hilfsfunktionen für API-Integrationstests gegen die echte (aber
-// isolierte) SQLite-Testdatenbank aus vitest.global-setup.ts.
+// Test-Hilfsfunktionen für API-Integrationstests gegen eine isolierte
+// PostgreSQL-Testdatenbank (Neon) aus vitest.global-setup.ts.
 // -----------------------------------------------------------------------------
 import { prisma } from "@/lib/core/prisma";
 
@@ -11,6 +11,11 @@ import { prisma } from "@/lib/core/prisma";
  * von anderen Tests unabhängigen Datenbank startet.
  */
 export async function resetDb() {
+  if (!process.env.TEST_DATABASE_URL) {
+    throw new Error(
+      "SICHERHEITSABBRUCH: resetDb() darf nur ausgeführt werden, wenn TEST_DATABASE_URL explizit gesetzt ist (verhindert versehentliches Leeren der Entwicklungsdatenbank)."
+    );
+  }
   await prisma.applicationDocument.deleteMany();
   await prisma.applicationStatusEvent.deleteMany();
   await prisma.applicationInteraction.deleteMany();
