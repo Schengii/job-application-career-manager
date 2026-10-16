@@ -7,18 +7,11 @@ import { useState, useRef } from "react";
 import { Mic, MicOff, CheckCircle2, Edit3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import type { WindowWithSpeechRecognition, SpeechRecognitionLike } from "@/types";
-
-type SpeechRecognitionEvent = {
-  resultIndex: number;
-  results: {
-    length: number;
-    [index: number]: {
-      isFinal?: boolean;
-      [index: number]: { transcript: string };
-    };
-  };
-};
+import type {
+  WindowWithSpeechRecognition,
+  SpeechRecognitionLike,
+  SpeechRecognitionEventLike,
+} from "@/types";
 
 export function QuestionNoteEditor({
   questionId,
@@ -91,7 +84,7 @@ export function QuestionNoteEditor({
       recognition.continuous = true;
       recognition.interimResults = true;
 
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
+      recognition.onresult = (event: SpeechRecognitionEventLike) => {
         let transcript = "";
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {

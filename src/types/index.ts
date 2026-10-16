@@ -118,9 +118,18 @@ export interface SpeechRecognitionResultLike {
   transcript: string;
 }
 
+export interface SpeechRecognitionResultItemListLike {
+  [index: number]: SpeechRecognitionResultLike;
+  length: number;
+  isFinal?: boolean;
+}
+
 export interface SpeechRecognitionEventLike {
-  resultIndex?: number;
-  results: ArrayLike<ArrayLike<SpeechRecognitionResultLike>>;
+  resultIndex: number;
+  results: {
+    [index: number]: SpeechRecognitionResultItemListLike;
+    length: number;
+  };
 }
 
 export interface SpeechRecognitionLike {
@@ -132,7 +141,8 @@ export interface SpeechRecognitionLike {
   onerror: ((event?: unknown) => void) | null;
   onend: (() => void) | null;
   start: () => void;
-  stop?: () => void;
+  stop: () => void;
+  abort?: () => void;
 }
 
 export type WindowWithSpeechRecognition = Window & {

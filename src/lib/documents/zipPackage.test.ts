@@ -41,6 +41,7 @@ describe("createApplicationZipPackage", () => {
           name: "Exploit",
           fileUrl: "/../../.env",
           fileName: "stolen.env",
+          category: "OTHER",
         },
       ],
     });

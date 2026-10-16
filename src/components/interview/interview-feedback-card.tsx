@@ -10,7 +10,7 @@ import {
   analyzeInterviewNotes,
   type InterviewFeedbackInsight,
 } from "@/lib/interview/interviewAudioFeedback";
-import type { WindowWithSpeechRecognition } from "@/types";
+import type { WindowWithSpeechRecognition, SpeechRecognitionEventLike } from "@/types";
 
 export function InterviewFeedbackCard() {
   const toast = useToast();
