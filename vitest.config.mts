@@ -24,7 +24,7 @@ export default defineConfig({
       // Für Integrationstests: TEST_DATABASE_URL in .env.test oder als Environment-Variable setzen.
       // Niemals stillschweigend auf die Entwicklungs-/Produktions-DATABASE_URL zurückfallen,
       // um versehentlichen Datenverlust durch resetDb() auszuschließen.
-      DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgresql://unit-test-dummy:dummy@localhost:5432/dummy",
+      DATABASE_URL: process.env.TEST_DATABASE_URL || "postgresql://unit-test-dummy:dummy@localhost:5432/dummy",
     },
   },
   resolve: {
