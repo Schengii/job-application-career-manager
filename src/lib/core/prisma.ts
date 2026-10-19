@@ -1,9 +1,9 @@
 // -----------------------------------------------------------------------------
-// Prisma Client Singleton — Neon (PostgreSQL, serverless via HTTP)
+// Prisma Client Singleton ÔÇö Neon (PostgreSQL, serverless via HTTP)
 // -----------------------------------------------------------------------------
-// Nutzt PrismaNeonHttp für Vercel-kompatibles serverless PostgreSQL via Neon.
+// Nutzt PrismaNeonHttp f├╝r Vercel-kompatibles serverless PostgreSQL via Neon.
 // HTTP-Transport vermeidet WebSocket-Probleme in serverless Umgebungen und
-// funktioniert zuverlässig auf Vercel mit Node.js 22+.
+// funktioniert zuverl├ñssig auf Vercel mit Node.js 22+.
 // Der Singleton verhindert im Next.js-Dev-Modus (Hot Reload) mehrfache
 // Instanzen.
 // -----------------------------------------------------------------------------
@@ -23,8 +23,23 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+let cached: PrismaClient | undefined;
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+function getPrisma(): PrismaClient {
+  cached ??= globalForPrisma.prisma ?? createPrismaClient();
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = cached;
+  }
+  return cached;
 }
+
+// Lazy: Der Client wird erst beim ersten Zugriff erzeugt. So scheitert der
+// Next.js-Build (Page-Data-Collection) nicht, wenn DATABASE_URL zur Build-Zeit
+// fehlt, z. B. bei Vercel-Preview-Deployments ohne Datenbank-Variable.
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    const client = getPrisma();
+    const value = Reflect.get(client, prop, client);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
