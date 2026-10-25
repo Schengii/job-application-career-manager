@@ -10,7 +10,8 @@ und dieses Projekt hält sich an [Semantic Versioning](https://semver.org/spec/v
 ## [Unreleased]
 
 ### Behoben & Gehärtet (Security)
-- **Fail-closed auf Vercel**: Ohne `APP_PASSWORD` liefert `middleware.ts` auf Vercel 503 statt die App öffentlich auszuliefern. Cron-Tick, Portfolio-Tracking und Recruiter-Ansicht sind per `isPublicPath` ausgenommen (sichern sich selbst ab).
+- **Fail-closed auf Vercel**: Ohne `APP_PASSWORD` liefert `middleware.ts` auf Vercel 503 statt die App öffentlich auszuliefern. Cron-Tick, Portfolio-Recruiter-Ansicht (`/api/portfolio/view`) sind per `isPublicPath` ausgenommen (sichern sich selbst ab).
+- **Portfolio-Recruiter-Ansicht**: Neuer Endpunkt `POST /api/portfolio/view` prüft Token, Ablauf und PIN serverseitig und liefert nur Recruiter-Felder. Die Seite `/portfolio/[token]` lädt nicht mehr `/api/preferences` (inkl. PIN) und funktioniert damit auch mit gesetztem `APP_PASSWORD`. `/api/portfolio/track` entfällt.
 - Zod-Validierung für `/api/portfolio/token` (POST) und `/api/settings/webhooks/test`.
 
 ### Geändert

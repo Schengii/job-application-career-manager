@@ -50,9 +50,9 @@ describe("isBasicAuthValid", () => {
 });
 
 describe("isPublicPath", () => {
-  it("erlaubt Cron-Tick, Portfolio-Tracking und Recruiter-Ansicht", () => {
+  it("erlaubt Cron-Tick, Portfolio-Ansicht/GitHub-Karten und Recruiter-Ansicht", () => {
     expect(isPublicPath("/api/cron/tick")).toBe(true);
-    expect(isPublicPath("/api/portfolio/track")).toBe(true);
+    expect(isPublicPath("/api/portfolio/view")).toBe(true);
     expect(isPublicPath("/portfolio/abc123")).toBe(true);
   });
 

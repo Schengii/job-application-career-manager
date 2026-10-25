@@ -53,7 +53,8 @@ export function isBasicAuthValid(authHeader: string | null | undefined, expected
 export function isPublicPath(pathname: string): boolean {
   return (
     pathname === "/api/cron/tick" ||
-    pathname === "/api/portfolio/track" ||
+    pathname === "/api/portfolio/view" ||
+    pathname === "/api/portfolio/github" ||
     pathname.startsWith("/portfolio/")
   );
 }
