@@ -16,6 +16,7 @@ export async function resetDb() {
       "SICHERHEITSABBRUCH: resetDb() darf nur ausgeführt werden, wenn TEST_DATABASE_URL explizit gesetzt ist (verhindert versehentliches Leeren der Entwicklungsdatenbank)."
     );
   }
+  await prisma.backupSnapshot.deleteMany();
   await prisma.applicationDocument.deleteMany();
   await prisma.applicationStatusEvent.deleteMany();
   await prisma.applicationInteraction.deleteMany();

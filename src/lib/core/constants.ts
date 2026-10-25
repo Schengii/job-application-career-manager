@@ -1,8 +1,8 @@
 // -----------------------------------------------------------------------------
 // Zentrale Konstanten & Status-Definitionen
 // -----------------------------------------------------------------------------
-// Da SQLite in Prisma keine nativen Enums unterstützt, werden alle "enum"-
-// artigen Felder als String in der DB gespeichert. Hier definieren wir die
+// Die "enum"-artigen Felder werden bewusst als String in der DB gespeichert.
+// Hier definieren wir die
 // erlaubten Werte, deutsche Anzeige-Labels und Farben für Badges an EINER
 // zentralen Stelle — sowohl Backend (Validierung) als auch Frontend (Anzeige)
 // greifen darauf zu.

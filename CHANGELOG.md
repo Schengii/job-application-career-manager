@@ -9,6 +9,14 @@ und dieses Projekt hält sich an [Semantic Versioning](https://semver.org/spec/v
 
 ## [Unreleased]
 
+### Behoben & Gehärtet (Security)
+- **Fail-closed auf Vercel**: Ohne `APP_PASSWORD` liefert `middleware.ts` auf Vercel 503 statt die App öffentlich auszuliefern. Cron-Tick, Portfolio-Tracking und Recruiter-Ansicht sind per `isPublicPath` ausgenommen (sichern sich selbst ab).
+- Zod-Validierung für `/api/portfolio/token` (POST) und `/api/settings/webhooks/test`.
+
+### Geändert
+- **Auto-Backups in der Datenbank**: Neues Modell `BackupSnapshot` ersetzt die Ablage unter `./backups/` (auf Vercel nicht beschreibbar). Nach dem Update `npx prisma db push` ausführen.
+- `/api/metrics` nutzt ein `groupBy` statt sieben einzelner `count()`-Abfragen.
+
 - Kontinuierliche Verbesserungen an KI-Prompts und Prompt-Chains für Interview- und Anschreiben-Generierung.
 - Performance-Optimierungen für Client-seitiges Caching mit SWR.
 

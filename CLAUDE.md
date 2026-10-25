@@ -161,4 +161,4 @@ Vor jedem Git-Commit greift der Hook `.githooks/pre-commit` (delegiert an `scrip
 | `VAPID_PUBLIC_KEY` | VAPID Public Key für Web Push | Optional |
 | `VAPID_PRIVATE_KEY` | VAPID Private Key für Web Push | Optional |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob Token für Datei-Uploads | Optional |
-| `APP_PASSWORD` | Passwort für Zugangsschutz via `middleware.ts` | Optional |
+| `APP_PASSWORD` | Passwort für Zugangsschutz via `middleware.ts` (auf Vercel fail-closed: ohne Wert 503) | Vercel |

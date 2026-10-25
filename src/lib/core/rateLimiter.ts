@@ -17,10 +17,9 @@
 //     `recordRequest`/`DEFAULT_API_RATE_LIMIT`.
 //
 // Bewusst in-memory (eine `Map` pro laufender Server-Instanz) statt in der
-// SQLite-Datenbank:
+// Datenbank (jeder Check wäre ein HTTP-Roundtrip zu Neon):
 //  - middleware.ts läuft vor jeder Route und potenziell in einer Umgebung
-//    ohne Zugriff auf den `better-sqlite3`-Adapter (siehe Kommentar dort zu
-//    Edge- vs. Node.js-Runtime).
+//    ohne Datenbankzugriff (siehe Kommentar dort zu Edge- vs. Node.js-Runtime).
 //  - Laut README ist die App bewusst für Einzelnutzer-Betrieb gedacht. Ein
 //    Neustart/Kaltstart der Server-Instanz setzt den Zähler zurück — für den
 //    Bedrohungsfall "automatisierter Missbrauch in Echtzeit" ist das

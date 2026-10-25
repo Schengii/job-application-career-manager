@@ -431,3 +431,12 @@ export const aiRequestSchema = z.object({
   idealAnswer: z.string().optional(),
   targetJobTitle: z.string().optional(),
 });
+
+export const portfolioTokenRequestSchema = z.object({
+  pin: z.string().trim().max(10).nullable().optional(),
+});
+
+export const webhookTestSchema = z.object({
+  type: z.enum(["discord", "slack"]).optional(),
+  webhookUrl: z.string().url("Gültige Webhook-URL erforderlich."),
+});
