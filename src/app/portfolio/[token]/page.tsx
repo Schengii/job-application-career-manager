@@ -3,8 +3,8 @@
 // -----------------------------------------------------------------------------
 // Öffentliche, geschützte Bewerber-Landingpage (Digital Developer Portfolio)
 // -----------------------------------------------------------------------------
-import { use, useEffect, useState } from "react";
-import useSWR from "swr";
+import { use, useState } from "react";
+import useSWRImmutable from "swr/immutable";
 import {
   GraduationCap,
   FolderGit2,
@@ -16,35 +16,51 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { GitHubRepoCard } from "@/components/portfolio/github-repo-card";
-import { fetcher } from "@/lib/core/api";
-import type { PreferencesWithProfile } from "@/types";
+import type { PublicPortfolio } from "@/lib/portfolio/publicView";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+type ViewResult =
+  | { kind: "ok"; data: PublicPortfolio }
+  | { kind: "pin"; wrongPin: boolean }
+  | { kind: "error" };
+
+// Token und PIN werden serverseitig geprüft; ein erfolgreicher Aufruf wird dort
+// auch als Recruiter-View gezählt.
+async function fetchPortfolio(token: string, pin: string | undefined): Promise<ViewResult> {
+  try {
+    const res = await fetch("/api/portfolio/view", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, pin }),
+    });
+    if (res.status === 401) return { kind: "pin", wrongPin: Boolean(pin) };
+    if (!res.ok) return { kind: "error" };
+    return { kind: "ok", data: (await res.json()) as PublicPortfolio };
+  } catch {
+    return { kind: "error" };
+  }
+}
+
 export default function PortfolioTokenPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
-  const [tracked, setTracked] = useState(false);
   const [enteredPin, setEnteredPin] = useState("");
-  const [pinUnlocked, setPinUnlocked] = useState(false);
-  const [pinError, setPinError] = useState(false);
+  const [submittedPin, setSubmittedPin] = useState<string | undefined>(undefined);
+  const [pinDismissed, setPinDismissed] = useState(false);
 
-  const { data: preferences, isLoading, error } = useSWR<PreferencesWithProfile>(
-    "/api/preferences",
-    fetcher
+  const { data: result, isLoading } = useSWRImmutable<ViewResult>(
+    ["portfolio-view", token, submittedPin],
+    () => fetchPortfolio(token, submittedPin),
   );
 
-  // Recruiter-Aufruf einmalig protokollieren
-  useEffect(() => {
-    if (!tracked && token) {
-      fetch("/api/portfolio/track", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      })
-        .then(() => setTracked(true))
-        .catch(() => {});
-    }
-  }, [token, tracked]);
+  const preferences = result?.kind === "ok" ? result.data : null;
+  const pinRequired = result?.kind === "pin";
+  const pinError = result?.kind === "pin" && result.wrongPin && !pinDismissed;
+  const error = !isLoading && (!result || result.kind === "error");
+  const submitPin = () => {
+    setPinDismissed(false);
+    setSubmittedPin(enteredPin.trim());
+  };
 
   if (isLoading) {
     return (
@@ -57,7 +73,7 @@ export default function PortfolioTokenPage({ params }: { params: Promise<{ token
     );
   }
 
-  if (error || !preferences) {
+  if (error || (!preferences && !pinRequired)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4 text-slate-200">
         <Card className="max-w-md border-red-500/30 bg-slate-900 text-center p-6">
@@ -72,7 +88,7 @@ export default function PortfolioTokenPage({ params }: { params: Promise<{ token
   }
 
   // PIN-Schutz aktiv?
-  if (preferences.portfolioPin && !pinUnlocked) {
+  if (!preferences) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 p-4 text-slate-200">
         <Card className="max-w-sm border-indigo-500/30 bg-slate-900 text-center p-6 space-y-4 shadow-xl">
@@ -91,16 +107,10 @@ export default function PortfolioTokenPage({ params }: { params: Promise<{ token
               value={enteredPin}
               onChange={(e) => {
                 setEnteredPin(e.target.value);
-                setPinError(false);
+                setPinDismissed(true);
               }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (enteredPin.trim() === preferences.portfolioPin) {
-                    setPinUnlocked(true);
-                  } else {
-                    setPinError(true);
-                  }
-                }
+                if (e.key === "Enter") submitPin();
               }}
               className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-center text-lg tracking-widest font-mono text-white focus:outline-none focus:border-indigo-500"
             />
@@ -109,13 +119,7 @@ export default function PortfolioTokenPage({ params }: { params: Promise<{ token
           <Button
             type="button"
             variant="primary"
-            onClick={() => {
-              if (enteredPin.trim() === preferences.portfolioPin) {
-                setPinUnlocked(true);
-              } else {
-                setPinError(true);
-              }
-            }}
+            onClick={submitPin}
             className="w-full"
           >
             Profil freischalten

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isBasicAuthValid, timingSafeEqual } from "@/lib/core/basicAuth";
+import { isBasicAuthValid, isPublicPath, isUnprotectedDeployment, timingSafeEqual } from "@/lib/core/basicAuth";
 
 function basicAuthHeader(user: string, password: string): string {
   return `Basic ${btoa(`${user}:${password}`)}`;
@@ -46,5 +46,30 @@ describe("isBasicAuthValid", () => {
 
   it("lehnt einen Header ohne ':' -Trenner ab", () => {
     expect(isBasicAuthValid(`Basic ${btoa("keinTrennzeichen")}`, APP_PASSWORD)).toBe(false);
+  });
+});
+
+describe("isPublicPath", () => {
+  it("erlaubt Cron-Tick, Portfolio-Ansicht/GitHub-Karten und Recruiter-Ansicht", () => {
+    expect(isPublicPath("/api/cron/tick")).toBe(true);
+    expect(isPublicPath("/api/portfolio/view")).toBe(true);
+    expect(isPublicPath("/portfolio/abc123")).toBe(true);
+  });
+
+  it("schützt alle übrigen Pfade", () => {
+    expect(isPublicPath("/api/applications")).toBe(false);
+    expect(isPublicPath("/api/portfolio/token")).toBe(false);
+    expect(isPublicPath("/")).toBe(false);
+  });
+});
+
+describe("isUnprotectedDeployment", () => {
+  it("sperrt Vercel ohne APP_PASSWORD", () => {
+    expect(isUnprotectedDeployment({ VERCEL: "1" })).toBe(true);
+  });
+
+  it("lässt Vercel mit Passwort und lokalen Betrieb zu", () => {
+    expect(isUnprotectedDeployment({ VERCEL: "1", APP_PASSWORD: "x" })).toBe(false);
+    expect(isUnprotectedDeployment({})).toBe(false);
   });
 });

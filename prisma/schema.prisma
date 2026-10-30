@@ -432,3 +432,20 @@ model CareerProfile {
 
   @@index([preferencesId])
 }
+
+// ---------------------------------------------------------------------------
+// Automatische Sicherheitskopien (Auto-Snapshots)
+// ---------------------------------------------------------------------------
+// Ersetzt die frühere Ablage unter ./backups/, die auf Vercel (read-only /
+// flüchtiges Dateisystem) nicht funktioniert. Enthält denselben JSON-Export
+// wie /api/backup (ohne aiApiKey/imapPassword). Rotation: letzte 10 Stände.
+// ---------------------------------------------------------------------------
+model BackupSnapshot {
+  id        String   @id @default(cuid())
+  label     String
+  data      Json
+  createdAt DateTime @default(now())
+
+  @@index([label, createdAt])
+  @@index([createdAt])
+}

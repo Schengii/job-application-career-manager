@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/core/prisma";
 import { handleApiError } from "@/lib/core/apiUtils";
 import { getOrCreatePreferences } from "@/lib/settings/preferences";
+import { portfolioTokenRequestSchema } from "@/lib/core/validation";
 import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export async function GET() {
 
 export async function POST(req?: Request) {
   try {
-    const body = req ? await req.json().catch(() => ({})) : {};
+    const body = portfolioTokenRequestSchema.parse(req ? await req.json().catch(() => ({})) : {});
     await getOrCreatePreferences();
     const token = crypto.randomBytes(16).toString("hex");
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 60); // 60 Tage gültig
@@ -37,7 +38,7 @@ export async function POST(req?: Request) {
         portfolioShareToken: token,
         portfolioTokenExpiresAt: expiresAt,
         portfolioActive: true,
-        portfolioPin: body.pin !== undefined ? (body.pin ? String(body.pin).trim() : null) : undefined,
+        portfolioPin: body.pin !== undefined ? (body.pin || null) : undefined,
       },
     });
 

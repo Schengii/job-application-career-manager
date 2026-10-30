@@ -22,7 +22,7 @@
 // nicht nur den Build-Erfolg).
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
-import { isBasicAuthValid } from "@/lib/core/basicAuth";
+import { isBasicAuthValid, isPublicPath, isUnprotectedDeployment } from "@/lib/core/basicAuth";
 import { checkRateLimit, clientKeyFromHeaders, createRateLimitStore, recordFailure, recordSuccess } from "@/lib/core/rateLimiter";
 
 export const config = {
@@ -44,8 +44,17 @@ function tooManyAttemptsResponse(retryAfterSeconds: number): NextResponse {
 }
 
 export function middleware(request: NextRequest) {
+  if (isPublicPath(request.nextUrl.pathname)) {
+    return NextResponse.next();
+  }
+
   const appPassword = process.env.APP_PASSWORD;
   if (!appPassword) {
+    // Fail-closed: Auf Vercel/in Produktion ohne Passwort alles sperren,
+    // statt persönliche Daten öffentlich auszuliefern.
+    if (isUnprotectedDeployment({ APP_PASSWORD: appPassword, VERCEL: process.env.VERCEL })) {
+      return new NextResponse("Server nicht konfiguriert: APP_PASSWORD fehlt.", { status: 503 });
+    }
     return NextResponse.next();
   }
 

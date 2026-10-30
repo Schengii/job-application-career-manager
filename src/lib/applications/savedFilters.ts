@@ -5,7 +5,7 @@
 //
 // Persistenz bewusst client-seitig via localStorage (analog zu
 // src/lib/backupRotation.ts) statt über ein neues Prisma-Modell: Diese App
-// ist Single-User/lokale SQLite-Instanz, Presets sind reines UI-Komfort-
+// ist Single-User-Instanz, Presets sind reines UI-Komfort-
 // Feature ohne Bezug zu Domänendaten, und das bestehende `Preferences`-Modell
 // (src/lib/preferences.ts) bietet keinen Platz für eine beliebig lange Liste
 // benannter Filterkombinationen — ein neues Prisma-Modell + Migration +

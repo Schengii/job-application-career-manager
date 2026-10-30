@@ -44,3 +44,26 @@ export function isBasicAuthValid(authHeader: string | null | undefined, expected
 
   return timingSafeEqual(password, expectedPassword);
 }
+
+/**
+ * Pfade, die bewusst ohne Basic-Auth erreichbar bleiben, weil sie sich selbst
+ * absichern: der Cron-Endpunkt (Bearer `CRON_SECRET`, fail-closed auf Vercel)
+ * sowie die per Zufalls-Token geschützte Recruiter-Ansicht des Portfolios.
+ */
+export function isPublicPath(pathname: string): boolean {
+  return (
+    pathname === "/api/cron/tick" ||
+    pathname === "/api/portfolio/view" ||
+    pathname === "/api/portfolio/github" ||
+    pathname.startsWith("/portfolio/")
+  );
+}
+
+/**
+ * Fail-closed-Prüfung: Auf Vercel darf die App nie ohne `APP_PASSWORD`
+ * ausgeliefert werden, sonst sind alle Daten öffentlich lesbar. Lokaler
+ * Betrieb (Dev, Docker auf localhost) bleibt bewusst ohne Passwort möglich.
+ */
+export function isUnprotectedDeployment(env: { APP_PASSWORD?: string; VERCEL?: string }): boolean {
+  return !env.APP_PASSWORD && Boolean(env.VERCEL);
+}
