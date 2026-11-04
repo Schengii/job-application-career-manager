@@ -1,6 +1,8 @@
 // -----------------------------------------------------------------------------
 // Gemeinsame Logik für "Status ändern" — schreibt Status + Status-Historie-
-// Eintrag in einer Transaktion. Wird von POST /api/applications/:id/status
+// Eintrag. Atomar ist das NICHT: PrismaNeonHttp unterstützt keine Transaktionen,
+// daher wird erst der Historie-Eintrag und danach der Status geschrieben (bei einem
+// Abbruch fehlt höchstens die Statusänderung, nie die Historie). Wird von POST /api/applications/:id/status
 // (manuelle Änderung) UND von POST /api/email-sync/pending (Annahme eines
 // E-Mail-Vorschlags aus der Antworten-Inbox) verwendet, damit beide Pfade
 // exakt dasselbe Verhalten (Historie, Push-Benachrichtigung) haben.
@@ -9,19 +11,22 @@ import { prisma } from "@/lib/core/prisma";
 import { sendDueNotifications } from "@/lib/settings/pushNotifications";
 
 export async function applyApplicationStatusChange(applicationId: string, status: string, note?: string | null) {
-  // Update status first
-  await prisma.application.update({
-    where: { id: applicationId },
-    data: { status },
-  });
+  // Existenz zuerst prüfen: unbekannte ID -> P2025 -> 404 (statt FK-Fehler P2003 -> 400).
+  await prisma.application.findUniqueOrThrow({ where: { id: applicationId }, select: { id: true } });
 
-  // Create status event entry separately (avoids nested transaction error on Neon HTTP)
+  // Historie danach: schlägt der Status-Update danach fehl, bleibt ein harmloser
+  // zusätzlicher Eintrag statt einer Statusänderung ohne Nachweis.
   await prisma.applicationStatusEvent.create({
     data: {
       applicationId,
       status,
       note: note ?? null,
     },
+  });
+
+  await prisma.application.update({
+    where: { id: applicationId },
+    data: { status },
   });
 
   const application = await prisma.application.findUniqueOrThrow({

@@ -40,9 +40,12 @@ export async function POST(req: NextRequest) {
     const jsonBody = (await req.json()) as JsonResumeSchema;
     const { preferences: prefData, education, projects } = parseJsonResumeImport(jsonBody);
 
-    const updated = await prisma.$transaction(async (tx) => {
+    // Hinweis: PrismaNeonHttp unterstützt keine Transaktionen (auch nicht die
+    // Array-Form von $transaction) — daher sequenziell. Die Reihenfolge ist so
+    // gewählt, dass ein Abbruch nur ergänzte Einträge hinterlässt (kein Löschen).
+    const updated = await (async () => {
       // 1. Preferences aktualisieren
-      await tx.preferences.upsert({
+      await prisma.preferences.upsert({
         where: { id: "default" },
         update: {
           fullName: prefData.fullName,
@@ -71,7 +74,7 @@ export async function POST(req: NextRequest) {
 
       // 2. Bildungs- und Projekt-Einträge ergänzen
       if (education.length > 0) {
-        await tx.educationEntry.createMany({
+        await prisma.educationEntry.createMany({
           data: education.map((e, idx) => ({
             type: e.type,
             title: e.title,
@@ -86,7 +89,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (projects.length > 0) {
-        await tx.projectEntry.createMany({
+        await prisma.projectEntry.createMany({
           data: projects.map((p, idx) => ({
             title: p.title,
             description: p.description,
@@ -99,14 +102,14 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      return tx.preferences.findUnique({
+      return prisma.preferences.findUnique({
         where: { id: "default" },
         include: {
           educationEntries: { orderBy: { sortOrder: "asc" } },
           projectEntries: { orderBy: { sortOrder: "asc" } },
         },
       });
-    });
+    })();
 
     return NextResponse.json({
       success: true,

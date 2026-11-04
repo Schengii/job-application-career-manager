@@ -2,8 +2,8 @@
 // POST /api/applications/:id/status
 // -----------------------------------------------------------------------------
 // Dedizierter Endpunkt für schnelle Status-Änderungen (z.B. Dropdown in der
-// Tracker-Tabelle). Schreibt Status + Status-Historie-Eintrag in einer
-// Transaktion, damit das Dashboard sofort konsistente Daten sieht.
+// Tracker-Tabelle). Schreibt Status-Historie-Eintrag + Status (siehe
+// applicationStatus.ts; ohne Transaktion, da PrismaNeonHttp keine kennt).
 // -----------------------------------------------------------------------------
 import { NextRequest, NextResponse } from "next/server";
 import { statusEventSchema } from "@/lib/core/validation";
