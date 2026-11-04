@@ -134,6 +134,7 @@ export function KeyboardShortcutsDialog() {
           <button
             type="button"
             onClick={() => setOpen(false)}
+            aria-label="Schließen"
             className="rounded-lg p-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground"
           >
             <X className="h-4 w-4" />

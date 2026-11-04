@@ -17,6 +17,7 @@ und dieses Projekt hält sich an [Semantic Versioning](https://semver.org/spec/v
 - **JSON-Resume-Import** (`POST /api/resume/json`) nutzte eine interaktive Transaktion, die `PrismaNeonHttp` ablehnt, und schlug dadurch immer fehl. Schreibt jetzt sequenziell.
 - **Insights**: Der Tech-Stack-Abschnitt der Karte „Erfolgsquote nach Tag & Tech-Stack“ zeigte versehentlich die Tag-Daten.
 - Ein kaputter JSON-Body liefert bei Routen mit `readJson` jetzt 400 statt 500.
+- **Barrierefreiheit**: 17 Icon-Buttons (Schließen, Suche zurücksetzen, Löschen, Entfernen von Tags) hatten keinen zugänglichen Namen und tragen jetzt ein `aria-label`. Ein Test (`src/test/iconButtonLabels.test.ts`) verhindert neue Icon-Buttons ohne Beschriftung.
 - Statuswechsel prüft zuerst die Existenz der Bewerbung (404 statt Fremdschlüssel-Fehler) und schreibt Verlauf vor Status; irreführende Kommentare zu einer nicht vorhandenen Transaktion korrigiert.
 
 ### Geändert

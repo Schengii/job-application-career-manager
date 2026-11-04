@@ -208,6 +208,7 @@ export function CareerProfilesCard() {
                     size="sm"
                     variant="ghost"
                     onClick={() => handleDelete(p.id, p.name)}
+                    aria-label={`Profil „${p.name}“ löschen`}
                     className="h-7 w-7 p-0 text-muted-foreground hover:text-rose-500"
                   >
                     <Trash2 className="h-3.5 w-3.5" />

@@ -305,6 +305,7 @@ export function TaxExpenseReportCard() {
                       <button
                         type="button"
                         onClick={() => handleDelete(item.id)}
+                        aria-label="Eintrag löschen"
                         className="text-muted-foreground hover:text-rose-500 transition-colors p-1"
                       >
                         <Trash2 className="h-3.5 w-3.5" />

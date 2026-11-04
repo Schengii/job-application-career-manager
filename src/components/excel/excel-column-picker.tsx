@@ -55,6 +55,7 @@ export function ExcelColumnPicker({ visibleCols, onToggle, onPreset }: Props) {
             <button
               type="button"
               onClick={() => setOpen(false)}
+              aria-label="Spaltenauswahl schließen"
               className="text-muted-foreground hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" />

@@ -192,7 +192,7 @@ export function ExcelGridRow({ row, index, visibleCols, onCellChange, onDelete }
           <div className="flex items-center justify-center gap-1">
             {!row.id.startsWith("temp-") && (
               <Link href={`/applications/${row.id}`} title="Zur Detailansicht">
-                <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Button variant="ghost" size="icon" aria-label="Zur Detailansicht" className="h-6 w-6">
                   <ArrowUpRight className="h-3.5 w-3.5 text-primary" />
                 </Button>
               </Link>

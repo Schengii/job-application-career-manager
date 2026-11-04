@@ -334,6 +334,7 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
                   <button
                     type="button"
                     onClick={() => removeCompany(c)}
+                    aria-label={`${c} entfernen`}
                     className="hover:text-rose-800 dark:hover:text-rose-200"
                   >
                     <X className="h-3 w-3" />
@@ -381,6 +382,7 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
                   <button
                     type="button"
                     onClick={() => removeKeyword(kw)}
+                    aria-label={`${kw} entfernen`}
                     className="hover:text-amber-800 dark:hover:text-amber-200"
                   >
                     <X className="h-3 w-3" />
@@ -428,6 +430,7 @@ export function PreferencesForm({ preferences }: { preferences: PreferencesPubli
                   <button
                     type="button"
                     onClick={() => removeTech(t)}
+                    aria-label={`${t} entfernen`}
                     className="hover:text-indigo-800 dark:hover:text-indigo-200"
                   >
                     <X className="h-3 w-3" />

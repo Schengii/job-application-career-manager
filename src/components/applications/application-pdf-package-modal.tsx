@@ -264,6 +264,8 @@ export function ApplicationPdfPackageModal({
                         <button
                           type="button"
                           onClick={() => toggleDoc(doc.id)}
+                          aria-pressed={isSelected}
+                          aria-label={`${doc.name} ${isSelected ? "aus dem Paket entfernen" : "zum Paket hinzufügen"}`}
                           className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
                             isSelected
                               ? "border-primary bg-primary text-white"
