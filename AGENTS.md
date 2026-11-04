@@ -20,6 +20,8 @@ Architektur und Feature-Übersicht.
 - **Stack:** Next.js 16 (App Router, Turbopack), TypeScript (Strict), Tailwind CSS v4, Prisma 7 (Neon PostgreSQL via
   `PrismaNeonHttp`-Adapter, siehe `src/lib/core/prisma.ts` und `prisma.config.ts`).
 - **API-Routen:** `src/app/api/**/route.ts` (REST, Zod-validiert über `src/lib/core/validation.ts`).
+  Neue Routen mit `withApi`/`readJson` aus `src/lib/core/withApi.ts` bauen (einheitliche Fehlerbehandlung,
+  Zod-Validierung, optionales Rate-Limit; kaputtes JSON ergibt 400); bestehende werden schrittweise migriert.
 - **Domänenlogik:** Strukturiert in Submodule unter `src/lib/`:
   - `core/`: DB-Client, Validierung, SSRF-Schutz, Rate-Limiting, Verschlüsselung (`secretCrypto.ts`).
   - `applications/`: Bewerbungen, Kanban-Board, Time-Tracking (ROTI), Ghosting-Radar, Mappen-Builder.

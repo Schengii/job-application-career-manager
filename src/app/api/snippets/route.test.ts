@@ -15,19 +15,25 @@ function postRequest(body: unknown) {
   });
 }
 
+const ctx = { params: Promise.resolve({}) };
+
+function getRequest() {
+  return new NextRequest("http://localhost/api/snippets");
+}
+
 describe("/api/snippets", () => {
   beforeEach(async () => {
     await resetDb();
   });
 
   it("GET liefert eine leere Liste ohne angelegte Textbausteine", async () => {
-    const response = await GET();
+    const response = await GET(getRequest(), ctx);
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual([]);
   });
 
   it("POST legt einen neuen Textbaustein an und gibt ihn mit Status 201 zurück", async () => {
-    const response = await POST(postRequest({ title: "Remote-Absatz", content: "Ich arbeite bevorzugt remote." }));
+    const response = await POST(postRequest({ title: "Remote-Absatz", content: "Ich arbeite bevorzugt remote." }), ctx);
     expect(response.status).toBe(201);
 
     const body = await response.json();
@@ -39,7 +45,7 @@ describe("/api/snippets", () => {
   });
 
   it("POST lehnt einen fehlenden Titel mit 400 + Validierungsdetails ab", async () => {
-    const response = await POST(postRequest({ content: "Nur Inhalt, kein Titel" }));
+    const response = await POST(postRequest({ content: "Nur Inhalt, kein Titel" }), ctx);
     expect(response.status).toBe(400);
 
     const body = await response.json();
@@ -51,7 +57,7 @@ describe("/api/snippets", () => {
     await prisma.coverLetterSnippet.create({ data: { title: "Zebra-Absatz", content: "..." } });
     await prisma.coverLetterSnippet.create({ data: { title: "Anfangs-Absatz", content: "..." } });
 
-    const response = await GET();
+    const response = await GET(getRequest(), ctx);
     const body = await response.json();
     expect(body.map((s: { title: string }) => s.title)).toEqual(["Anfangs-Absatz", "Zebra-Absatz"]);
   });
