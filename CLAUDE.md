@@ -1,6 +1,7 @@
 # CLAUDE.md - Projekt-Leitfaden für Claude Code / Claude Desktop
 
 Dieses Dokument dient als Kontext- und Architektur-Leitfaden für Claude bei der Arbeit im Projekt **Job Application & Career Manager**.
+Gemeinsame Architektur- und Modulübersicht für alle KI-Werkzeuge: siehe [AGENTS.md](./AGENTS.md).
 
 ---
 
@@ -112,7 +113,7 @@ vercel --prod          # Production-Deploy
 2. **Next.js 16 & React 19:**
    - Client Components explizit mit `'use client';` kennzeichnen, wenn Hooks (`useState`, `useEffect`, `useSWR`) verwendet werden.
    - Server Components standardmäßig bevorzugen.
-3. **Prisma 7:** Niemals direkt im generierten Client editieren. Typen immer aus `src/types` bzw. `src/generated/prisma/client` beziehen. Adapter: `PrismaNeonHttp` (HTTP-basiert, kein WebSocket — zuverlässiger auf Vercel Node.js 22+).
+3. **Prisma 7:** Niemals direkt im generierten Client editieren. Typen immer aus `src/types` bzw. `src/generated/prisma/client` beziehen. Adapter: `PrismaNeonHttp` (HTTP-basiert, kein WebSocket — zuverlässiger auf Vercel Node.js 22+). **Keine Transaktionen möglich** (`$transaction` in jeder Form wirft „Transactions are not supported in HTTP mode“) — Schreibvorgänge sequenziell und abbruchsicher anordnen.
 4. **Datei-Uploads:** Immer `@vercel/blob` nutzen (`put`, `del`). Kein lokales Dateisystem in Production. Bestehende lokale Pfade (`/uploads/...`) werden als Fallback weiterhin unterstützt.
 5. **Sicherheit & Datenschutz & Pre-Commit Hook:**
    - **Pre-Commit Hook aktiv:** `.githooks/pre-commit` (delegiert an `scripts/check-secrets.mjs`) blockiert vor jedem `git commit` automatisch das versehentliche Committen von `.env`-Dateien, API-Keys (`sk-ant-`, `sk-`, `AIzaSy`, `ghp_`, etc.) und privaten Dokumenten.

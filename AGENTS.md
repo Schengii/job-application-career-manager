@@ -10,6 +10,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Projektüberblick
 
+> Gemeinsame Referenz für alle KI-Werkzeuge (Claude, Gemini, …). `CLAUDE.md` enthält zusätzlich
+> Claude-spezifische Befehle und verbindliche Regeln, `GEMINI.md` verweist hierher.
+
 "Job Application & Career Manager" — eine Next.js-Vollstack-Anwendung zur Verwaltung der Jobsuche
 (Fachinformatiker Anwendungsentwicklung, Frontend-Schwerpunkt). Siehe `README.md` für Setup,
 Architektur und Feature-Übersicht.
@@ -34,3 +37,18 @@ Architektur und Feature-Übersicht.
   `npx prisma generate` nach jeder Schema-Änderung erneut ausführen). Modelltypen heißen
   `<Model>Model` (z. B. `CompanyModel`, `ApplicationModel`), re-exportiert in `src/types/index.ts`.
 - **Testing & Linting:** Vitest (`npm run test`), Playwright (`npm run test:e2e`), ESLint (`npm run lint`).
+
+## Verbindliche Leitplanken
+
+- **Keine DB-Transaktionen:** `PrismaNeonHttp` lehnt jede Transaktion ab (`"Transactions are not supported
+  in HTTP mode"`) — weder `$transaction(async tx => …)` noch `$transaction([…])` funktioniert. Mehrstufige
+  Schreibvorgänge sequenziell ausführen und die Reihenfolge so wählen, dass ein Abbruch keinen
+  inkonsistenten Zustand hinterlässt (siehe `applicationStatus.ts`, `backup.ts`). Verschachtelte Writes
+  (`create` in `update`) ebenfalls vermeiden.
+- **SSRF-Schutz:** Vor jedem Abruf nutzergelieferter URLs `src/lib/core/ssrfGuard.ts` verwenden.
+- **Geheimnisse:** API-Keys/IMAP-Passwörter nur verschlüsselt via `src/lib/core/secretCrypto.ts` speichern.
+- **Rate-Limiting:** Der Limiter (`src/lib/core/rateLimiter.ts`) liegt im Speicher je Serverless-Instanz —
+  auf Vercel nur Best-Effort, keine harte Garantie.
+- **Privatdaten & Hook:** Persönliche Unterlagen und `.env*` nie committen; vor jedem Commit
+  `npm run security:check`, den Pre-Commit-Hook niemals mit `--no-verify` umgehen.
+- **Datei-Uploads:** `@vercel/blob`, kein lokales Dateisystem in Produktion.
