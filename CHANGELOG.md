@@ -9,6 +9,20 @@ und dieses Projekt hält sich an [Semantic Versioning](https://semver.org/spec/v
 
 ## [Unreleased]
 
+### Hinzugefügt
+- **Antwortzeit-Analyse** auf der Insights-Seite: Durchschnitt, Median, schnellste/langsamste Antwort, Verteilung in Zeitfenstern, Vergleich nach Quelle und ein Nachfass-Hinweis (90-%-Perzentil). Neue Logik in `src/lib/analytics/responseTime.ts`, Daten über `responseTimeStats` in `GET /api/analytics`.
+- **`withApi`/`readJson`** (`src/lib/core/withApi.ts`): einheitlicher Wrapper für Route-Handler (Fehlerbehandlung, optionales Rate-Limit, Zod-validiertes JSON). Zunächst von den Snippets-Routen genutzt.
+
+### Behoben
+- **JSON-Resume-Import** (`POST /api/resume/json`) nutzte eine interaktive Transaktion, die `PrismaNeonHttp` ablehnt, und schlug dadurch immer fehl. Schreibt jetzt sequenziell.
+- **Insights**: Der Tech-Stack-Abschnitt der Karte „Erfolgsquote nach Tag & Tech-Stack“ zeigte versehentlich die Tag-Daten.
+- Ein kaputter JSON-Body liefert bei Routen mit `readJson` jetzt 400 statt 500.
+- Statuswechsel prüft zuerst die Existenz der Bewerbung (404 statt Fremdschlüssel-Fehler) und schreibt Verlauf vor Status; irreführende Kommentare zu einer nicht vorhandenen Transaktion korrigiert.
+
+### Geändert
+- Große UI-Dateien aufgeteilt, Verhalten unverändert: `applications/page.tsx` (678 → 215 Zeilen), `jobs/page.tsx` (605 → 294), `excel-grid-table.tsx` (1096 → 154). Filter-/Sortierlogik liegt jetzt als getestete reine Funktionen in `src/lib/applications/` und `src/lib/jobs/`.
+- Dokumentation: `AGENTS.md` ist die gemeinsame Referenz für KI-Werkzeuge; `GEMINI.md` verweist darauf. Neue Leitplanke: keine DB-Transaktionen mit `PrismaNeonHttp`.
+
 ### Behoben & Gehärtet (Security)
 - **Fail-closed auf Vercel**: Ohne `APP_PASSWORD` liefert `middleware.ts` auf Vercel 503 statt die App öffentlich auszuliefern. Cron-Tick, Portfolio-Recruiter-Ansicht (`/api/portfolio/view`) sind per `isPublicPath` ausgenommen (sichern sich selbst ab).
 - **Portfolio-Recruiter-Ansicht**: Neuer Endpunkt `POST /api/portfolio/view` prüft Token, Ablauf und PIN serverseitig und liefert nur Recruiter-Felder. Die Seite `/portfolio/[token]` lädt nicht mehr `/api/preferences` (inkl. PIN) und funktioniert damit auch mit gesetztem `APP_PASSWORD`. `/api/portfolio/track` entfällt.

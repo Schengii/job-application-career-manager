@@ -20,6 +20,7 @@ import { SkillGapCard } from "@/components/analytics/skill-gap-card";
 import { ToneEfficiencyCard } from "@/components/analytics/tone-efficiency-card";
 import { SalaryHistoryCard } from "@/components/analytics/salary-history-card";
 import { ResponseHeatmapCard } from "@/components/analytics/response-heatmap-card";
+import { ResponseTimeCard } from "@/components/analytics/response-time-card";
 
 const CardSkeleton = () => <Card className="h-64 animate-pulse bg-muted/40" />;
 
@@ -70,6 +71,7 @@ const CounterOfferAssistantCard = dynamic(
 import type { ToneSuccessRate } from "@/lib/applications/toneSuccessRates";
 import type { SalaryDataPoint } from "@/lib/salary/salaryHistoryTracker";
 import type { TimingAnalyticsResult } from "@/lib/analytics/responseHeatmap";
+import type { ResponseTimeStats } from "@/lib/analytics/responseTime";
 
 type Analytics = {
   statusDistribution: { status: string; label: string; color: string; count: number }[];
@@ -82,6 +84,7 @@ type Analytics = {
   toneSuccessRates?: ToneSuccessRate[];
   salaryTrends?: SalaryDataPoint[];
   timingAnalytics?: TimingAnalyticsResult;
+  responseTimeStats?: ResponseTimeStats;
   successRate: number | null;
   avgResponseDays: number | null;
   totalApplications: number;
@@ -260,6 +263,11 @@ export default function AnalyticsPage() {
               <ResponseHeatmapCard timingData={data.timingAnalytics} />
             </div>
 
+            {/* Antwortzeit-Analyse */}
+            <div className="lg:col-span-2">
+              <ResponseTimeCard stats={data.responseTimeStats} />
+            </div>
+
             {/* Markt-Nachfrage & Skill-Gap Matrix */}
             <div className="lg:col-span-2">
               <SkillGapCard />
@@ -268,7 +276,7 @@ export default function AnalyticsPage() {
             {/* Erfolgsquote nach Tag & Tech-Stack */}
             <SkillSuccessRatesCard
               tagData={data.tagSuccessRates ?? []}
-              techStackData={data.tagSuccessRates ?? []}
+              techStackData={data.techStackSuccessRates ?? []}
             />
 
             {/* Anschreiben-Tonalität & Stil-Effizienz */}

@@ -8,8 +8,7 @@ import { computeTagSuccessRates, computeTechStackSuccessRates } from "@/lib/inte
 import { computeToneSuccessRates } from "@/lib/applications/toneSuccessRates";
 import { aggregateSalaryTrends } from "@/lib/salary/salaryHistoryTracker";
 import { computeResponseTimingAnalytics } from "@/lib/analytics/responseHeatmap";
-
-const RESPONSE_STATUSES = new Set(["INTERVIEW", "OFFER", "REJECTED"]);
+import { RESPONSE_STATUSES, computeResponseTimeStats } from "@/lib/analytics/responseTime";
 
 export async function GET() {
   const applications = await prisma.application.findMany({
@@ -81,21 +80,10 @@ export async function GET() {
     { stage: "Job-Angebot / Zusage", count: offerCount, rate: totalSent > 0 ? Math.round((offerCount / totalSent) * 100) : 0 },
   ];
 
-  // 6) Durchschnittliche Reaktionszeit
-  const responseDurations: number[] = [];
-  for (const app of applications) {
-    if (!app.applicationDate) continue;
-    const firstResponse = app.statusEvents.find((e) => RESPONSE_STATUSES.has(e.status));
-    if (!firstResponse) continue;
-    const days = Math.round(
-      (new Date(firstResponse.changedAt).getTime() - new Date(app.applicationDate).getTime()) / 86_400_000,
-    );
-    if (days >= 0) responseDurations.push(days);
-  }
-  const avgResponseDays =
-    responseDurations.length > 0
-      ? Math.round(responseDurations.reduce((sum, d) => sum + d, 0) / responseDurations.length)
-      : null;
+  // 6) Reaktionszeit (Durchschnitt, Median, Verteilung, nach Quelle) —
+  // siehe src/lib/analytics/responseTime.ts
+  const responseTimeStats = computeResponseTimeStats(applications);
+  const avgResponseDays = responseTimeStats.avgDays;
 
   // 7) Absagegründe-Verteilung
   const rejectionApps = applications.filter((a) => a.status === "REJECTED");
@@ -134,10 +122,11 @@ export async function GET() {
     toneSuccessRates,
     salaryTrends,
     timingAnalytics,
+    responseTimeStats,
     successRate,
     avgResponseDays,
     totalApplications: applications.length,
-    respondedCount: responseDurations.length,
+    respondedCount: responseTimeStats.sampleSize,
     rejectedCount: rejectionApps.length,
   });
 }
